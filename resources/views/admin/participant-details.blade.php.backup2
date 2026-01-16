@@ -1,0 +1,603 @@
+@extends('layouts.app')
+
+@section('title', 'Detail Peserta')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6">Detail Peserta</h1>
+                    <p class="lead text-muted">{{ $participant->name }}</p>
+                </div>
+                <div>
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4 me-2">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-primary rounded-pill px-4">
+                        <i class="fas fa-arrow-left me-2"></i>Kembali
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Information Card -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white rounded-top">
+                    <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Informasi Peserta</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Personal Information Section -->
+                            <div class="section-header mb-4">
+                                <h6 class="text-center">
+                                    <span class="d-inline-block bg-primary text-white px-4 py-2 rounded-pill">
+                                        <i class="fas fa-user me-2"></i>INFORMASI PRIBADI
+                                    </span>
+                                </h6>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Nomor Kursi</label>
+                                        <div class="fw-bold fs-5">{{ $participant->seat_number ?: 'Belum ditetapkan' }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">NIM</label>
+                                        <div class="fw-bold">{{ $participant->nim }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Nama</label>
+                                        <div class="fw-bold">{{ $participant->name }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Username</label>
+                                        <div class="fw-bold">{{ $participant->username }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Email</label>
+                                        <div class="fw-bold">{{ $participant->email }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Jurusan</label>
+                                        <div class="fw-bold">
+                                            @if($participant->academic_level_display)
+                                                {{ $participant->academic_level_display }} {{ $participant->major }}
+                                            @else
+                                                {{ $participant->major }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Fakultas</label>
+                                        <div class="fw-bold">{{ $participant->faculty }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Jenis Kelamin</label>
+                                        <div class="fw-bold">{{ $participant->gender == 'male' ? 'Laki-laki' : 'Perempuan' }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Tempat & Tanggal Lahir</label>
+                                        <div class="fw-bold">{{ $participant->birth_place }}, {{ $participant->birth_date->format('d M Y') }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Nomor WhatsApp</label>
+                                        <div class="fw-bold">{{ $participant->phone }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Tanggal Pembayaran</label>
+                                        <div class="fw-bold">{{ $participant->payment_date ? $participant->payment_date->format('d M Y') : '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Test Information Section -->
+                            <div class="section-header mb-4">
+                                <h6 class="text-center">
+                                    <span class="d-inline-block bg-success text-white px-4 py-2 rounded-pill">
+                                        <i class="fas fa-clipboard-check me-2"></i>INFORMASI TES
+                                    </span>
+                                </h6>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Kategori Tes</label>
+                                        <div class="fw-bold">{{ $participant->test_category }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Tanggal Tes Sebelumnya</label>
+                                        <div class="fw-bold">
+                                            @if($participant->previous_test_date)
+                                                {{ $participant->previous_test_date->format('d M Y') }}
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Jadwal Tes</label>
+                                        <div class="fw-bold">{{ $participant->schedule->room }} - {{ $participant->schedule->date->format('d M Y') }}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Tanggal Pendaftaran</label>
+                                        <div class="fw-bold">{{ $participant->created_at->format('d M Y H:i') }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Status</label>
+                                        <div>
+                                            <span class="badge bg-{{ $participant->status === 'confirmed' ? 'success' : ($participant->status === 'pending' ? 'warning' : 'danger') }} px-3 py-2 fs-6">
+                                                {{ $participant->status === 'confirmed' ? 'Terkonfirmasi' : ($participant->status === 'pending' ? 'Tertunda' : 'Dibatalkan') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Nilai Test</label>
+                                        <div class="fw-bold">
+                                            @if($participant->test_score)
+                                                {{ $participant->test_score }}
+                                            @else
+                                                <span class="text-muted">Belum dinilai</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Status Kelulusan</label>
+                                        <div>
+                                            @if($participant->passed !== null)
+                                                <span class="badge bg-{{ $participant->passed ? 'success' : 'danger' }} px-3 py-2 fs-6">
+                                                    {{ $participant->passed ? 'Lulus' : 'Tidak Lulus' }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted">Belum dinilai</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="fw-bold text-muted">Tanggal Test</label>
+                                        <div class="fw-bold">
+                                            @if($participant->test_date)
+                                                {{ $participant->test_date->format('d M Y') }}
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar with Photo and Actions -->
+        <div class="col-md-4">
+            <!-- Photo Section -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-image me-2"></i>Foto Peserta</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if($participant->photo_path && file_exists(storage_path('app/public/' . $participant->photo_path)))
+                        <img src="{{ asset('storage/' . $participant->photo_path) }}"
+                             alt="Foto Peserta"
+                             class="img-fluid rounded shadow-sm border mb-2"
+                             style="width: 151px; height: 227px; object-fit: cover; object-position: center;">
+                    @else
+                        <div class="bg-light d-flex align-items-center justify-content-center border rounded"
+                             style="width: 151px; height: 227px; margin: 0 auto; border: 2px dashed #ccc;">
+                            <span class="text-muted">Foto tidak tersedia</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Action Section -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Aksi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('admin.participant.card.preview', $participant->id) }}" class="btn btn-info rounded-pill py-3" target="_blank">
+                            <i class="fas fa-eye me-2"></i>Lihat Pratinjau Kartu
+                        </a>
+
+                        <!-- Action Buttons Grid -->
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{{ route('admin.participants.list', $participant->schedule_id) }}" class="btn btn-secondary rounded-pill w-100 py-2">
+                                    <i class="fas fa-arrow-left me-1"></i> Kembali
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-warning rounded-pill w-100 py-2" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                                    <i class="fas fa-key me-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Delete Button - Separate due to confirmation requirement -->
+                        <form action="{{ route('admin.participant.delete', $participant->id) }}" method="POST" class="mt-2">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger rounded-pill w-100 py-3" onclick="return confirm('Apakah Anda yakin ingin menghapus peserta ini?')">
+                                <i class="fas fa-trash-alt me-2"></i>Hapus Peserta
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Score Modal -->
+<div class="modal fade" id="testScoreModal" tabindex="-1" aria-labelledby="testScoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white rounded-top">
+                <h5 class="modal-title" id="testScoreModalLabel">Input Nilai Test - {{ $participant->name }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.participant.score.update', $participant->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <!-- Test Format Selection - Only PBT now -->
+                    <div class="mb-4">
+                        <label for="test_format" class="form-label fw-bold">Format TOEFL</label>
+                        <select class="form-select rounded-pill" id="test_format" name="test_format" required>
+                            <option value="PBT" {{ ($participant->test_format ?? 'PBT') == 'PBT' ? 'selected' : '' }}>TOEFL PBT (Paper-based Test)</option>
+                        </select>
+                        <div class="form-text">Catatan: Sistem hanya mendukung format TOEFL PBT (Paper-based Test)</div>
+                    </div>
+
+                    <!-- PBT Scores Section -->
+                    <div id="pbt-section" class="mb-4">
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-file-alt me-2"></i>Skor TOEFL PBT (Paper-based Test)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">Listening Comprehension</label>
+                                            <input type="number" class="form-control rounded-pill" name="listening_score_pbt" min="0" max="68" value="{{ $participant->listening_score_pbt ?? '' }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">Structure and Written Expression</label>
+                                            <input type="number" class="form-control rounded-pill" name="structure_score_pbt" min="0" max="68" value="{{ $participant->structure_score_pbt ?? '' }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">Reading Comprehension</label>
+                                            <input type="number" class="form-control rounded-pill" name="reading_score_pbt" min="0" max="67" value="{{ $participant->reading_score_pbt ?? '' }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info rounded-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <small>
+                                        <strong>Info:</strong> Skor total otomatis dihitung menggunakan rumus: ((L + S + R) ÷ 3) × 10<br>
+                                        Contoh: ((59 + 56 + 55) ÷ 3) × 10 = (170 ÷ 3) × 10 = 56.67 × 10 = 566.67 ≈ 567
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Level Display (Automatically Determined) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Jenjang Akademik (Otomatis)</label>
+                        <input type="text" class="form-control rounded-pill bg-light" value="{{ $participant->studyProgram->level ?? $participant->academic_level ?? 'Tidak Diketahui' }}" readonly>
+                        <div class="form-text">Jenjang akademik diambil otomatis dari data program studi peserta</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="test_score" class="form-label fw-bold">Nilai Total TOEFL</label>
+                        @if(($participant->test_format ?? 'iBT') == 'PBT')
+                            <input type="number" class="form-control rounded-pill bg-light" id="test_score" name="test_score" min="0" max="677" step="1" value="{{ $participant->test_score }}" readonly>
+                            <div class="form-text">Skala TOEFL PBT: 0-677 poin (diisi otomatis berdasarkan rumus: ((L+S+R)÷3)×10)</div>
+                        @else
+                            <input type="number" class="form-control rounded-pill" id="test_score" name="test_score" min="0" max="120" step="1" value="{{ $participant->test_score }}" required>
+                            <div class="form-text">Skala TOEFL iBT: 0-120 poin (Total dari 4 section: Reading, Listening, Speaking, Writing)</div>
+                        @endif
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="test_date" class="form-label fw-bold">Tanggal Test</label>
+                        <input type="date" class="form-control rounded-pill" id="test_date" name="test_date" value="{{ $participant->test_date ? $participant->test_date->format('Y-m-d') : date('Y-m-d') }}" required>
+                    </div>
+
+                    <!-- TOEFL Standards Table -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Standar Kelulusan TOEFL berdasarkan Jenjang</label>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Jenjang</th>
+                                        <th>Skor Minimum Lulus</th>
+                                        <th>Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if(($participant->test_format ?? 'iBT') == 'PBT')
+                                        <tr>
+                                            <td>S1 (Sarjana)</td>
+                                            <td>&ge; 400</td>
+                                            <td>Skor harus 400 atau lebih untuk lulus</td>
+                                        </tr>
+                                        <tr>
+                                            <td>S2 (Magister)</td>
+                                            <td>&ge; 450</td>
+                                            <td>Skor harus 450 atau lebih untuk lulus</td>
+                                        </tr>
+                                        <tr>
+                                            <td>S3 (Doktor)</td>
+                                            <td>&ge; 500</td>
+                                            <td>Skor harus 500 atau lebih untuk lulus</td>
+                                        </tr>
+                                    @else
+                                        <tr>
+                                            <td>Sarjana</td>
+                                            <td>&ge; 79</td>
+                                            <td>Skor harus 79 atau lebih</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Magister</td>
+                                            <td>&ge; 85</td>
+                                            <td>Skor harus 85 atau lebih</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Doktor</td>
+                                            <td>&ge; 90</td>
+                                            <td>Skor harus 90 atau lebih</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="calculated-passed" class="mb-3">
+                        <label class="form-label fw-bold">Status Kelulusan (diisi otomatis)</label>
+                        <div class="alert alert-{{ $participant->passed ? 'success' : 'danger' }} rounded-3" id="statusDisplay">
+                            <i class="fas fa-{{ $participant->passed ? 'check-circle' : 'times-circle' }} me-2"></i>
+                            <strong>Status: <span id="statusText">{{ $participant->passed !== null ? ($participant->passed ? 'LULUS' : 'TIDAK LULUS') : 'BELUM DINILAI' }}</span></strong>
+                            <br>
+                            <small>Berdasarkan jenjang <span id="academicLevelText">{{ $participant->studyProgram->level ? ucfirst($participant->studyProgram->level) : ($participant->academic_level ? ucfirst($participant->academic_level) : 'belum ditentukan') }}</span> dan skor <span id="scoreText">{{ $participant->test_score ?? '0' }}</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const formatSelect = document.getElementById('test_format');
+                        const pbtSection = document.getElementById('pbt-section');
+                        const testScoreInput = document.getElementById('test_score');
+                        const testScoreLabel = document.querySelector('label[for="test_score"]');
+                        const standardsTable = document.querySelector('.table-responsive table');
+                        const academicLevelSelect = document.getElementById('academic_level');
+                        const calculatedPassedDiv = document.getElementById('calculated-passed');
+
+                        // Function to calculate PBT score
+                        function calculatePBTScore() {
+                            if (formatSelect.value === 'PBT') {
+                                const listeningInput = document.querySelector('input[name="listening_score_pbt"]');
+                                const structureInput = document.querySelector('input[name="structure_score_pbt"]');
+                                const readingInput = document.querySelector('input[name="reading_score_pbt"]');
+
+                                const listening = parseFloat(listeningInput.value) || 0;
+                                const structure = parseFloat(structureInput.value) || 0;
+                                const reading = parseFloat(readingInput.value) || 0;
+
+                                if (listening || structure || reading) { // Allow partial scores during input
+                                    const calculatedTotal = Math.round(((listening + structure + reading) / 3) * 10);
+                                    testScoreInput.value = calculatedTotal;
+
+                                    // Update pass status based on academic level from the participant's study program
+                                    const academicLevel = '{{ $participant->studyProgram->level ?? $participant->academic_level ?? "" }}';
+                                    updatePassStatus(calculatedTotal, academicLevel, true);
+                                }
+                            }
+                        }
+
+                        // Function to update pass status based on score and academic level (PBT only)
+                        function updatePassStatus(score, academicLevel, isPBT) {
+                            if (!academicLevel) return;
+
+                            let isPassed = false;
+
+                            // Only PBT logic now (iBT logic removed)
+                            switch(academicLevel.toLowerCase()) {
+                                case 'undergraduate':
+                                case 'bachelor':
+                                case 'sarjana':
+                                case 's1':
+                                    isPassed = score >= 400; // S1: score must be ≥ 400
+                                    break;
+                                case 'master':
+                                case 'magister':
+                                case 's2':
+                                    isPassed = score >= 450; // S2: score must be ≥ 450
+                                    break;
+                                case 'doctorate':
+                                case 'doctoral':
+                                case 'doktor':
+                                case 's3':
+                                    isPassed = score >= 500; // S3: score must be ≥ 500
+                                    break;
+                                default:
+                                    isPassed = false;
+                            }
+
+                            console.log('Debug - Academic Level:', academicLevel, 'Score:', score, 'isPBT (ignored):', isPBT, 'isPassed:', isPassed);
+
+                            // Update the calculated passed div content
+                            const statusText = isPassed ? 'LULUS' : 'TIDAK LULUS';
+                            const statusClass = isPassed ? 'success' : 'danger';
+                            const icon = isPassed ? 'check-circle' : 'times-circle';
+
+                            // Update the status text, level and score
+                            document.getElementById('statusText').textContent = statusText;
+                            document.getElementById('academicLevelText').textContent = academicLevel ? academicLevel.charAt(0).toUpperCase() + academicLevel.slice(1) : 'belum ditentukan';
+                            document.getElementById('scoreText').textContent = score;
+
+                            // Update the alert class
+                            const statusDisplay = document.getElementById('statusDisplay');
+                            statusDisplay.className = `alert alert-\${statusClass} rounded-3`;
+
+                            // Update the icon
+                            const iconElement = statusDisplay.querySelector('i');
+                            iconElement.className = `fas fa-\${icon} me-2`;
+                        }
+
+                        // Format change handler - only PBT now, so only handle PBT
+                        formatSelect.addEventListener('change', function() {
+                            // Only PBT is supported now, so always use PBT settings
+                            testScoreInput.max = 677; // Max possible with formula: ((68+68+67)÷3)×10 = 679.99... rounded to 677
+                            testScoreInput.readOnly = true;
+                            testScoreInput.value = '';
+                            testScoreLabel.innerHTML = 'Nilai Total TOEFL';
+                            document.querySelector('.form-text').innerHTML = 'Skala TOEFL PBT: 0-677 poin (diisi otomatis berdasarkan rumus: ((L+S+R)÷3)×10)';
+
+                            // Update standards table for PBT
+                            standardsTable.innerHTML = `
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Jenjang</th>
+                                        <th>Skor Minimum Lulus</th>
+                                        <th>Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>S1 (Sarjana)</td>
+                                        <td>&ge; 400</td>
+                                        <td>Skor harus 400 atau lebih untuk lulus</td>
+                                    </tr>
+                                    <tr>
+                                        <td>S2 (Magister)</td>
+                                        <td>&ge; 450</td>
+                                        <td>Skor harus 450 atau lebih untuk lulus</td>
+                                    </tr>
+                                    <tr>
+                                        <td>S3 (Doktor)</td>
+                                        <td>&ge; 500</td>
+                                        <td>Skor harus 500 atau lebih untuk lulus</td>
+                                    </tr>
+                                </tbody>
+                            `;
+
+                            // Update pass status if academic level is available and test score exists
+                            const academicLevel = '{{ $participant->studyProgram->level ?? $participant->academic_level ?? "" }}';
+                            const currentScore = parseFloat(testScoreInput.value);
+                            if (academicLevel && !isNaN(currentScore)) {
+                                // Always use PBT logic since only PBT is supported
+                                updatePassStatus(currentScore, academicLevel, true);
+                            }
+                        });
+
+
+                        // Add event listeners to PBT score inputs
+                        document.addEventListener('input', function(e) {
+                            if (formatSelect.value === 'PBT' &&
+                                (e.target.name === 'listening_score_pbt' ||
+                                 e.target.name === 'structure_score_pbt' ||
+                                 e.target.name === 'reading_score_pbt')) {
+                                calculatePBTScore();
+                            }
+                        });
+
+                        // Initialize - update pass status if values already exist
+                        const academicLevel = '{{ $participant->studyProgram->level ?? $participant->academic_level ?? "" }}';
+                        const initialTestScore = parseFloat(testScoreInput.value);
+                        if (academicLevel && !isNaN(initialTestScore)) {
+                            updatePassStatus(initialTestScore, academicLevel, formatSelect.value === 'PBT');
+                        }
+                    });
+                </script>
+                <div class="modal-footer bg-light rounded-bottom">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Simpan Nilai</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-dark rounded-top">
+                <h5 class="modal-title" id="resetPasswordModalLabel">Reset Kata Sandi Peserta - {{ $participant->name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.reset.participant.password') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <input type="hidden" name="participant_id" value="{{ $participant->id }}">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Nama Pengguna:</label>
+                        <p class="form-control-plaintext bg-light p-3 border rounded-pill">{{ $participant->username }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label fw-bold">Kata Sandi Baru</label>
+                        <input type="password" class="form-control rounded-pill" id="new_password" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password_confirmation" class="form-label fw-bold">Konfirmasi Kata Sandi Baru</label>
+                        <input type="password" class="form-control rounded-pill" id="new_password_confirmation" name="new_password_confirmation" required>
+                    </div>
+                    <div class="alert alert-warning rounded-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <small>Peserta perlu menggunakan kata sandi baru ini untuk login berikutnya.</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light rounded-bottom">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4">Reset Kata Sandi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection

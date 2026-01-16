@@ -1,0 +1,556 @@
+@extends('layouts.app')
+
+@section('title', 'Dashboard ' . $participant->name)
+
+@section('content')
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1>Dashboard {{ $participant->name }}</h1>
+            <a href="#"
+               onclick="event.preventDefault();
+                        document.getElementById('logout-form').submit();"
+               class="btn btn-outline-danger">Keluar</a>
+            <form id="logout-form" action="{{ route('participant.logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+        </div>
+        <p class="lead">Status dan detail pendaftaran TOEFL Anda</p>
+    </div>
+</div>
+
+<!-- Show success message with account details -->
+@if(session('success') || session('account_details'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <h4 class="alert-heading">🎉 Selamat!</h4>
+    @if(session('success'))
+        <p>{{ session('success') }}</p>
+    @endif
+    @if(session('account_details'))
+        @if(session('success'))
+            <hr>
+        @else
+            <p>Pendaftaran Anda berhasil dilakukan. Simpan informasi akun Anda berikut ini:</p>
+            <hr>
+        @endif
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Username:</strong> <code>{{ session('account_details')['username'] }}</code></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Password:</strong> <code>{{ session('account_details')['password'] }}</code></p>
+            </div>
+        </div>
+        <p class="mb-0"><strong>Penting:</strong> {{ session('account_details')['message'] }}</p>
+    @endif
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
+<!-- Tabs -->
+<ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration" type="button" role="tab" aria-controls="registration" aria-selected="true">
+            <i class="fas fa-file-alt me-1"></i>Detail Pendaftaran
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="participant-detail-tab" data-bs-toggle="tab" data-bs-target="#participant-detail" type="button" role="tab" aria-controls="participant-detail" aria-selected="false">
+            <i class="fas fa-user me-1"></i>Detail Peserta
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="dashboardTabContent">
+    <!-- Registration Information Tab -->
+    <div class="tab-pane fade show active" id="registration" role="tabpanel" aria-labelledby="registration-tab">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Detail Pendaftaran</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless" style="margin-bottom: 0;">
+                                    <tr>
+                                        <td style="width: 40%; vertical-align: top;"><strong>Status Pendaftaran</strong></td>
+                                        <td style="width: 5%; vertical-align: top;"><strong>:</strong></td>
+                                        <td style="width: 55%; vertical-align: top;">
+                                            <span class="badge bg-{{ $participant->status === 'confirmed' ? 'success' : ($participant->status === 'pending' ? 'warning' : ($participant->status === 'rejected' ? 'secondary' : 'danger')) }}">
+                                                {{ $participant->status === 'confirmed' ? 'Terkonfirmasi' : ($participant->status === 'pending' ? 'Tertunda' : ($participant->status === 'rejected' ? 'Ditolak' : 'Dibatalkan')) }}
+                                            </span>
+                                            @if($participant->status === 'rejected' && $participant->rejection_message)
+                                                <div class="alert alert-light mt-2 p-2">
+                                                    <strong>Pesan Penolakan:</strong>
+                                                    <div class="text-muted">{{ $participant->rejection_message }}</div>
+                                                </div>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Tanggal Jam Pendaftaran</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">{{ $participant->created_at->format('d M Y H:i') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Nama</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">{{ $participant->name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>NIM</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">{{ $participant->nim }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Email</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">{{ $participant->email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Jurusan</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">
+                                            @if($participant->academic_level_display)
+                                                {{ $participant->academic_level_display }} {{ $participant->major }}
+                                            @else
+                                                {{ $participant->major }}
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Fakultas</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">{{ $participant->faculty }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless" style="margin-bottom: 0;">
+                                    <tr>
+                                        <td style="width: 40%; vertical-align: top;"><strong>Ruangan</strong></td>
+                                        <td style="width: 5%; vertical-align: top;"><strong>:</strong></td>
+                                        <td style="width: 55%; vertical-align: top;">{{ $participant->schedule->room }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Nomor Kursi</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">
+                                            @if($participant->isSeatConfirmed())
+                                                <span class="badge bg-success">{{ $participant->seat_number }}</span>
+                                            @elseif($participant->isSeatReserved())
+                                                <span class="badge bg-warning">Belum Ditentukan</span>
+                                                <div class="small text-muted">Nomor kursi akan ditetapkan setelah pembayaran dikonfirmasi</div>
+                                            @else
+                                                <span class="badge bg-secondary">Belum Ditentukan</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Kategori</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">{{ $participant->test_category }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Tanggal Pembayaran</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">{{ $participant->payment_date ? $participant->payment_date->format('d M Y') : '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Status Pembayaran</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">
+                                            @if($participant->status === 'rejected')
+                                                <span class="badge bg-danger">Ditolak</span>
+                                            @elseif($participant->status === 'confirmed')
+                                                <span class="badge bg-success">Valid</span>
+                                            @elseif($participant->status === 'pending')
+                                                <span class="badge bg-warning">Menunggu Validasi</span>
+                                            @else
+                                                <span class="badge bg-secondary">Belum Terdaftar</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;"><strong>Status Kelulusan</strong></td>
+                                        <td style="vertical-align: top;"><strong>:</strong></td>
+                                        <td style="vertical-align: top;">
+                                            @if($participant->test_score)
+                                                <span class="badge bg-{{ $participant->passed ? 'success' : 'danger' }}">
+                                                    {{ $participant->passed ? 'Lulus' : 'Tidak Lulus' }}
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary">Belum Dinilai</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                <!-- Test Score Section -->
+                @if($participant->test_score)
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-chart-line text-primary me-2"></i>
+                                        Hasil Test {{ $participant->test_category }}
+                                        <small class="text-muted">({{ $participant->test_format ?? 'iBT' }})</small>
+                                    </h5>
+                                    <span class="badge bg-{{ $participant->passed ? 'success' : 'danger' }} fs-6">
+                                        {{ $participant->passed ? 'Lulus' : 'Tidak Lulus' }}
+                                    </span>
+                                </div>
+
+                                <div class="row align-items-center">
+                                    <div class="col-md-4 text-center">
+                                        <div class="display-4 fw-bold text-primary">{{ number_format($participant->test_score, 0, '', '') }}</div>
+                                        <p class="mb-0 text-muted">Nilai Total</p>
+                                    </div>
+
+                                    <div class="col-md-8">
+                                        @if(($participant->test_format ?? 'iBT') == 'PBT')
+                                            <!-- PBT Section Scores -->
+                                            @if($participant->listening_score_pbt || $participant->structure_score_pbt || $participant->reading_score_pbt)
+                                            <div class="row text-center g-2">
+                                                @if($participant->listening_score_pbt)
+                                                <div class="col-4">
+                                                    <div class="h5 text-primary fw-bold">{{ $participant->listening_score_pbt }}</div>
+                                                    <p class="mb-0 small text-muted">Listening</p>
+                                                </div>
+                                                @endif
+                                                @if($participant->structure_score_pbt)
+                                                <div class="col-4">
+                                                    <div class="h5 text-primary fw-bold">{{ $participant->structure_score_pbt }}</div>
+                                                    <p class="mb-0 small text-muted">Structure & Writing</p>
+                                                </div>
+                                                @endif
+                                                @if($participant->reading_score_pbt)
+                                                <div class="col-4">
+                                                    <div class="h5 text-primary fw-bold">{{ $participant->reading_score_pbt }}</div>
+                                                    <p class="mb-0 small text-muted">Reading</p>
+                                                </div>
+                                                @endif
+                                            </div>
+                                            @endif
+                                        @else
+                                            <!-- iBT Section Scores -->
+                                            @if($participant->reading_score || $participant->listening_score || $participant->speaking_score || $participant->writing_score)
+                                            <div class="row text-center g-2">
+                                                @if($participant->reading_score)
+                                                <div class="col-3">
+                                                    <div class="h5 text-primary fw-bold">{{ $participant->reading_score }}</div>
+                                                    <p class="mb-0 small text-muted">Reading</p>
+                                                </div>
+                                                @endif
+                                                @if($participant->listening_score)
+                                                <div class="col-3">
+                                                    <div class="h5 text-primary fw-bold">{{ $participant->listening_score }}</div>
+                                                    <p class="mb-0 small text-muted">Listening</p>
+                                                </div>
+                                                @endif
+                                                @if($participant->speaking_score)
+                                                <div class="col-3">
+                                                    <div class="h5 text-primary fw-bold">{{ $participant->speaking_score }}</div>
+                                                    <p class="mb-0 small text-muted">Speaking</p>
+                                                </div>
+                                                @endif
+                                                @if($participant->writing_score)
+                                                <div class="col-3">
+                                                    <div class="h5 text-primary fw-bold">{{ $participant->writing_score }}</div>
+                                                    <p class="mb-0 small text-muted">Writing</p>
+                                                </div>
+                                                @endif
+                                            </div>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+
+                                @if($participant->test_date)
+                                <div class="text-center mt-3">
+                                    <span class="text-muted">Tanggal Test: {{ $participant->test_date->format('d M Y') }}</span>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+                    @if($participant->status !== 'rejected')
+                    <a href="{{ route('participant.card.download', $participant->id) }}" class="btn btn-success btn-lg
+                        @if($participant->status === 'pending') disabled @endif">
+                        <i class="fas fa-download"></i> Unduh Kartu Ujian
+                    </a>
+                    @endif
+                    @if($participant->status === 'rejected')
+                        <a href="{{ route('participant.resubmit.payment.form', $participant->id) }}" class="btn btn-warning btn-lg">
+                            <i class="fas fa-upload"></i> Upload Ulang Bukti Pembayaran
+                        </a>
+                    @elseif($participant->test_score && $participant->passed)
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-redo"></i> Daftar Tes Ulang
+                        </button>
+                    @elseif(is_null($participant->test_score))
+                        <button class="btn btn-secondary btn-lg" disabled title="Status kelulusan belum dinilai">
+                            <i class="fas fa-redo"></i> Daftar Tes Ulang
+                        </button>
+                    @else
+                        <a href="{{ route('participant.retake.form', $participant->id) }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-redo"></i> Daftar Tes Ulang
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test History Section -->
+@if($testHistory->count() > 1)
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2 text-primary"></i>Riwayat Tes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Kategori Tes</th>
+                                <th>Tanggal Tes</th>
+                                <th>Jadwal</th>
+                                <th>Nilai</th>
+                                <th>Section (R/L/S/W)</th>
+                                <th>Status</th>
+                                <th>Tanggal Pendaftaran</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($testHistory as $history)
+                            <tr>
+                                <td>{{ $history->test_category }}</td>
+                                <td>
+                                    @if($history->test_date)
+                                        {{ $history->test_date->format('d M Y') }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    {{ $history->schedule->room ?? '-' }} -
+                                    {{ $history->schedule->date ? $history->schedule->date->format('d M Y') : '-' }}
+                                </td>
+                                <td>
+                                    @if($history->test_score)
+                                        <span class="badge bg-primary">{{ number_format($history->test_score, 0, '', '') }}</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(($history->test_format ?? 'iBT') == 'PBT')
+                                        @if($history->listening_score_pbt || $history->structure_score_pbt || $history->reading_score_pbt)
+                                            <div class="small">
+                                                L:{{ $history->listening_score_pbt ?: '0' }}
+                                                S:{{ $history->structure_score_pbt ?: '0' }}
+                                                R:{{ $history->reading_score_pbt ?: '0' }}
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    @else
+                                        @if($history->reading_score || $history->listening_score || $history->speaking_score || $history->writing_score)
+                                            <div class="small">
+                                                R:{{ $history->reading_score ?: '0' }}
+                                                L:{{ $history->listening_score ?: '0' }}
+                                                S:{{ $history->speaking_score ?: '0' }}
+                                                W:{{ $history->writing_score ?: '0' }}
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($history->passed !== null)
+                                        <span class="badge bg-{{ $history->passed ? 'success' : 'danger' }}">
+                                            {{ $history->passed ? 'Lulus' : 'Tidak Lulus' }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary">Belum Dinilai</span>
+                                    @endif
+                                </td>
+                                <td>{{ $history->created_at->format('d M Y H:i') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Dokumen yang Diunggah</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <h6>Bukti Pembayaran</h6>
+                        <a href="{{ asset('storage/' . $participant->payment_proof_path) }}" target="_blank" class="d-block">
+                            <img src="{{ asset('storage/' . $participant->payment_proof_path) }}" alt="Bukti Pembayaran" class="img-thumbnail rounded shadow-sm" style="max-height: 150px; width: auto; object-fit: cover;">
+                        </a>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6>Pas Photo</h6>
+                        <a href="{{ asset('storage/' . $participant->photo_path) }}" target="_blank" class="d-block">
+                            <img src="{{ asset('storage/' . $participant->photo_path) }}" alt="Pas Photo" class="img-thumbnail rounded shadow-sm" style="max-height: 150px; width: auto; object-fit: cover;">
+                        </a>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6>KTP</h6>
+                        <a href="{{ asset('storage/' . $participant->ktp_path) }}" target="_blank" class="d-block">
+                            <img src="{{ asset('storage/' . $participant->ktp_path) }}" alt="KTP" class="img-thumbnail rounded shadow-sm" style="max-height: 150px; width: auto; object-fit: cover;">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Participant Detail Tab -->
+<div class="tab-pane fade" id="participant-detail" role="tabpanel" aria-labelledby="participant-detail-tab">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Detail Informasi Peserta</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless" style="margin-bottom: 0;">
+                                <tr>
+                                    <td style="width: 40%; vertical-align: top;"><strong>Nama</strong></td>
+                                    <td style="width: 5%; vertical-align: top;"><strong>:</strong></td>
+                                    <td style="width: 55%; vertical-align: top;">{{ $participant->name }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>Username</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">{{ $participant->username }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>NIM</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">{{ $participant->nim }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>Email</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">{{ $participant->email }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>Jurusan</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">
+                                        @if($participant->academic_level_display)
+                                            {{ $participant->academic_level_display }} {{ $participant->major }}
+                                        @else
+                                            {{ $participant->major }}
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>Fakultas</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">{{ $participant->faculty }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>Tempat & Tanggal Lahir</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">{{ $participant->birth_place }}, {{ $participant->birth_date->format('d M Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>Jenis Kelamin</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">{{ $participant->gender == 'male' ? 'Laki-laki' : 'Perempuan' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: top;"><strong>No. Telepon</strong></td>
+                                    <td style="vertical-align: top;"><strong>:</strong></td>
+                                    <td style="vertical-align: top;">{{ $participant->phone }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <h6>Peserta</h6>
+                                <div class="bg-gradient" style="background: linear-gradient(to bottom, blue, yellow); width: 151px; height: 227px; margin: 0 auto; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; border: 2px solid blue; cursor: pointer;" onclick="showPhotoModal()">
+                                    @if($participant->photo_path && file_exists(storage_path('app/public/' . $participant->photo_path)))
+                                        <img src="{{ asset('storage/' . $participant->photo_path) }}"
+                                             alt="Foto Peserta"
+                                             class="img-fluid rounded"
+                                             style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                                    @else
+                                        <span class="text-white text-center" style="color: white;">Foto tidak tersedia</span>
+                                    @endif
+                                </div>
+
+                                <!-- Photo Modal -->
+                                <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-sm" style="max-width: 6cm; margin: 1.5cm auto;">
+                                        <div class="modal-content">
+                                            <div class="modal-body text-center p-0">
+                                                <img src="{{ asset('storage/' . $participant->photo_path) }}"
+                                                     alt="Foto Peserta"
+                                                     style="width: 6cm; height: 8cm; object-fit: cover;"
+                                                     class="img-fluid">
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+@endsection
+
+<script>
+function showPhotoModal() {
+    // Check if photo exists
+    if ("{{ $participant->photo_path }}" && "{{ file_exists(storage_path('app/public/' . $participant->photo_path)) }}") {
+        // Show the modal
+        var modal = new bootstrap.Modal(document.getElementById('photoModal'));
+        modal.show();
+    } else {
+        // Alert if no photo available
+        alert('Foto tidak tersedia');
+    }
+}
+</script>

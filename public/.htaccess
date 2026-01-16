@@ -1,0 +1,39 @@
+Options -MultiViews
+RewriteEngine On
+
+# Handle Authorization Header
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Redirect Trailing Slashes If Not A Folder...
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [L,R=301]
+
+# Send Requests To Front Controller...
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
+
+# Security: Don't allow access to potentially sensitive files
+<Files ~ "(\.env|\.htaccess|\.git|\.svn|\.hg|\.idea|\.vscode|npm-debug\.log|yarn\.lock|composer\.lock)$">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Disable Server Signature
+ServerSignature Off
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect .php files from direct access (except index.php)
+<FilesMatch "\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+<Files "index.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
