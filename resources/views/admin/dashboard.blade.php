@@ -245,7 +245,7 @@
                     <a href="{{ route('admin.profile') }}" class="btn btn-light px-4 py-2 border-end border-light-subtle">
                         <i class="fas fa-user-circle me-2"></i> Profil
                     </a>
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-light px-4 py-2 text-danger">
+                    <a href="#" id="btn-logout-dashboard" class="btn btn-light px-4 py-2 text-danger">
                         <i class="fas fa-sign-out-alt me-2"></i> Keluar
                     </a>
                 </div>
@@ -576,6 +576,15 @@
                 btn.addEventListener('click', () => confirmDelete(scheduleId, roomName));
             }
         });
+
+        // Logout button handler (CSP compliant)
+        const logoutBtn = document.getElementById('btn-logout-dashboard');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('logout-form').submit();
+            });
+        }
     });
 
     function confirmDelete(scheduleId, roomName) {

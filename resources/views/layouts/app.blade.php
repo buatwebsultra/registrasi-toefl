@@ -330,7 +330,7 @@
                             <a class="nav-link" href="{{ route('admin.profile') }}">Profil</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-danger" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-nav').submit();">
+                            <a class="nav-link text-danger" href="#" id="btn-logout-nav">
                                 <i class="fas fa-sign-out-alt me-1"></i>Keluar
                             </a>
                             <form id="logout-form-nav" action="{{ route('admin.logout') }}" method="POST" class="d-none">
@@ -379,11 +379,10 @@
             <div class="row g-3 px-3">
                 <!-- Information Section -->
                 <div class="col-md-4">
-                    <div class="d-flex align-items-center mb-3">
+                    <div class="mb-3">
                         <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}"
                              alt="Logo UHO dan Diktisaintek"
-                             class="me-3 footer-logo">
-                        <h5 class="fw-bold mb-0">Sistem Informasi Pelayanan Bahasa UHO (SIPENA)</h5>
+                             class="mb-2 footer-logo">
                     </div>
                     <p class="text-light mb-3">
                         Sistem Informasi Pelayanan Bahasa (SIPENA) UHO Kendari.
@@ -461,6 +460,18 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script nonce="{{ $csp_nonce ?? '' }}">
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutNavBtn = document.getElementById('btn-logout-nav');
+            if (logoutNavBtn) {
+                logoutNavBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('logout-form-nav').submit();
+                });
+            }
+        });
+    </script>
 
     @yield('modals')
     @yield('scripts')
