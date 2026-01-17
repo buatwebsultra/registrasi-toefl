@@ -34,8 +34,8 @@ Route::get('/', function () {
 
 // Participant routes
 Route::middleware(['participant'])->prefix('participant')->group(function () {
-    Route::get('/register', [ParticipantController::class, 'showRegistrationForm'])->name('participant.register.form');
-    Route::post('/register', [ParticipantController::class, 'register'])->name('participant.register')->middleware('throttle:10,1'); // SECURITY: Rate limit 10/min
+    // Registration routes are NOW PUBLIC (moved below)
+    
     Route::get('/dashboard/{id}', [ParticipantController::class, 'showDashboard'])->name('participant.dashboard');
     
     Route::get('/card/preview/{id}', [PDFController::class, 'showTestCardPreview'])->name('participant.card.preview');
@@ -45,6 +45,12 @@ Route::middleware(['participant'])->prefix('participant')->group(function () {
     Route::post('/retake/{id}', [ParticipantController::class, 'processRetake'])->name('participant.retake.process')->middleware('throttle:5,1'); // SECURITY: Rate limit 5/min
     Route::get('/resubmit-payment/{id}', [ParticipantController::class, 'showResubmitPaymentForm'])->name('participant.resubmit.payment.form');
     Route::post('/resubmit-payment/{id}', [ParticipantController::class, 'processResubmitPayment'])->name('participant.resubmit.payment')->middleware('throttle:3,1'); // SECURITY: Rate limit 3/min
+});
+
+// PUBLIC Participant Routes (Registration & Login)
+Route::prefix('participant')->group(function () {
+    Route::get('/register', [ParticipantController::class, 'showRegistrationForm'])->name('participant.register.form');
+    Route::post('/register', [ParticipantController::class, 'register'])->name('participant.register')->middleware('throttle:10,1');
 });
 
 // SECURITY: Secure file download with authorization - accessible by both participant and admin

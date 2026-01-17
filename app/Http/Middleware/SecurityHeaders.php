@@ -53,7 +53,7 @@ class SecurityHeaders
         // - USE NONCE for inline scripts/styles to resolve "unsafe-inline"
         $csp = "default-src 'self'; " .
                "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net http://127.0.0.1:5173 http://localhost:5173; " .
-               "style-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com http://127.0.0.1:5173 http://localhost:5173; " .
+               "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com http://127.0.0.1:5173 http://localhost:5173; " .
                "img-src 'self' data: https:; " .
                "font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; " .
                "connect-src 'self' http://127.0.0.1:5173 http://localhost:5173 ws://127.0.0.1:5173 ws://localhost:5173;";

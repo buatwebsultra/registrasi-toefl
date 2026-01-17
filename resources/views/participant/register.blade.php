@@ -139,7 +139,7 @@
 
                             <div class="d-flex justify-content-between mt-4">
                                 <div></div> <!-- Empty div for spacing -->
-                                <button type="button" class="btn btn-primary" onclick="nextStep(1)">Lanjut ke Informasi Akademik</button>
+                                <button type="button" class="btn btn-primary btn-next" data-step="1">Lanjut ke Informasi Akademik</button>
                             </div>
                         </div>
 
@@ -238,8 +238,8 @@
 
 
                             <div class="d-flex justify-content-between mt-4">
-                                <button type="button" class="btn btn-secondary" onclick="prevStep(2)">Kembali</button>
-                                <button type="button" class="btn btn-primary" onclick="nextStep(2)">Lanjut ke Dokumen</button>
+                                <button type="button" class="btn btn-secondary btn-prev" data-step="2">Kembali</button>
+                                <button type="button" class="btn btn-primary btn-next" data-step="2">Lanjut ke Dokumen</button>
                             </div>
                         </div>
 
@@ -276,8 +276,8 @@
                             </div>
 
                             <div class="d-flex justify-content-between mt-4">
-                                <button type="button" class="btn btn-secondary" onclick="prevStep(3)">Kembali</button>
-                                <button type="button" class="btn btn-primary" onclick="nextStep(3)">Lanjut ke Akun</button>
+                                <button type="button" class="btn btn-secondary btn-prev" data-step="3">Kembali</button>
+                                <button type="button" class="btn btn-primary btn-next" data-step="3">Lanjut ke Akun</button>
                             </div>
                         </div>
 
@@ -321,7 +321,7 @@
                             </div>
 
                             <div class="d-flex justify-content-between mt-4">
-                                <button type="button" class="btn btn-secondary" onclick="prevStep(4)">Kembali</button>
+                                <button type="button" class="btn btn-secondary btn-prev" data-step="4">Kembali</button>
                                 <button type="submit" class="btn btn-success btn-lg px-4">Daftar Sekarang</button>
                             </div>
                         </div>
@@ -332,8 +332,23 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ $csp_nonce ?? '' }}">
 document.addEventListener('DOMContentLoaded', function() {
+    // Attach event listeners for Next/Prev buttons (CSP Compliant)
+    document.querySelectorAll('.btn-next').forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.getAttribute('data-step'));
+            nextStep(currentStep);
+        });
+    });
+
+    document.querySelectorAll('.btn-prev').forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.getAttribute('data-step'));
+            prevStep(currentStep);
+        });
+    });
+
     const facultySelect = document.getElementById('faculty_id');
     const studyProgramSelect = document.getElementById('study_program_id');
     const usernameInput = document.getElementById('username');
