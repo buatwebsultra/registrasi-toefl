@@ -565,7 +565,7 @@
                         <a href="{{ route('participant.resubmit.payment.form', $participant->id) }}" class="btn btn-premium btn-warning">
                             <i class="fas fa-cloud-upload-alt me-2"></i>Upload Ulang Pembayaran
                         </a>
-                    @elseif(is_null($participant->test_score) || !$participant->is_score_validated)
+                    @elseif($participant->attendance !== 'absent' && (is_null($participant->test_score) || !$participant->is_score_validated))
                         <button class="btn btn-premium btn-light text-muted" disabled>
                             <i class="fas fa-history me-2"></i>Belum Bisa Daftar Ulang
                         </button>
