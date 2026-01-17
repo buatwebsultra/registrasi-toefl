@@ -152,33 +152,39 @@
             </div>
         </div>
 
-        <script>
-        document.getElementById('verifyDeleteAllBtn').addEventListener('click', function() {
-            const expectedText = "HAPUS {{ $totalParticipants }} PESERTA";
-            const inputText = document.getElementById('confirmDeleteAll').value;
-            const errorElement = document.getElementById('confirmDeleteAllError');
-            const confirmForm = document.getElementById('clearAllParticipantsForm');
-            const confirmBtn = document.getElementById('deleteAllConfirmedBtn');
+        <script nonce="{{ $csp_nonce ?? '' }}">
+        document.addEventListener('DOMContentLoaded', function() {
+            const verifyBtn = document.getElementById('verifyDeleteAllBtn');
+            if(verifyBtn) {
+                verifyBtn.addEventListener('click', function() {
+                    const expectedText = "HAPUS {{ $totalParticipants }} PESERTA";
+                    const inputText = document.getElementById('confirmDeleteAll').value;
+                    const errorElement = document.getElementById('confirmDeleteAllError');
+                    const confirmForm = document.getElementById('clearAllParticipantsForm');
+                    const confirmBtn = document.getElementById('deleteAllConfirmedBtn');
 
-            if (inputText.trim() === expectedText) {
-                errorElement.classList.add('d-none');
-                confirmForm.classList.remove('d-none');
-                confirmBtn.classList.remove('d-none');
-                // Disable the verify button to prevent double action
-                this.disabled = true;
-            } else {
-                errorElement.classList.remove('d-none');
-                confirmForm.classList.add('d-none');
-                confirmBtn.classList.add('d-none');
+                    if (inputText.trim() === expectedText) {
+                        errorElement.classList.add('d-none');
+                        confirmForm.classList.remove('d-none');
+                        confirmBtn.classList.remove('d-none');
+                        this.disabled = true;
+                    } else {
+                        errorElement.classList.remove('d-none');
+                        confirmForm.classList.add('d-none');
+                        confirmBtn.classList.add('d-none');
+                    }
+                });
             }
-        });
 
-        // Reset modal when closed
-        document.getElementById('deleteAllModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('confirmDeleteAll').value = '';
-            document.getElementById('confirmDeleteAllError').classList.add('d-none');
-            document.getElementById('clearAllParticipantsForm').classList.add('d-none');
-            document.getElementById('verifyDeleteAllBtn').disabled = false;
+            const deleteModal = document.getElementById('deleteAllModal');
+            if(deleteModal) {
+                deleteModal.addEventListener('hidden.bs.modal', function() {
+                    document.getElementById('confirmDeleteAll').value = '';
+                    document.getElementById('confirmDeleteAllError').classList.add('d-none');
+                    document.getElementById('clearAllParticipantsForm').classList.add('d-none');
+                    if(verifyBtn) verifyBtn.disabled = false;
+                });
+            }
         });
         </script>
         <div class="table-responsive">
@@ -238,8 +244,10 @@
                                 <span class="badge bg-secondary">-</span>
                             @endif
                             <button type="button" 
-                                    class="btn btn-sm btn-link p-0 ms-1" 
-                                    onclick="openAttendanceModal({{ $participant->id }}, '{{ $participant->name }}', '{{ $participant->attendance }}')"
+                                    class="btn btn-sm btn-link p-0 ms-1 btn-open-attendance" 
+                                    data-id="{{ $participant->id }}"
+                                    data-name="{{ $participant->name }}"
+                                    data-attendance="{{ $participant->attendance }}"
                                     {{ $participant->passed ? 'disabled title="Tidak dapat mengubah kehadiran peserta yang sudah Lulus"' : ($participant->status !== 'confirmed' ? 'disabled title="Peserta belum terkonfirmasi"' : '') }}>
                                 <i class="fas fa-edit {{ ($participant->passed || $participant->status !== 'confirmed') ? 'text-muted' : '' }}"></i>
                             </button>
@@ -248,14 +256,16 @@
                             <a href="{{ route('admin.participant.details', $participant->id) }}" class="btn btn-info btn-sm me-1">Lihat Detail</a>
                             @if(Auth::user()->isOperator())
                             <button type="button" 
-                                    class="btn btn-warning btn-sm me-1" 
-                                    onclick="openResetPasswordModal({{ $participant->id }}, '{{ $participant->name }}', '{{ $participant->username }}')">
+                                    class="btn btn-warning btn-sm me-1 btn-reset-password" 
+                                    data-id="{{ $participant->id }}"
+                                    data-name="{{ $participant->name }}"
+                                    data-username="{{ $participant->username }}">
                                 <i class="fas fa-key"></i> Reset
                             </button>
-                            <form action="{{ route('admin.participant.delete', $participant->id) }}" method="POST" class="d-inline">
+                            <form action="{{ route('admin.participant.delete', $participant->id) }}" method="POST" class="d-inline form-delete-participant">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus peserta ini?')">Hapus</button>
+                                <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
                             </form>
                             @endif
                         </td>
@@ -294,17 +304,17 @@
                     @method('PUT')
                     
                     <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-outline-success p-3 text-start" onclick="setAttendance('present')">
+                        <button type="button" class="btn btn-outline-success p-3 text-start btn-set-attendance" data-status="present">
                             <i class="fas fa-check-circle me-2"></i> <strong>Hadir</strong>
                             <div class="small text-muted ms-4">Peserta hadir dan mengikuti ujian.</div>
                         </button>
                         
-                        <button type="button" class="btn btn-outline-danger p-3 text-start" onclick="setAttendance('absent')">
+                        <button type="button" class="btn btn-outline-danger p-3 text-start btn-set-attendance" data-status="absent">
                             <i class="fas fa-times-circle me-2"></i> <strong>Tidak Hadir</strong>
                             <div class="small text-muted ms-4">Peserta tidak hadir (Otomatis Gagal).</div>
                         </button>
                         
-                        <button type="button" class="btn btn-outline-warning p-3 text-start" onclick="setAttendance('permission')">
+                        <button type="button" class="btn btn-outline-warning p-3 text-start btn-set-attendance" data-status="permission">
                             <i class="fas fa-clock me-2"></i> <strong>Izin (Reschedule)</strong>
                             <div class="small text-muted ms-4">Peserta minta pindah jadwal.</div>
                         </button>
@@ -363,24 +373,89 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" onclick="submitReschedule()">Pindahkan Peserta</button>
+                <button type="button" class="btn btn-primary" id="btn-submit-reschedule">Pindahkan Peserta</button>
             </div>
         </div>
     </div>
 </div>
 
-<script>
+<script nonce="{{ $csp_nonce ?? '' }}">
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 2. Open Attendance Modal
+        document.querySelectorAll('.btn-open-attendance').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                openAttendanceModal(id, name);
+            });
+        });
+
+        // 3. Set Attendance Buttons
+        document.querySelectorAll('.btn-set-attendance').forEach(btn => {
+            btn.addEventListener('click', function() {
+                setAttendance(this.getAttribute('data-status'));
+            });
+        });
+
+        // 4. Submit Reschedule
+        const btnSubmitReschedule = document.getElementById('btn-submit-reschedule');
+        if(btnSubmitReschedule) {
+            btnSubmitReschedule.addEventListener('click', function() {
+                document.getElementById('rescheduleForm').submit();
+            });
+        }
+
+        // 5. Open Reset Password Modal
+        document.querySelectorAll('.btn-reset-password').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const username = this.getAttribute('data-username');
+                openResetPasswordModal(id, name, username);
+            });
+        });
+
+        // 6. Delete Participant Confirm
+        document.querySelectorAll('.form-delete-participant').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if(!confirm('Apakah Anda yakin ingin menghapus peserta ini?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // 7. Bulk Validation
+        const selectAll = document.getElementById('selectAll');
+        if(selectAll) {
+            selectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.participant-checkbox');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                toggleBulkButton();
+            });
+        }
+
+        document.querySelectorAll('.participant-checkbox').forEach(cb => {
+            cb.addEventListener('change', toggleBulkButton);
+        });
+
+        const bulkValidateBtn = document.getElementById('bulkValidateBtn');
+        if(bulkValidateBtn) {
+            bulkValidateBtn.addEventListener('click', function() {
+                if (confirm('Apakah Anda yakin ingin memvalidasi semua nilai yang dipilih?')) {
+                    document.getElementById('bulkValidateForm').submit();
+                }
+            });
+        }
+
+    }); // End DOMContentLoaded
+
     let currentParticipantId = null;
 
-    function openAttendanceModal(id, name, currentStatus) {
+    function openAttendanceModal(id, name) {
         currentParticipantId = id;
         document.getElementById('attendanceParticipantName').textContent = name;
-        
-        // Reset buttons style if you want to highlight current status
-        // ...
-        
-        const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
-        modal.show();
+        new bootstrap.Modal(document.getElementById('attendanceModal')).show();
     }
 
     function setAttendance(status) {
@@ -388,78 +463,41 @@
         const modal = bootstrap.Modal.getInstance(modalEl);
         
         if (status === 'permission') {
-            // Close attendance modal and open reschedule modal
             modal.hide();
-            
-            // Set form action for reschedule
+            // Open Reschedule Modal
+            // We need to set the action of reschedule form?
+            // The original code set it to /participant/{id}/reschedule
             const form = document.getElementById('rescheduleForm');
             form.action = `/admin/participant/${currentParticipantId}/reschedule`;
             
-            // Mark attendance as permission first via AJAX, then show modal? 
-            // Better flow: Just show modal. The reschedule action implies permission.
-            // BUT requirement: "jika peserta izin admin memindahkan jadwal". 
-            // So let's open reschedule modal.
-            
-            const rescheduleModal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
-            rescheduleModal.show();
-            
-            // We should also update attendance status to 'permission' in background or as part of reschedule?
-            // Let's update attendance first to permission via AJAX, then reschedule?
-            // Or just Reschedule Controller handles everything? 
-            // Controller rescheduleParticipant updates attendance to null/reset.
-            // So we don't strictly need to set 'permission' in DB if we move them immediately.
-            // However, the user might want to just mark as permission and reschedule LATER?
-            // "jika peserta tidak hadir berdasarkan jadwal tes maka peserta gagal" -> handled by absent
-            // "jika peserta izin admin memindahkan jadwal" -> handled here.
-            
+            new bootstrap.Modal(document.getElementById('rescheduleModal')).show();
             return;
         }
 
-        // For Present/Absent
         const form = document.getElementById('attendanceForm');
         form.action = `/admin/participant/${currentParticipantId}/attendance`;
         document.getElementById('attendanceInput').value = status;
-        
-        // Submit
         form.submit();
-    }
-
-    function submitReschedule() {
-        document.getElementById('rescheduleForm').submit();
     }
 
     function openResetPasswordModal(id, name, username) {
         document.getElementById('resetParticipantId').value = id;
         document.getElementById('resetParticipantName').textContent = name;
         document.getElementById('resetParticipantUsername').textContent = username;
-        
-        const modal = new bootstrap.Modal(document.getElementById('resetPasswordListModal'));
-        modal.show();
+        new bootstrap.Modal(document.getElementById('resetPasswordListModal')).show();
     }
-
-    // Bulk validation logic
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.participant-checkbox');
-        checkboxes.forEach(cb => cb.checked = this.checked);
-        toggleBulkButton();
-    });
-
-    document.querySelectorAll('.participant-checkbox').forEach(cb => {
-        cb.addEventListener('change', toggleBulkButton);
-    });
 
     function toggleBulkButton() {
         const btn = document.getElementById('bulkValidateBtn');
         const selected = document.querySelectorAll('.participant-checkbox:checked').length;
         if (selected > 0) {
-            btn.classList.remove('d-none');
+            btn.classList.remove('d-none'); // This relies on d-none class being available
         } else {
             btn.classList.add('d-none');
         }
         
-        // Update form with selected IDs
         const form = document.getElementById('bulkValidateForm');
-        // Clear existing inputs
+        // Clear existing
         form.querySelectorAll('input[name="participant_ids[]"]').forEach(el => el.remove());
         
         document.querySelectorAll('.participant-checkbox:checked').forEach(cb => {
@@ -470,14 +508,6 @@
             form.appendChild(input);
         });
     }
-
-    function submitBulkValidation() {
-        if (confirm('Apakah Anda yakin ingin memvalidasi semua nilai yang dipilih?')) {
-            document.getElementById('bulkValidateForm').submit();
-        }
-    }
-
-    document.getElementById('bulkValidateBtn')?.addEventListener('click', submitBulkValidation);
 </script>
 
 <!-- Reset Password Modal (List) -->

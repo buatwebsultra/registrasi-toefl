@@ -224,7 +224,7 @@
             <div class="col-md-5 d-flex justify-content-center justify-content-md-end">
                 <div class="d-flex gap-2">
                     <a href="#"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                       id="logout-link"
                        class="btn btn-light btn-premium text-danger">
                         <i class="fas fa-sign-out-alt me-2"></i>Keluar
                     </a>
@@ -236,6 +236,19 @@
         </div>
     </div>
 </div>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Logout handler
+        const logoutLink = document.getElementById('logout-link');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('logout-form').submit();
+            });
+        }
+    });
+</script>
 
 <!-- Show success message with account details -->
 @if(session('success') || session('account_details'))
