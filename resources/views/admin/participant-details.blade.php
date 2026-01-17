@@ -218,8 +218,8 @@
         <!-- Header -->
         <div class="id-header">
             <div class="university-brand">
-                <img src="{{ asset('images/logo-uho.png') }}" class="university-logo" alt="Logo">
-                <div>
+            <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}" class="university-logo" alt="Logo" style="width: auto; height: 40px; border-radius: 0; background: transparent;">
+            <div>
                     <div class="fw-bold text-uppercase" style="font-size: 0.8rem; opacity: 0.9;">Pusat Bahasa</div>
                     <div class="fw-bold" style="font-size: 1.1rem;">TOEFL Registration</div>
                 </div>
@@ -270,7 +270,7 @@
 
                         <div class="col-md-6 data-group">
                             <div class="data-label">Tempat & Tanggal Lahir</div>
-                            <div class="data-value">{{ $participant->birth_place }}, {{ $participant->birth_date->format('d M Y') }}</div>
+                            <div class="data-value">{{ $participant->birth_place }}, {{ $participant->birth_date ? $participant->birth_date->format('d M Y') : '-' }}</div>
                         </div>
                         <div class="col-md-6 data-group">
                             <div class="data-label">Nomor WhatsApp</div>
@@ -290,7 +290,7 @@
 
                         <div class="col-md-6 data-group">
                             <div class="data-label">Jurusan / Prodi</div>
-                            <div class="data-value">{{ $participant->studyProgram->name }}</div>
+                            <div class="data-value">{{ optional($participant->studyProgram)->name ?? '-' }}</div>
                             <div class="small text-muted">{{ $participant->faculty }}</div>
                         </div>
                         
@@ -409,7 +409,7 @@
                             <form action="{{ route('admin.participant.score.update', $participant->id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
-                                <input type="hidden" name="test_date" value="{{ old('test_date', $participant->test_date ? $participant->test_date->format('Y-m-d') : $participant->schedule->date->format('Y-m-d')) }}">
+                                <input type="hidden" name="test_date" value="{{ old('test_date', $participant->test_date ? $participant->test_date->format('Y-m-d') : (optional($participant->schedule)->date ? $participant->schedule->date->format('Y-m-d') : now()->format('Y-m-d'))) }}">
                                 <input type="hidden" name="test_format" value="PBT">
                                 
                                 <div class="row g-2 mb-3">
@@ -452,11 +452,92 @@
             @endif
         </div>
     </div>
-    
-    <!-- Modals -->
+
+    <!-- Test History Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="secondary-section">
+                <div class="secondary-header" data-bs-toggle="collapse" data-bs-target="#historyCollapse">
+                    <span><i class="fas fa-history me-2 text-info"></i>Riwayat Tes Peserta</span>
+                    <i class="fas fa-chevron-down text-muted"></i>
+                </div>
+                <div class="collapse show" id="historyCollapse">
+                    <div class="secondary-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="px-4 py-3 text-muted small text-uppercase fw-bold">Tanggal Tes</th>
+                                        <th class="px-4 py-3 text-muted small text-uppercase fw-bold">Jenis Tes</th>
+                                        <th class="px-4 py-3 text-muted small text-uppercase fw-bold">Skor</th>
+                                        <th class="px-4 py-3 text-muted small text-uppercase fw-bold">Status</th>
+                                        <th class="px-4 py-3 text-muted small text-uppercase fw-bold text-end">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($testHistory as $history)
+                                    <tr class="{{ $history->id == $participant->id ? 'bg-primary bg-opacity-10' : '' }}">
+                                        <td class="px-4 py-3">
+                                            <div class="fw-bold text-dark">
+                                                {{ optional($history->schedule)->date ? $history->schedule->date->format('d M Y') : ($history->test_date ? $history->test_date->format('d M Y') : '-') }}
+                                            </div>
+                                            <div class="small text-muted">
+                                                {{ optional($history->schedule)->time ? \Carbon\Carbon::parse($history->schedule->time)->format('H:i') . ' WITA' : '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="badge bg-light text-dark border">{{ $history->test_category }}</span>
+                                            @if($history->id == $participant->id)
+                                                <span class="badge bg-primary ms-1">Current</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            @if($history->test_score)
+                                                <span class="fw-bold {{ $history->passed ? 'text-success' : 'text-danger' }}">
+                                                    {{ $history->test_score }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            @if($history->status == 'confirmed')
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Terkonfirmasi</span>
+                                            @elseif($history->status == 'pending')
+                                                <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">Pending</span>
+                                            @else
+                                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">Ditolak</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-end">
+                                            @if($history->id != $participant->id)
+                                                <a href="{{ route('admin.participant.details', $history->id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                    Lihat
+                                                </a>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-history fa-2x mb-3 d-block opacity-50"></i>
+                                            Belum ada riwayat tes lainnya.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     @include('admin.partials.modals-participant-details')
 
 </div>
+
+@endsection
 
 @section('scripts')
 <script nonce="{{ $csp_nonce ?? '' }}">
@@ -502,6 +583,4 @@ if (previewModal) {
     });
 }
 </script>
-@endsection
-
 @endsection

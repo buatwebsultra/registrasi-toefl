@@ -13,8 +13,11 @@
                 </div>
                 <div class="bg-white p-3 rounded-3 shadow-sm mb-3">
                     <label class="small text-muted fw-bold text-uppercase">Jadwal & Ruangan</label>
-                    <div class="fs-5 fw-bold text-dark">{{ $participant->schedule->room }}</div>
-                    <div class="text-primary">{{ $participant->schedule->date->format('d F Y') }} • {{ \Carbon\Carbon::parse($participant->schedule->time)->format('H:i') }} WITA</div>
+                    <div class="fs-5 fw-bold text-dark">{{ optional($participant->schedule)->room ?? 'Jadwal Tidak Tersedia' }}</div>
+                    <div class="text-primary">
+                        {{ optional($participant->schedule)->date ? $participant->schedule->date->format('d F Y') : '-' }} • 
+                        {{ optional($participant->schedule)->time ? \Carbon\Carbon::parse($participant->schedule->time)->format('H:i') . ' WITA' : '-' }}
+                    </div>
                 </div>
                 <div class="bg-white p-3 rounded-3 shadow-sm">
                     <label class="small text-muted fw-bold text-uppercase">Status Pendaftaran</label>
@@ -64,7 +67,7 @@
                 <h5 class="modal-title fw-bold"><i class="fas fa-key me-2"></i>Reset Password</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ route('admin.participant.reset-password') }}" method="POST">
+            <form action="{{ route('admin.reset.participant.password') }}" method="POST">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="participant_id" value="{{ $participant->id }}">
