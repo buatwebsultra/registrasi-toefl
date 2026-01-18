@@ -300,6 +300,28 @@
             }
         }
 
+        .step-number-container {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #0d6efd 0%, #00d2ff 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            border: 4px solid #fff;
+            transition: transform 0.3s ease;
+        }
+
+        .card-hover:hover .step-number-container {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .rounded-4 {
+            border-radius: 1.5rem !important;
+        }
 
     </style>
 </head>
@@ -311,7 +333,7 @@
                 <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}"
                      alt="Logo UHO dan Diktisaintek"
                      class="me-3 navbar-logo">
-                <span>TOEFL Registration</span>
+                <span>SIPENA UPA BAHASA UHO</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>

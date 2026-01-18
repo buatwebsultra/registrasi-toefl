@@ -107,33 +107,33 @@
         <div class="col-md-12">
             <div class="card border-0 shadow-lg bg-light">
                 <div class="card-body p-5">
-                    <h5 class="card-title text-center fw-bold mb-5 fs-3">Cara Pendaftaran</h5>
+                    <h5 class="card-title text-center fw-bold mb-5 fs-3 text-primary">Cara Pendaftaran</h5>
                     <div class="row g-4">
-                        <div class="col-md-4 text-center">
-                            <div class="p-4">
-                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white mb-4 mx-auto" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                        <div class="col-md-4">
+                            <div class="p-4 bg-white rounded-4 shadow-sm h-100 card-hover text-center border">
+                                <div class="step-number-container mb-4 mx-auto shadow">
                                     1
                                 </div>
-                                <h6 class="fw-bold">Pilih Jadwal</h6>
-                                <p class="mb-0 text-muted">Pilih jadwal ujian TOEFL yang tersedia sesuai ketersediaan</p>
+                                <h6 class="fw-bold fs-5 mb-3">Pilih Jadwal</h6>
+                                <p class="mb-0 text-muted">Pilih jadwal ujian TOEFL yang tersedia di sistem sesuai dengan ketersediaan kuota yang ada.</p>
                             </div>
                         </div>
-                        <div class="col-md-4 text-center">
-                            <div class="p-4">
-                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white mb-4 mx-auto" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                        <div class="col-md-4">
+                            <div class="p-4 bg-white rounded-4 shadow-sm h-100 card-hover text-center border">
+                                <div class="step-number-container mb-4 mx-auto shadow">
                                     2
                                 </div>
-                                <h6 class="fw-bold">Isi Data</h6>
-                                <p class="mb-0 text-muted">Lengkapi formulir pendaftaran dengan data diri yang benar</p>
+                                <h6 class="fw-bold fs-5 mb-3">Isi Data Diri</h6>
+                                <p class="mb-0 text-muted">Lengkapi formulir pendaftaran dengan data diri yang valid serta unggah berkas yang diperlukan.</p>
                             </div>
                         </div>
-                        <div class="col-md-4 text-center">
-                            <div class="p-4">
-                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white mb-4 mx-auto" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                        <div class="col-md-4">
+                            <div class="p-4 bg-white rounded-4 shadow-sm h-100 card-hover text-center border">
+                                <div class="step-number-container mb-4 mx-auto shadow">
                                     3
                                 </div>
-                                <h6 class="fw-bold">Selesai</h6>
-                                <p class="mb-0 text-muted">Unggah dokumen yang diperlukan dan selesaikan proses pendaftaran</p>
+                                <h6 class="fw-bold fs-5 mb-3">Konfirmasi & Selesai</h6>
+                                <p class="mb-0 text-muted">Selesaikan proses pendaftaran dan tunggu verifikasi administrator untuk mendapatkan kartu ujian.</p>
                             </div>
                         </div>
                     </div>
