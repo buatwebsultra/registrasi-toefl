@@ -456,8 +456,8 @@
                                 </div>
                                 <div class="row g-4 align-items-center">
                                     <div class="col-md-4 text-center border-end-md">
-                                        <div class="p-4 bg-primary bg-opacity-5 rounded-circle d-inline-block mb-3" style="width: 140px; height: 140px; line-height: 90px;">
-                                            <div class="display-4 fw-black text-primary">{{ number_format($participant->test_score, 0, '', '') }}</div>
+                                        <div class="p-4 bg-primary bg-opacity-5 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 140px; height: 140px;">
+                                            <div class="display-4 fw-bold text-dark mb-0">{{ number_format($participant->test_score, 0, '', '') }}</div>
                                         </div>
                                         <h6 class="text-muted text-uppercase small fw-bold">Skor Total</h6>
                                     </div>
@@ -635,7 +635,7 @@
                                         <td class="text-center">
                                             @if($history->test_score && $history->is_score_validated)
                                                 <div class="d-inline-block text-center">
-                                                    <div class="h5 mb-0 fw-bold text-primary">{{ number_format($history->test_score, 0, '', '') }}</div>
+                                                    <div class="h5 mb-0 fw-bold text-dark">{{ number_format($history->test_score, 0, '', '') }}</div>
                                                     <span class="badge bg-{{ $history->passed ? 'success' : 'warning' }} bg-opacity-10 text-{{ $history->passed ? 'success' : 'warning' }} rounded-pill small px-2">
                                                         {{ $history->passed ? 'PASS' : 'FAIL' }}
                                                     </span>
