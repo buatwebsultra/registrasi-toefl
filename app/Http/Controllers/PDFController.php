@@ -93,6 +93,26 @@ class PDFController extends Controller
         return view('participant.test-card', compact('participant', 'verificationUrl'));
     }
 
+    public function showCertificate($id, $token)
+    {
+        // This method is for certificate QR code verification
+        $participant = Participant::with(['schedule', 'studyProgram'])->findOrFail($id);
+        
+        // Verify token for privacy/security
+        if ($participant->verification_token !== $token) {
+            abort(404, 'Tautan verifikasi sertifikat tidak valid.');
+        }
+
+        // Verify that the participant has a score and is validated
+        if (!$participant->test_score || !$participant->is_score_validated) {
+            abort(403, 'Sertifikat belum tersedia atau belum divalidasi.');
+        }
+
+        $verificationUrl = route('participant.certificate.show', ['id' => $participant->id, 'token' => $participant->verification_token]);
+
+        return view('participant.certificate-verification', compact('participant', 'verificationUrl'));
+    }
+
     public function terbilang($number)
     {
         $number = (int)$number;
@@ -184,7 +204,7 @@ class PDFController extends Controller
         }
 
         // Generate verification URL for the certificate
-        $verificationUrl = route('participant.card.show', ['id' => $participant->id, 'token' => $participant->verification_token]);
+        $verificationUrl = route('participant.certificate.show', ['id' => $participant->id, 'token' => $participant->verification_token]);
 
         $pdf = Pdf::loadView('participant.certificate', compact('participant', 'verificationUrl'));
 

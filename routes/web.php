@@ -59,6 +59,7 @@ Route::get('/participant/file/{id}/{type}', [ParticipantController::class, 'down
 
 // Public route for QR code verification (accessible without authentication)
 Route::get('/participant/card/{id}/{token}', [PDFController::class, 'showTestCard'])->name('participant.card.show');
+Route::get('/participant/certificate/verify/{id}/{token}', [PDFController::class, 'showCertificate'])->name('participant.certificate.show');
 
 // Admin routes
 Route::middleware(['operator'])->prefix('admin')->group(function () {
