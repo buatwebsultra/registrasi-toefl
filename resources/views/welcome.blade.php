@@ -124,7 +124,7 @@
                                     2
                                 </div>
                                 <h6 class="fw-bold fs-5 mb-3">Isi Data Diri</h6>
-                                <p class="mb-0 text-muted">Lengkapi formulir pendaftaran dengan data diri yang valid serta unggah berkas yang diperlukan.</p>
+                                <p class="mb-0 text-muted">Lengkapi FORMULIR pendaftaran dengan data diri yang valid, serta unggah berkas (Bukti Pembayaran, KTP, Pas Photo) pastikan jelas dan tidak buram untuk divalidasi.</p>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -133,7 +133,7 @@
                                     3
                                 </div>
                                 <h6 class="fw-bold fs-5 mb-3">Konfirmasi & Selesai</h6>
-                                <p class="mb-0 text-muted">Selesaikan proses pendaftaran dan tunggu verifikasi administrator untuk mendapatkan kartu ujian.</p>
+                                <p class="mb-0 text-muted">Selesaikan proses pendaftaran catat username dan password anda dan tunggu verifikasi dari UPA Bahasa untuk mendapatkan kartu ujian/sertifikat di dashboard.</p>
                             </div>
                         </div>
                     </div>
