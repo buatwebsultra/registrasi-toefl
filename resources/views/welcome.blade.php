@@ -162,10 +162,10 @@
                                     @if($item->media_type == 'image')
                                         <img src="{{ $item->url }}" 
                                              alt="Background" 
-                                             style="width: 100%; height: 100%; object-fit: cover; filter: blur(20px) brightness(0.6); transform: scale(1.1);">
+                                             style="width: 100%; height: 100%; object-fit: cover; filter: blur(100px) brightness(0.4); transform: scale(1.1);">
                                     @else
                                         <video src="{{ $item->url }}" 
-                                               style="width: 100%; height: 100%; object-fit: cover; filter: blur(20px) brightness(0.6); transform: scale(1.1);" 
+                                               style="width: 100%; height: 100%; object-fit: cover; filter: blur(100px) brightness(0.4); transform: scale(1.1);" 
                                                muted loop autoplay playsinline></video>
                                     @endif
                                 </div>
