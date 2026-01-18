@@ -157,26 +157,13 @@
                     @foreach($galleryItems as $key => $item)
                         <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
                             <div class="ratio ratio-16x9 position-relative overflow-hidden" style="max-height: 500px;">
-                                <!-- Blurred Background Layer -->
-                                <div class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 1;">
-                                    @if($item->media_type == 'image')
-                                        <img src="{{ $item->url }}" 
-                                             alt="Background" 
-                                             style="width: 100%; height: 100%; object-fit: cover; filter: blur(100px) brightness(0.4); transform: scale(1.1);">
-                                    @else
-                                        <video src="{{ $item->url }}" 
-                                               style="width: 100%; height: 100%; object-fit: cover; filter: blur(100px) brightness(0.4); transform: scale(1.1);" 
-                                               muted loop autoplay playsinline></video>
-                                    @endif
-                                </div>
 
-                                <!-- Main Content Layer -->
-                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="z-index: 2;">
+                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
                                     @if($item->media_type == 'image')
                                         <img src="{{ $item->url }}" 
                                              class="d-block gallery-item-trigger" 
                                              alt="{{ $item->title ?? 'Gallery Image' }}" 
-                                             style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; cursor: pointer; box-shadow: 0 0 20px rgba(0,0,0,0.5);"
+                                             style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; cursor: pointer;"
                                              data-bs-toggle="modal" 
                                              data-bs-target="#galleryModal"
                                              data-type="image"
@@ -186,7 +173,7 @@
                                         <video src="{{ $item->url }}" 
                                                class="d-block gallery-item-trigger" 
                                                controls 
-                                               style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; cursor: pointer; box-shadow: 0 0 20px rgba(0,0,0,0.5);"
+                                               style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; cursor: pointer;"
                                                data-bs-toggle="modal" 
                                                data-bs-target="#galleryModal"
                                                data-type="video"
