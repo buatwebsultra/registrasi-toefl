@@ -10,11 +10,25 @@
         <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary mb-3">Kembali ke Dashboard</a>
     </div>
 </div>
-
+@if(session('success'))
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        </div>
     </div>
-</div>
+@endif
 
-<div class="row mb-4">
+@if(session('error'))
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        </div>
+    </div>
+@endif
     <div class="col-md-12">
         <div class="card">
             <div class="card-body">
@@ -112,31 +126,6 @@
     </div>
 </div>
 
-@section('scripts')
-<script nonce="{{ $csp_nonce ?? '' }}">
-    document.addEventListener('DOMContentLoaded', function() {
-        const scheduleSelect = document.getElementById('schedule_id');
-        if (scheduleSelect) {
-            scheduleSelect.addEventListener('change', function() {
-                this.form.submit();
-            });
-        }
-        
-        // WhatsApp Contact Listener
-        document.querySelectorAll('.btn-whatsapp-contact').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const phone = this.getAttribute('data-phone');
-                if (phone) {
-                    const cleanedNumber = phone.replace(/\D/g, '');
-                    let waNumber = cleanedNumber.startsWith('62') ? cleanedNumber : (cleanedNumber.startsWith('0') ? '62' + cleanedNumber.substring(1) : '62' + cleanedNumber);
-                    window.open('https://wa.me/' + waNumber, '_blank');
-                }
-            });
-        });
-    });
-</script>
-@endsection
 
 <!-- Validation Modals -->
 @foreach($pendingParticipants as $participant)
@@ -373,6 +362,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Schedule Filter Listener
+        const scheduleSelect = document.getElementById('schedule_id');
+        if (scheduleSelect) {
+            scheduleSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+
         // WhatsApp Contact Listener
         document.querySelectorAll('.btn-whatsapp-contact').forEach(btn => {
             btn.addEventListener('click', function(e) {
