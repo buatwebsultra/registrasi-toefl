@@ -576,5 +576,25 @@
         let waNumber = cleanedNumber.startsWith('62') ? cleanedNumber : (cleanedNumber.startsWith('0') ? '62' + cleanedNumber.substring(1) : '62' + cleanedNumber);
         window.open('https://wa.me/' + waNumber, '_blank');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bulk Validate Button Listener
+        const bulkBtn = document.getElementById('bulkValidateBtn');
+        if (bulkBtn) {
+            bulkBtn.addEventListener('click', function() {
+                const form = document.getElementById('bulkValidateForm');
+                if (form) form.submit();
+            });
+        }
+        
+        // Individual Validate & Publish Button Listener
+        const validateBtn = document.getElementById('btn-validate-publish');
+        if (validateBtn) {
+            validateBtn.addEventListener('click', function() {
+                const form = document.getElementById('validate-form');
+                if (form) form.submit();
+            });
+        }
+    });
 </script>
 @endsection

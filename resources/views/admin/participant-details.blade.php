@@ -435,7 +435,7 @@
                                 <button type="submit" class="btn btn-success w-100 fw-bold">Simpan Nilai</button>
                                 
                                 @if(!$participant->is_score_validated && $participant->test_score)
-                                    <button type="button" onclick="document.getElementById('validate-form').submit()" class="btn btn-outline-primary w-100 mt-2">Validasi & Publish</button>
+                                    <button type="button" id="btn-validate-publish" class="btn btn-outline-primary w-100 mt-2">Validasi & Publish</button>
                                 @endif
                             </form>
                             @if(!$participant->is_score_validated)
@@ -558,6 +558,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Validate & Publish Button Listener
+    const validateBtn = document.getElementById('btn-validate-publish');
+    if (validateBtn) {
+        validateBtn.addEventListener('click', function() {
+            const form = document.getElementById('validate-form');
+            if (form) form.submit();
+        });
+    }
 });
 
 function calculateTotalScore() {
