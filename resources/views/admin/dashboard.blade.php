@@ -438,6 +438,11 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
+                                    @if($schedule->pending_count > 0)
+                                        <a href="{{ route('admin.participants.list', ['id' => $schedule->id, 'status' => 'pending']) }}" class="btn btn-sm btn-warning rounded-pill me-1" title="Validasi {{ $schedule->pending_count }} Peserta">
+                                            <i class="fas fa-check-circle me-1"></i> Validasi ({{ $schedule->pending_count }})
+                                        </a>
+                                    @endif
                                     <a href="{{ route('admin.participants.list', $schedule->id) }}" class="action-btn bg-metric-blue" title="Daftar Peserta">
                                         <i class="fas fa-users"></i>
                                     </a>

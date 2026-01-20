@@ -7,6 +7,17 @@
     <div class="col-md-12">
         <h1>Peserta untuk {{ $schedule->room }} - {{ $schedule->date->format('d M Y') }}</h1>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary mb-3">Kembali ke Dashboard</a>
+        
+        @if(request('status') === 'pending')
+            <div class="alert alert-warning mt-3 border-start border-warning border-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <i class="fas fa-filter me-2"></i> Menampilkan <strong>Peserta Menunggu Validasi</strong>
+                    </div>
+                    <a href="{{ route('admin.participants.list', $schedule->id) }}" class="btn btn-sm btn-outline-dark">Lihat Semua Data</a>
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -106,6 +117,9 @@
                 </button>
                 <a href="{{ route('admin.schedule.participants.export', $schedule->id) }}" class="btn btn-success">
                     <i class="fas fa-download"></i> Download Seluruh Peserta
+                </a>
+                <a href="{{ route('admin.schedule.attendance.export', $schedule->id) }}" class="btn btn-warning text-dark">
+                    <i class="fas fa-file-excel"></i> Daftar Hadir (Excel)
                 </a>
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
                     <i class="fas fa-trash-alt"></i> Hapus Seluruh Peserta

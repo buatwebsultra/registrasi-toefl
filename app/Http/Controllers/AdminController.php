@@ -127,7 +127,10 @@ class AdminController extends Controller
         }
         $searchDate = request('search_date');
         
-        $query = Schedule::withCount('participants');
+        $query = Schedule::withCount('participants')
+            ->withCount(['participants as pending_count' => function ($query) {
+                $query->where('status', 'pending');
+            }]);
 
         if ($searchDate) {
             $query->whereDate('date', $searchDate);
@@ -333,13 +336,21 @@ class AdminController extends Controller
 
         // Ambil parameter pencarian
         $searchNim = request('search_nim');
+        $status = request('status');
+
+        $query = $schedule->participants()->with('studyProgram');
 
         // Jika ada parameter pencarian NIM, cari peserta dengan NIM tertentu
         if ($searchNim) {
-            $participants = $schedule->participants()->with('studyProgram')->where('nim', $searchNim)->paginate(10); // Gunakan pagination agar konsisten
-        } else {
-            $participants = $schedule->participants()->with('studyProgram')->paginate(10);
+            $query->where('nim', $searchNim);
         }
+        
+        // Filter by status if provided
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $participants = $query->paginate(10);
 
         // Hitung total peserta untuk kebutuhan view
         $totalParticipants = $schedule->participants()->count();
@@ -1392,5 +1403,160 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.dashboard')->with('success', "Berhasil memperbaiki {$totalFixed} nomor kursi peserta.");
+    }
+
+    public function exportAttendanceList($scheduleId)
+    {
+        $schedule = Schedule::findOrFail($scheduleId);
+
+        // Fetch ONLY confirmed participants
+        $participants = $schedule->participants()
+            // We only want confirmed participants for the attendance list
+            ->where(function($q) {
+                $q->where('status', 'confirmed')
+                  ->orWhere('seat_status', 'confirmed');
+            })
+            ->with(['studyProgram', 'faculty'])
+            ->orderBy('seat_number', 'asc') // Order by seat number
+            // Fallback sort by name if seat number is missing/duplicates
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // --- Header Section ---
+        // Title
+        $sheet->setCellValue('A1', 'DAFTAR HADIR PESERTA TOEFL');
+        
+        $sheet->mergeCells('A1:G1'); 
+        
+        $styleTitle = [
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+        ];
+        $sheet->getStyle('A1')->applyFromArray($styleTitle);
+
+        // Schedule Info
+        // Using Carbon for Indonesian date format requires proper locale setting or manual array
+        // Let's use manual mapping or simple format to ensure compatibility without extra resource loading
+        \Carbon\Carbon::setLocale('id'); // Attempt to set locale
+        
+        $sheet->setCellValue('A3', 'HARI / TANGGAL');
+        $sheet->setCellValue('C3', ': ' . strtoupper($schedule->date->translatedFormat('l, d F Y'))); // localized date
+        
+        $sheet->setCellValue('A4', 'PUKUL');
+        $sheet->setCellValue('C4', ': ' . \Carbon\Carbon::parse($schedule->time)->format('H:i') . ' WITA');
+        
+        $sheet->setCellValue('A5', 'TEMPAT');
+        $sheet->setCellValue('C5', ': ' . $schedule->room);
+
+        // --- Table Header ---
+        // Columns matching typical attendance list
+        $headers = ['NO', 'NO PESERTA', 'NAMA PESERTA', 'NIM', 'GENDER', 'JURUSAN', 'TANDA TANGAN'];
+        $headerRow = 7;
+        
+        $colIndex = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($colIndex . $headerRow, $header);
+            $colIndex++;
+        }
+        
+        // Manual column width adjustments
+        $sheet->getColumnDimension('A')->setWidth(5); // No
+        $sheet->getColumnDimension('B')->setWidth(18); // No Peserta
+        $sheet->getColumnDimension('C')->setWidth(35); // Nama
+        $sheet->getColumnDimension('D')->setWidth(15); // NIM
+        $sheet->getColumnDimension('E')->setWidth(10); // Gender
+        $sheet->getColumnDimension('F')->setWidth(25); // Jurusan
+        $sheet->getColumnDimension('G')->setWidth(20); // Tanda Tangan
+
+        $styleHeader = [
+            'font' => ['bold' => true],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN]
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFE0E0E0'],
+            ],
+        ];
+        $sheet->getStyle('A7:G7')->applyFromArray($styleHeader);
+        $sheet->getRowDimension($headerRow)->setRowHeight(25);
+
+        // --- Data Rows ---
+        $row = 8;
+        $no = 1;
+        
+        foreach ($participants as $participant) {
+            $sheet->setCellValue('A' . $row, $no);
+            $sheet->setCellValue('B' . $row, $participant->seat_number ?: '-'); 
+            $sheet->setCellValue('C' . $row, strtoupper($participant->name));
+            $sheet->setCellValue('D' . $row, $participant->nim);
+            
+            // Gender Column
+            $gender = $participant->gender == 'male' ? 'L' : 'P';
+            $sheet->setCellValue('E' . $row, $gender);
+            
+            // Study Program access
+            $studyProgram = $participant->relationLoaded('studyProgram') ? $participant->getRelation('studyProgram') : $participant->studyProgram;
+            $studyProgramName = (is_object($studyProgram) && isset($studyProgram->name)) ? $studyProgram->name : '-';
+            
+            $sheet->setCellValue('F' . $row, $studyProgramName);
+            
+            // Signature cell remains empty for manual signature
+            
+            // Set row height for signature space
+            $sheet->getRowDimension($row)->setRowHeight(35);
+            
+            $no++;
+            $row++;
+        }
+        
+        // Apply borders to all data rows
+        $lastRow = $row - 1;
+        $styleTable = [
+             'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN]
+            ],
+            'alignment' => ['vertical' => Alignment::VERTICAL_CENTER]
+        ];
+        
+        if ($lastRow >= 8) {
+             $sheet->getStyle('A8:G' . $lastRow)->applyFromArray($styleTable);
+             // Center align No, No Peserta, NIM
+             $sheet->getStyle('A8:B' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+             $sheet->getStyle('D8:D' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+             $sheet->getStyle('E8:E' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Center Gender
+             $sheet->getStyle('C8:C' . $lastRow)->getAlignment()->setIndent(1); // Small indent for name
+        }
+
+        // --- Summary Section ---
+        $summaryRow = $lastRow + 2;
+        
+        $sheet->setCellValue('B' . $summaryRow, 'Jumlah Peserta Hadir');
+        $sheet->setCellValue('C' . $summaryRow, ': ....................... Orang');
+        
+        $sheet->setCellValue('B' . ($summaryRow + 1), 'Jumlah Peserta Tidak Hadir');
+        $sheet->setCellValue('C' . ($summaryRow + 1), ': ....................... Orang');
+
+        // Signature Section
+        $signatureRow = $summaryRow + 3;
+        $sheet->setCellValue('F' . $signatureRow, 'Pengawas / Petugas,');
+        $sheet->getStyle('F' . $signatureRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        
+        $sheet->setCellValue('F' . ($signatureRow + 4), '( ....................................................... )');
+        $sheet->getStyle('F' . ($signatureRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Filename: DAFTAR_HADIR_YYYY-MM-DD_ROOM.xlsx
+        $fileName = 'DAFTAR_HADIR_' . $schedule->date->format('Y-m-d') . '_' . \Str::slug($schedule->room) . '.xlsx';
+        
+        $writer = new Xlsx($spreadsheet);
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="'. urlencode($fileName) .'"');
+        $writer->save('php://output');
+        exit;
     }
 }

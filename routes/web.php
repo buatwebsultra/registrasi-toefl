@@ -107,6 +107,9 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
     // Clear all participants for specific schedule
     Route::post('/schedule/{schedule}/participants/clear', [AdminController::class, 'clearScheduleParticipants'])->name('admin.schedule.clear-participants');
 
+        // Export attendance list (Daftar Hadir)
+        Route::get('/schedule/{schedule}/attendance/export', [AdminController::class, 'exportAttendanceList'])->name('admin.schedule.attendance.export');
+
     // Card generation routes for admin
     Route::get('/participant/{id}/card/preview', [PDFController::class, 'showTestCardPreview'])->name('admin.participant.card.preview')->middleware('admin');
     Route::get('/participant/{id}/card/download', [PDFController::class, 'generateTestCard'])->name('admin.participant.card.download')->middleware('admin');
