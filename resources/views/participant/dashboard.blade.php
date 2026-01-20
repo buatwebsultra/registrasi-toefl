@@ -190,6 +190,26 @@
         color: #64748b;
         border-radius: 1.25rem;
     }
+
+    /* Profile Detail Tab Photo */
+    .profile-photo-frame {
+        width: 100%;
+        max-width: 220px;
+        aspect-ratio: 3/4;
+        background: #f3f4f6;
+        border-radius: 1rem;
+        overflow: hidden;
+        margin: 0 auto;
+        border: 4px solid white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+
+    .profile-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 </style>
 
 <div class="welcome-banner">
@@ -375,7 +395,11 @@
                                     <div class="p-3 bg-light rounded-3">
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Kategori Tes</span>
-                                            <span class="badge bg-primary rounded-pill">{{ $participant->test_category }}</span>
+                                            @php
+                                                $isGraduate = \Str::contains(strtolower($participant->academic_level), ['s2', 's3', 'magister', 'doktor', 'master', 'doctor']);
+                                                $displayCategory = $isGraduate ? 'TOEFL-EQUIVALENT' : 'TOEFL-LIKE';
+                                            @endphp
+                                            <span class="badge bg-primary rounded-pill">{{ $displayCategory }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Tanggal Tes</span>
@@ -557,7 +581,7 @@
                                 class="btn btn-premium btn-outline-primary {{ ($participant->status === 'pending' || $isFail) ? 'disabled' : '' }}"
                                 data-bs-toggle="modal"
                                 data-bs-target="{{ $isFail ? '' : '#cardPreviewModal' }}">
-                            <i class="fas fa-eye me-2"></i>Pratinjau Kartu
+                            <i class="fas fa-file-pdf me-2"></i>Preview & Unduh PDF
                         </button>
                     @endif
 
@@ -811,16 +835,45 @@
     });
 </script>
 
-<script>
-function showPhotoModal() {
-    // Check if photo exists
-    if ("{{ $participant->photo_path }}" && ("{{ \Storage::disk('private')->exists($participant->photo_path) }}" || "{{ \Storage::disk('public')->exists($participant->photo_path) }}")) {
-        // Show the modal
-        var modal = new bootstrap.Modal(document.getElementById('photoModal'));
-        modal.show();
-    } else {
-        // Alert if no photo available
-        alert('Foto tidak tersedia');
+<!-- Photo Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="photoModalLabel">Foto Peserta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 text-center bg-light">
+                <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'photo']) }}" 
+                     alt="Foto Peserta Full" 
+                     class="img-fluid" 
+                     style="max-height: 80vh;">
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.addEventListener('DOMContentLoaded', function() {
+    const photoTrigger = document.getElementById('photo-frame-trigger');
+    
+    if (photoTrigger) {
+        photoTrigger.addEventListener('click', function() {
+            // Check if photo exists based on the presence of the img tag inside
+            const img = this.querySelector('img');
+            
+            if (img) {
+                // Show the modal
+                var modal = new bootstrap.Modal(document.getElementById('photoModal'));
+                modal.show();
+            } else {
+                // Alert if no photo available
+                alert('Foto tidak tersedia');
+            }
+        });
     }
-}
+});
 </script>

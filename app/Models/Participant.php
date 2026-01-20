@@ -96,8 +96,8 @@ class Participant extends Model
     // Accessor to get academic level from study program
     public function getAcademicLevelAttribute()
     {
+        // Try to get from study program first
         if ($this->studyProgram) {
-            // Map study program levels to standard academic levels
             $levelMap = [
                 'bachelor' => 'undergraduate',
                 'sarjana' => 'undergraduate',
@@ -111,13 +111,31 @@ class Participant extends Model
                 'doktor' => 'doctorate',
                 's3' => 'doctorate',
                 'doctoral' => 'doctorate',
+                'doctorate' => 'doctorate',
             ];
 
-            $rawLevel = strtolower($this->studyProgram->level);
-            return $levelMap[$rawLevel] ?? $this->studyProgram->level;
+            $rawLevel = strtolower(trim($this->studyProgram->level));
+            
+            // Check exact match first
+            if (isset($levelMap[$rawLevel])) {
+                return $levelMap[$rawLevel];
+            }
+            
+            // Check if level contains keywords
+            if (str_contains($rawLevel, 's1') || str_contains($rawLevel, 'sarjana') || str_contains($rawLevel, 'bachelor')) {
+                return 'undergraduate';
+            }
+            if (str_contains($rawLevel, 's2') || str_contains($rawLevel, 'magister') || str_contains($rawLevel, 'master')) {
+                return 'master';
+            }
+            if (str_contains($rawLevel, 's3') || str_contains($rawLevel, 'doktor') || str_contains($rawLevel, 'doctor')) {
+                return 'doctorate';
+            }
+            
+            return $rawLevel;
         }
 
-        return $this->attributes['academic_level'] ?? null;
+        return $this->attributes['academic_level'] ?? 'undergraduate';
     }
 
     public function getAcademicLevelDisplayAttribute()

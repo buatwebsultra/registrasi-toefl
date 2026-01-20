@@ -394,7 +394,11 @@
     <div class="page">
         <!-- Identity Information Section -->
         <div class="page-header">
-            <h1>KARTU UJIAN TOEFL</h1>
+            @php
+                $isGraduateTitle = \Str::contains(strtolower($participant->academic_level), ['s2', 's3', 'magister', 'doktor', 'master', 'doctor']);
+                $cardTitle = $isGraduateTitle ? 'KARTU UJIAN TOEFL-EQUIVALENT' : 'KARTU UJIAN TOEFL-LIKE';
+            @endphp
+            <h1>{{ $cardTitle }}</h1>
             <p>Universitas Halu Oleo - UPA Bahasa</p>
         </div>
 
@@ -499,7 +503,7 @@
                                 <div style="display: table-cell; vertical-align: middle;">
                                     <div class="seat-title">NOMOR KURSI ANDA</div>
                                     <div class="seat-number">{{ $participant->effective_seat_number }}</div>
-                                    <div class="seat-category">Kategori: {{ $participant->test_category }}</div>
+                                    <div class="seat-category">Kategori: {{ $isGraduateTitle ? 'TOEFL-EQUIVALENT' : 'TOEFL-LIKE' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -527,7 +531,7 @@
 
         <!-- Regulations Section Merged -->
         <div class="regulations-container">
-            <div class="instructions" style="margin-top: 2px;">TATA TERTIB MASUK RUANGAN UJIAN</div>
+            <div class="instructions" style="margin-top: 2px;">PESERTA WAJIB MEMBAWA PRINT OUT KARTU TES INI</div>
 
             <!-- Regulations Section -->
             <div class="regulations-section">

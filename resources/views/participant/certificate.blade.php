@@ -260,7 +260,13 @@
                     </table>
                 </td>
                 <td class="grid-col-center">
-                    <div class="certificate-title">TOEFL-LIKE SCORE</div>
+                    <div class="certificate-title">
+                        @if(in_array($participant->academic_level, ['master', 'doctorate']))
+                            TOEFL-EQUIVALENT
+                        @else
+                            TOEFL-LIKE SCORE
+                        @endif
+                    </div>
                     <table class="info-table">
                         <tr><td class="info-value">{{ $participant->name }}</td></tr>
                         <tr><td class="info-value">{{ $participant->birth_date ? $participant->birth_date->format('d F Y') : '-' }}</td></tr>

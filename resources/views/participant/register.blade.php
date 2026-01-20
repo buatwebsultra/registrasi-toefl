@@ -290,7 +290,7 @@
                                         <label for="username" class="form-label">Nama Pengguna <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control @error('username') is-invalid @enderror" id="username" name="username" value="{{ old('username') }}" required
                                             placeholder="Contoh: budi_santoso">
-                                        <div class="form-text">Hanya boleh berisi huruf kecil, angka, titik, underscore, dan tanda hubung</div>
+                                        <div class="form-text">Hanya boleh berisi huruf kecil, angka, underscore, Contoh : jay_idzes</div>
                                         @error('username')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -299,12 +299,20 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="password" class="form-label">Kata Sandi <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required
-                                            placeholder="Kata sandi minimal 12 karakter">
+                                        <div class="input-group">
+                                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required
+                                                placeholder="Kata sandi minimal 12 karakter">
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
                                         @error('password')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                         <div class="form-text">Password minimal harus 12 karakter. Password harus mengandung huruf besar, huruf kecil, angka, dan karakter khusus (@$!%*?&).</div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="generatePasswordBtn">
+                                            <i class="fas fa-key me-1"></i> Buat Password Otomatis
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -313,9 +321,15 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required
-                                            placeholder="Ulangi kata sandi">
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required
+                                                placeholder="Ulangi kata sandi">
+                                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
                                         <div class="form-text">Ketik ulang kata sandi yang sama</div>
+                                        <div id="password-match-feedback" class="small mt-1 collapse"></div>
                                     </div>
                                 </div>
                             </div>
@@ -419,7 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const errorDiv = document.createElement('div');
             errorDiv.id = 'username-error';
             errorDiv.className = 'invalid-feedback';
-            errorDiv.textContent = 'Username hanya boleh berisi huruf kecil, angka, titik, underscore, dan tanda hubung.';
+            errorDiv.textContent = '';
             errorDiv.style.display = 'block';
 
             // Insert after the input element
@@ -989,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<script>
+<script nonce="{{ $csp_nonce ?? '' }}">
 @if(session('payment_error'))
     document.addEventListener('DOMContentLoaded', function() {
         const modal = new bootstrap.Modal(document.getElementById('paymentErrorModal'));
@@ -998,4 +1012,116 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 @endif
 </script>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.addEventListener('DOMContentLoaded', function() {
+    // Password visibility toggles
+    function setupPasswordToggle(inputId, toggleId) {
+        const toggleBtn = document.getElementById(toggleId);
+        const inputField = document.getElementById(inputId);
+        
+        if (toggleBtn && inputField) {
+            toggleBtn.addEventListener('click', function() {
+                const type = inputField.getAttribute('type') === 'password' ? 'text' : 'password';
+                inputField.setAttribute('type', type);
+                
+                // Toggle icon
+                const icon = this.querySelector('i');
+                if (type === 'text') {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
+    }
+
+    setupPasswordToggle('password', 'togglePassword');
+    setupPasswordToggle('password_confirmation', 'toggleConfirmPassword');
+
+    // Password Generator
+    const generateBtn = document.getElementById('generatePasswordBtn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            const length = 16;
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&";
+            let retVal = "";
+            
+            // Ensure at least one of each required type
+            retVal += "ABC"; // Upper
+            retVal += "abc"; // Lower
+            retVal += "123"; // Number
+            retVal += "@$!"; // Special
+            
+            // Fill the rest randomly
+            for (let i = 0, n = charset.length; i < length - 12; ++i) {
+                retVal += charset.charAt(Math.floor(Math.random() * n));
+            }
+            
+            // Shuffle the password
+            retVal = retVal.split('').sort(function(){return 0.5-Math.random()}).join('');
+            
+            const passwordField = document.getElementById('password');
+            const confirmField = document.getElementById('password_confirmation');
+            
+            if (passwordField && confirmField) {
+                passwordField.value = retVal;
+                confirmField.value = retVal;
+                
+                // Show password so user can save it
+                passwordField.setAttribute('type', 'text');
+                confirmField.setAttribute('type', 'text');
+                
+                // Update icons
+                document.querySelector('#togglePassword i').classList.remove('fa-eye');
+                document.querySelector('#togglePassword i').classList.add('fa-eye-slash');
+                document.querySelector('#toggleConfirmPassword i').classList.remove('fa-eye');
+                document.querySelector('#toggleConfirmPassword i').classList.add('fa-eye-slash');
+
+                // Trigger validation if needed
+                passwordField.classList.remove('is-invalid');
+                confirmField.classList.remove('is-invalid');
+                
+                // Trigger input event to update match status
+                passwordField.dispatchEvent(new Event('input'));
+            }
+        });
+    }
+
+    // Password match check
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password_confirmation');
+    const matchFeedback = document.getElementById('password-match-feedback');
+
+    if (passwordInput && confirmInput && matchFeedback) {
+        function checkPasswordMatch() {
+            if (confirmInput.value === '') {
+                matchFeedback.classList.remove('show');
+                return;
+            }
+
+            matchFeedback.classList.add('show');
+            if (passwordInput.value === confirmInput.value) {
+                matchFeedback.textContent = 'Password cocok ✓';
+                matchFeedback.classList.remove('text-danger');
+                matchFeedback.classList.add('text-success');
+                confirmInput.classList.remove('is-invalid');
+                confirmInput.classList.add('is-valid');
+            } else {
+                matchFeedback.textContent = 'Password tidak cocok ✕';
+                matchFeedback.classList.remove('text-success');
+                matchFeedback.classList.add('text-danger');
+                confirmInput.classList.remove('is-valid');
+                confirmInput.classList.add('is-invalid');
+            }
+        }
+
+        passwordInput.addEventListener('input', checkPasswordMatch);
+        confirmInput.addEventListener('input', checkPasswordMatch);
+    }
+});
+</script>
+
 @endsection

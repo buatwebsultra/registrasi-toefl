@@ -9,7 +9,11 @@
             <div class="modal-body p-4 bg-light">
                 <div class="bg-white p-3 rounded-3 shadow-sm mb-3">
                     <label class="small text-muted fw-bold text-uppercase">Kategori Tes</label>
-                    <div class="fs-5 fw-bold text-dark">{{ $participant->test_category }}</div>
+                    @php
+                        $isGraduate = \Str::contains(strtolower($participant->academic_level), ['s2', 's3', 'magister', 'doktor', 'master', 'doctor']);
+                        $displayCategory = $isGraduate ? 'TOEFL-EQUIVALENT' : 'TOEFL-LIKE';
+                    @endphp
+                    <div class="fs-5 fw-bold text-dark">{{ $displayCategory }}</div>
                 </div>
                 <div class="bg-white p-3 rounded-3 shadow-sm mb-3">
                     <label class="small text-muted fw-bold text-uppercase">Jadwal & Ruangan</label>
@@ -44,7 +48,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 h-100">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold">Preview Kartu Ujian</h5>
+                <h5 class="modal-title fw-bold">Preview & Unduh Kartu PDF</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4" style="min-height: 500px">

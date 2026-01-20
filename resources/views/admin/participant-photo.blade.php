@@ -132,7 +132,12 @@
                                 </div>
                                 <div class="info-item mb-3 p-2 rounded">
                                     <label class="fw-bold text-muted">Nomor WhatsApp</label>
-                                    <div class="fw-bold text-break">{{ $participant->phone }}</div>
+                                    <div class="fw-bold text-break">
+                                        {{ $participant->phone }}
+                                        <a href="#" class="ms-2 text-success text-decoration-none btn-whatsapp-contact" data-phone="{{ $participant->phone }}" title="Chat via WhatsApp">
+                                            <i class="fab fa-whatsapp"></i> Chat
+                                        </a>
+                                    </div>
                                 </div>
                                 <div class="info-item mb-3 p-2 rounded">
                                     <label class="fw-bold text-muted">Tanggal Pembayaran</label>
@@ -341,7 +346,34 @@
         }
     });
     @endif
-</script>
-@endsection
 
+    function sendWhatsApp(phoneNumber) {
+        const cleanedNumber = phoneNumber.replace(/\D/g, '');
+        let waNumber = cleanedNumber.startsWith('62') ? cleanedNumber : (cleanedNumber.startsWith('0') ? '62' + cleanedNumber.substring(1) : '62' + cleanedNumber);
+        window.open('https://wa.me/' + waNumber, '_blank');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // WhatsApp Contact Listener
+        document.querySelectorAll('.btn-whatsapp-contact').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const phone = this.getAttribute('data-phone');
+                if (phone) {
+                    sendWhatsApp(phone);
+                }
+            });
+        });
+
+        // Delete Participant Confirmation Listener
+        const deleteBtn = document.getElementById('deleteParticipantBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function(e) {
+                if (!confirm('Apakah Anda yakin ingin menghapus peserta ini?')) {
+                    e.preventDefault(); // Prevent form submission if user cancels
+                }
+            });
+        }
+    });
+</script>
 @endsection

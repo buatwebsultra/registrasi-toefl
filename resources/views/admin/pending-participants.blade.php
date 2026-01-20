@@ -54,6 +54,7 @@
                                     <th>Jadwal</th>
                                     <th>Tanggal Daftar</th>
                                     <th>Aksi</th>
+                                    <th>WhatsApp</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -71,9 +72,18 @@
                                     </td>
                                     <td>{{ $participant->created_at->format('d M Y H:i') }}</td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#validationModal{{ $participant->id }}">
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#validationModal{{ $participant->id }}">
                                             <i class="fas fa-eye"></i> Validasi
                                         </button>
+                                    </td>
+                                    <td>
+                                        @if($participant->phone)
+                                            <a href="#" class="btn btn-sm btn-success btn-whatsapp-contact" data-phone="{{ $participant->phone }}">
+                                                <i class="fab fa-whatsapp"></i> Chat
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
@@ -139,6 +149,19 @@
                                 <td><strong>Tanggal Pembayaran</strong></td>
                                 <td>:</td>
                                 <td>{{ $participant->payment_date ? $participant->payment_date->format('d M Y H:i:s') : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>WhatsApp</strong></td>
+                                <td>:</td>
+                                <td>
+                                    @if($participant->phone)
+                                        <a href="#" class="text-success fw-bold text-decoration-none btn-whatsapp-contact" data-phone="{{ $participant->phone }}">
+                                            <i class="fab fa-whatsapp me-1"></i> {{ $participant->phone }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                             </tr>
                         </table>
                     </div>
@@ -296,4 +319,28 @@
     </div>
 </div>
 @endforeach
+
+@endsection
+
+@section('scripts')
+<script nonce="{{ $csp_nonce ?? '' }}">
+    function sendWhatsApp(phoneNumber) {
+        const cleanedNumber = phoneNumber.replace(/\D/g, '');
+        let waNumber = cleanedNumber.startsWith('62') ? cleanedNumber : (cleanedNumber.startsWith('0') ? '62' + cleanedNumber.substring(1) : '62' + cleanedNumber);
+        window.open('https://wa.me/' + waNumber, '_blank');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // WhatsApp Contact Listener
+        document.querySelectorAll('.btn-whatsapp-contact').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const phone = this.getAttribute('data-phone');
+                if (phone) {
+                    sendWhatsApp(phone);
+                }
+            });
+        });
+    });
+</script>
 @endsection

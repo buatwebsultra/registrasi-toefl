@@ -53,18 +53,23 @@
                     <div class="col-md-4">
                         <div class="text-center p-3">
                             <label class="text-muted small fw-bold text-uppercase d-block mb-3">Foto Identitas</label>
-                            <div class="premium-card d-inline-block p-2 bg-white" style="cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.1);" onclick="showPhotoModal()">
+                            
+                            <div id="photo-frame-trigger" class="profile-photo-frame mb-3" style="cursor: pointer;">
                                 @if($participant->photo_path && (\Storage::disk('private')->exists($participant->photo_path) || \Storage::disk('public')->exists($participant->photo_path)))
                                     <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'photo']) }}"
                                          alt="Foto Peserta"
-                                         class="rounded-3"
-                                         style="width: 200px; height: 300px; object-fit: cover;">
+                                         class="profile-photo">
                                 @else
-                                    <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center border rounded-3" style="width: 200px; height: 300px;">
-                                        <span class="text-muted">Foto tidak tersedia</span>
+                                    <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
+                                        <div class="text-center">
+                                            <i class="fas fa-user fa-3x mb-2"></i>
+                                            <div class="small">Foto Tidak Tersedia</div>
+                                        </div>
                                     </div>
                                 @endif
                             </div>
+                            
+                            <div class="small text-muted">Klik foto untuk melihat ukuran penuh</div>
                         </div>
                     </div>
                 </div>

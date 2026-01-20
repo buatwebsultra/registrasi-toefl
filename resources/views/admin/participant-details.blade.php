@@ -196,7 +196,7 @@
     
     <!-- Breadcrumb / Back Navigation -->
     <div class="mb-4">
-        <a href="javascript:history.back()" class="text-decoration-none text-muted fw-bold">
+        <a href="{{ url()->previous() }}" class="text-decoration-none text-muted fw-bold">
             <i class="fas fa-arrow-left me-2"></i>Kembali
         </a>
     </div>
@@ -275,7 +275,7 @@
                         <div class="col-md-6 data-group">
                             <div class="data-label">Nomor WhatsApp</div>
                             <div class="data-value">
-                                <a href="javascript:void(0)" onclick="sendWhatsApp('{{ $participant->phone }}')" class="text-decoration-none text-success fw-bold">
+                                <a href="#" class="text-decoration-none text-success fw-bold btn-whatsapp-contact" data-phone="{{ $participant->phone }}">
                                     <i class="fab fa-whatsapp me-1"></i>{{ $participant->phone }} <sup><i class="fas fa-external-link-alt" style="font-size: 10px;"></i></sup>
                                 </a>
                             </div>
@@ -326,9 +326,9 @@
             <!-- Footer Actions -->
             <div class="action-bar">
                  @if(Auth::user()->isAdmin())
-                    <button class="btn-action bg-primary text-white" data-bs-toggle="modal" data-bs-target="#cardPreviewModal">
-                        <i class="fas fa-id-card"></i> Preview Kartu
-                    </button>
+                    <a href="{{ route('admin.participant.card.download', $participant->id) }}" class="btn-action bg-primary text-white text-decoration-none">
+                        <i class="fas fa-file-pdf"></i> Unduh Kartu PDF
+                    </a>
                  @endif
                  
                  @if($participant->test_score)
@@ -546,6 +546,19 @@ function sendWhatsApp(phoneNumber) {
     let waNumber = cleanedNumber.startsWith('62') ? cleanedNumber : (cleanedNumber.startsWith('0') ? '62' + cleanedNumber.substring(1) : '62' + cleanedNumber);
     window.open('https://wa.me/' + waNumber, '_blank');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // WhatsApp Contact Listener
+    document.querySelectorAll('.btn-whatsapp-contact').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const phone = this.getAttribute('data-phone');
+            if (phone) {
+                sendWhatsApp(phone);
+            }
+        });
+    });
+});
 
 function calculateTotalScore() {
     const listening = parseFloat(document.getElementById('listening_score_pbt')?.value) || 0;

@@ -492,7 +492,7 @@
                     <form action="{{ route('admin.schedule.delete', $schedule->id) }}" method="POST" class="flex-grow-1" id="deleteForm{{ $schedule->id }}">
                         @csrf
                         @method('DELETE')
-                        <button type="button" class="btn btn-danger w-100 py-2 rounded-3 fw-bold" onclick="confirmDelete({{ $schedule->id }}, '{{ $schedule->room }}')">Hapus Sekarang</button>
+                        <button type="button" class="btn btn-danger w-100 py-2 rounded-3 fw-bold btn-confirm-delete-schedule" data-id="{{ $schedule->id }}" data-room="{{ $schedule->room }}">Hapus Sekarang</button>
                     </form>
                 </div>
             </div>
@@ -566,15 +566,12 @@
         });
 
         // Set up delete confirmation event listeners
-        document.querySelectorAll('button[onclick^="confirmDelete"]').forEach(btn => {
-            const onclick = btn.getAttribute('onclick');
-            const match = onclick.match(/confirmDelete\((\d+),\s*'(.*)'\)/);
-            if (match) {
-                const scheduleId = match[1];
-                const roomName = match[2];
-                btn.removeAttribute('onclick');
-                btn.addEventListener('click', () => confirmDelete(scheduleId, roomName));
-            }
+        document.querySelectorAll('.btn-confirm-delete-schedule').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const scheduleId = this.getAttribute('data-id');
+                const roomName = this.getAttribute('data-room');
+                confirmDelete(scheduleId, roomName);
+            });
         });
 
         // Logout button handler (CSP compliant)

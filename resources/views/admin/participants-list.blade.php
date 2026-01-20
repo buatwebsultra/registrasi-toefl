@@ -152,41 +152,6 @@
             </div>
         </div>
 
-        <script nonce="{{ $csp_nonce ?? '' }}">
-        document.addEventListener('DOMContentLoaded', function() {
-            const verifyBtn = document.getElementById('verifyDeleteAllBtn');
-            if(verifyBtn) {
-                verifyBtn.addEventListener('click', function() {
-                    const expectedText = "HAPUS {{ $totalParticipants }} PESERTA";
-                    const inputText = document.getElementById('confirmDeleteAll').value;
-                    const errorElement = document.getElementById('confirmDeleteAllError');
-                    const confirmForm = document.getElementById('clearAllParticipantsForm');
-                    const confirmBtn = document.getElementById('deleteAllConfirmedBtn');
-
-                    if (inputText.trim() === expectedText) {
-                        errorElement.classList.add('d-none');
-                        confirmForm.classList.remove('d-none');
-                        confirmBtn.classList.remove('d-none');
-                        this.disabled = true;
-                    } else {
-                        errorElement.classList.remove('d-none');
-                        confirmForm.classList.add('d-none');
-                        confirmBtn.classList.add('d-none');
-                    }
-                });
-            }
-
-            const deleteModal = document.getElementById('deleteAllModal');
-            if(deleteModal) {
-                deleteModal.addEventListener('hidden.bs.modal', function() {
-                    document.getElementById('confirmDeleteAll').value = '';
-                    document.getElementById('confirmDeleteAllError').classList.add('d-none');
-                    document.getElementById('clearAllParticipantsForm').classList.add('d-none');
-                    if(verifyBtn) verifyBtn.disabled = false;
-                });
-            }
-        });
-        </script>
         <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead class="table-dark">
@@ -199,6 +164,7 @@
                         <th>Status Nilai</th>
                         <th>Status Verifikasi</th>
                         <th>Kehadiran</th>
+                        <th>WhatsApp</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -253,6 +219,15 @@
                             </button>
                         </td>
                         <td>
+                            @if($participant->phone)
+                                <a href="#" class="btn btn-sm btn-success btn-whatsapp-contact" data-phone="{{ $participant->phone }}">
+                                    <i class="fab fa-whatsapp"></i> Chat
+                                </a>
+                            @else
+                                <span class="text-muted small">-</span>
+                            @endif
+                        </td>
+                        <td>
                             <a href="{{ route('admin.participant.details', $participant->id) }}" class="btn btn-info btn-sm me-1">Lihat Detail</a>
                             @if(Auth::user()->isOperator())
                             <button type="button" 
@@ -273,9 +248,9 @@
                     @empty
                     <tr>
                         @if($searchNim)
-                            <td colspan="9" class="text-center">Tidak ditemukan peserta dengan NIM: {{ $searchNim }}</td>
+                            <td colspan="10" class="text-center">Tidak ditemukan peserta dengan NIM: {{ $searchNim }}</td>
                         @else
-                            <td colspan="9" class="text-center">Tidak ada peserta terdaftar untuk jadwal ini</td>
+                            <td colspan="10" class="text-center">Tidak ada peserta terdaftar untuk jadwal ini</td>
                         @endif
                     </tr>
                     @endforelse
@@ -379,8 +354,82 @@
     </div>
 </div>
 
+<!-- Reset Password Modal (List) -->
+<div class="modal fade" id="resetPasswordListModal" tabindex="-1" aria-labelledby="resetPasswordListModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-warning text-dark rounded-top-4">
+                <h5 class="modal-title fw-bold" id="resetPasswordListModalLabel">Reset Kata Sandi Peserta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.reset.participant.password') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <input type="hidden" name="participant_id" id="resetParticipantId">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted">Peserta:</label>
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="fw-bold" id="resetParticipantName"></div>
+                            <div class="small text-muted">Username: <span id="resetParticipantUsername"></span></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label fw-bold">Kata Sandi Baru</label>
+                        <input type="password" class="form-control rounded-3" id="new_password" name="new_password" required minlength="12">
+                        <small class="text-muted">Min. 12 karakter, huruf besar, kecil, angka, spesial.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password_confirmation" class="form-label fw-bold">Konfirmasi Kata Sandi Baru</label>
+                        <input type="password" class="form-control rounded-3" id="new_password_confirmation" name="new_password_confirmation" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@section('scripts')
 <script nonce="{{ $csp_nonce ?? '' }}">
     document.addEventListener('DOMContentLoaded', function() {
+        // 1. Delete All Confirmation
+        const verifyBtn = document.getElementById('verifyDeleteAllBtn');
+        if(verifyBtn) {
+            verifyBtn.addEventListener('click', function() {
+                const expectedText = "HAPUS {{ $totalParticipants }} PESERTA";
+                const inputText = document.getElementById('confirmDeleteAll').value;
+                const errorElement = document.getElementById('confirmDeleteAllError');
+                const confirmForm = document.getElementById('clearAllParticipantsForm');
+                const confirmBtn = document.getElementById('deleteAllConfirmedBtn');
+
+                if (inputText.trim() === expectedText) {
+                    errorElement.classList.add('d-none');
+                    confirmForm.classList.remove('d-none');
+                    confirmBtn.classList.remove('d-none');
+                    this.disabled = true;
+                } else {
+                    errorElement.classList.remove('d-none');
+                    confirmForm.classList.add('d-none');
+                    confirmBtn.classList.add('d-none');
+                }
+            });
+        }
+
+        const deleteModalEl = document.getElementById('deleteAllModal');
+        if(deleteModalEl) {
+            deleteModalEl.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('confirmDeleteAll').value = '';
+                document.getElementById('confirmDeleteAllError').classList.add('d-none');
+                document.getElementById('clearAllParticipantsForm').classList.add('d-none');
+                if(verifyBtn) verifyBtn.disabled = false;
+            });
+        }
         
         // 2. Open Attendance Modal
         document.querySelectorAll('.btn-open-attendance').forEach(btn => {
@@ -439,114 +488,79 @@
             cb.addEventListener('change', toggleBulkButton);
         });
 
-        const bulkValidateBtn = document.getElementById('bulkValidateBtn');
-        if(bulkValidateBtn) {
-            bulkValidateBtn.addEventListener('click', function() {
-                if (confirm('Apakah Anda yakin ingin memvalidasi semua nilai yang dipilih?')) {
-                    document.getElementById('bulkValidateForm').submit();
+        // 8. WhatsApp Contact Listener
+        document.querySelectorAll('.btn-whatsapp-contact').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const phone = this.getAttribute('data-phone');
+                if (phone) {
+                    sendWhatsApp(phone);
                 }
             });
-        }
+        });
+    });
 
-    }); // End DOMContentLoaded
-
+    // Modal Objects
+    const attendanceModalEl = document.getElementById('attendanceModal');
+    const attendanceModal = attendanceModalEl ? new bootstrap.Modal(attendanceModalEl) : null;
     let currentParticipantId = null;
 
     function openAttendanceModal(id, name) {
         currentParticipantId = id;
         document.getElementById('attendanceParticipantName').textContent = name;
-        new bootstrap.Modal(document.getElementById('attendanceModal')).show();
+        document.getElementById('attendanceForm').action = `/admin/participant/${id}/attendance`;
+        if(attendanceModal) attendanceModal.show();
     }
 
     function setAttendance(status) {
-        const modalEl = document.getElementById('attendanceModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        
-        if (status === 'permission') {
-            modal.hide();
-            // Open Reschedule Modal
-            // We need to set the action of reschedule form?
-            // The original code set it to /participant/{id}/reschedule
-            const form = document.getElementById('rescheduleForm');
-            form.action = `/admin/participant/${currentParticipantId}/reschedule`;
-            
-            new bootstrap.Modal(document.getElementById('rescheduleModal')).show();
-            return;
-        }
-
-        const form = document.getElementById('attendanceForm');
-        form.action = `/admin/participant/${currentParticipantId}/attendance`;
         document.getElementById('attendanceInput').value = status;
-        form.submit();
+        document.getElementById('attendanceForm').submit();
     }
 
+    const rescheduleModalEl = document.getElementById('rescheduleModal');
+    const rescheduleModal = rescheduleModalEl ? new bootstrap.Modal(rescheduleModalEl) : null;
+    function openRescheduleModal(id) {
+        document.getElementById('rescheduleForm').action = `/admin/participant/${id}/reschedule`;
+        if(rescheduleModal) rescheduleModal.show();
+    }
+
+    const resetModalEl = document.getElementById('resetPasswordListModal');
+    const resetModal = resetModalEl ? new bootstrap.Modal(resetModalEl) : null;
     function openResetPasswordModal(id, name, username) {
         document.getElementById('resetParticipantId').value = id;
         document.getElementById('resetParticipantName').textContent = name;
         document.getElementById('resetParticipantUsername').textContent = username;
-        new bootstrap.Modal(document.getElementById('resetPasswordListModal')).show();
+        if(resetModal) resetModal.show();
     }
 
     function toggleBulkButton() {
         const btn = document.getElementById('bulkValidateBtn');
         const selected = document.querySelectorAll('.participant-checkbox:checked').length;
         if (selected > 0) {
-            btn.classList.remove('d-none'); // This relies on d-none class being available
+            if(btn) btn.classList.remove('d-none');
         } else {
-            btn.classList.add('d-none');
+            if(btn) btn.classList.add('d-none');
         }
         
         const form = document.getElementById('bulkValidateForm');
-        // Clear existing
-        form.querySelectorAll('input[name="participant_ids[]"]').forEach(el => el.remove());
-        
-        document.querySelectorAll('.participant-checkbox:checked').forEach(cb => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'participant_ids[]';
-            input.value = cb.value;
-            form.appendChild(input);
-        });
+        if(form) {
+            // Clear existing
+            form.querySelectorAll('input[name="participant_ids[]"]').forEach(el => el.remove());
+            
+            document.querySelectorAll('.participant-checkbox:checked').forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'participant_ids[]';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+        }
+    }
+
+    function sendWhatsApp(phoneNumber) {
+        const cleanedNumber = phoneNumber.replace(/\D/g, '');
+        let waNumber = cleanedNumber.startsWith('62') ? cleanedNumber : (cleanedNumber.startsWith('0') ? '62' + cleanedNumber.substring(1) : '62' + cleanedNumber);
+        window.open('https://wa.me/' + waNumber, '_blank');
     }
 </script>
-
-<!-- Reset Password Modal (List) -->
-<div class="modal fade" id="resetPasswordListModal" tabindex="-1" aria-labelledby="resetPasswordListModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-warning text-dark rounded-top-4">
-                <h5 class="modal-title fw-bold" id="resetPasswordListModalLabel">Reset Kata Sandi Peserta</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('admin.reset.participant.password') }}" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="modal-body">
-                    <input type="hidden" name="participant_id" id="resetParticipantId">
-                    <div class="mb-4">
-                        <label class="form-label fw-bold text-muted">Peserta:</label>
-                        <div class="p-3 bg-light rounded-3">
-                            <div class="fw-bold" id="resetParticipantName"></div>
-                            <div class="small text-muted">Username: <span id="resetParticipantUsername"></span></div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="new_password" class="form-label fw-bold">Kata Sandi Baru</label>
-                        <input type="password" class="form-control rounded-3" id="new_password" name="new_password" required minlength="12">
-                        <small class="text-muted">Min. 12 karakter, huruf besar, kecil, angka, spesial.</small>
-                    </div>
-                    <div class="mb-3">
-                        <label for="new_password_confirmation" class="form-label fw-bold">Konfirmasi Kata Sandi Baru</label>
-                        <input type="password" class="form-control rounded-3" id="new_password_confirmation" name="new_password_confirmation" required>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm">Reset Password</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @endsection

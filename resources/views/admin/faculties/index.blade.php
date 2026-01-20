@@ -58,7 +58,7 @@
                                     <form action="{{ route('admin.faculties.delete', $faculty->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus fakultas ini?')">Hapus</button>
+                                        <button type="submit" class="btn btn-danger btn-sm btn-delete-confirm" data-message="Apakah Anda yakin ingin menghapus fakultas ini?">Hapus</button>
                                     </form>
                                 </td>
                             </tr>
@@ -78,4 +78,19 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script nonce="{{ $csp_nonce ?? '' }}">
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-delete-confirm').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const message = this.getAttribute('data-message') || 'Apakah Anda yakin?';
+                if (!confirm(message)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
 @endsection
