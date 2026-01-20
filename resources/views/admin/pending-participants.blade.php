@@ -11,19 +11,35 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-12">
-        @if(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
+    </div>
+</div>
 
-        @if(session('error'))
-            <div class="alert alert-danger">
-                {{ session('error') }}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ route('admin.participants.pending') }}" method="GET" class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="schedule_id" class="col-form-label fw-bold">Filter Berdasarkan Jadwal:</label>
+                    </div>
+                    <div class="col-auto flex-grow-1">
+                        <select name="schedule_id" id="schedule_id" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Tampilkan Semua Jadwal --</option>
+                            @foreach($schedules as $schedule)
+                                <option value="{{ $schedule->id }}" {{ request('schedule_id') == $schedule->id ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::parse($schedule->date)->format('d M Y') }} - {{ $schedule->room }} ({{ \Carbon\Carbon::parse($schedule->time)->format('H:i') }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        @if(request('schedule_id'))
+                            <a href="{{ route('admin.participants.pending') }}" class="btn btn-outline-secondary">Reset Filter</a>
+                        @endif
+                    </div>
+                </form>
             </div>
-        @endif
+        </div>
     </div>
 </div>
 

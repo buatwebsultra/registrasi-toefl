@@ -667,17 +667,28 @@ class AdminController extends Controller
         return redirect()->route('admin.participants.list', $oldSchedule->id)->with('success', 'Peserta berhasil dipindahkan ke jadwal baru.');
     }
 
-    public function pendingParticipants()
+    public function pendingParticipants(Request $request)
     {
         if (Auth::user()->isProdi()) {
             return redirect()->route('prodi.dashboard');
         }
-        $pendingParticipants = Participant::with(['schedule', 'studyProgram', 'faculty'])
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc')
+
+        // Get active schedules for filter
+        $schedules = Schedule::where('date', '>=', now())
+            ->orderBy('date', 'asc')
             ->get();
 
-        return view('admin.pending-participants', compact('pendingParticipants'));
+        $query = Participant::with(['schedule', 'studyProgram', 'faculty'])
+            ->where('status', 'pending');
+
+        // Apply filter if selected
+        if ($request->has('schedule_id') && $request->schedule_id != '') {
+            $query->where('schedule_id', $request->schedule_id);
+        }
+
+        $pendingParticipants = $query->orderBy('created_at', 'desc')->get();
+
+        return view('admin.pending-participants', compact('pendingParticipants', 'schedules'));
     }
 
     public function confirmParticipant($id)
