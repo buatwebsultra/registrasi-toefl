@@ -731,9 +731,14 @@
                                 </div>
                                 <h6 class="fw-bold">Bukti Pembayaran</h6>
                                 <p class="small text-muted mb-3">File bukti pembayaran yang diunggah</p>
-                                <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye me-1"></i>Lihat File
-                                </a>
+                                <div class="d-flex gap-2 justify-content-center mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#paymentProofModal">
+                                        <i class="fas fa-eye me-1"></i>Lihat File
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#updatePaymentProofModal">
+                                        <i class="fas fa-upload me-1"></i>Ganti
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -743,9 +748,14 @@
                                 </div>
                                 <h6 class="fw-bold">Foto Peserta</h6>
                                 <p class="small text-muted mb-3">Foto profil untuk kartu ujian</p>
-                                <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'photo']) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye me-1"></i>Lihat File
-                                </a>
+                                <div class="d-flex gap-2 justify-content-center mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#photoViewModal">
+                                        <i class="fas fa-eye me-1"></i>Lihat File
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#updatePhotoModal">
+                                        <i class="fas fa-upload me-1"></i>Ganti
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -755,9 +765,14 @@
                                 </div>
                                 <h6 class="fw-bold">Kartu Identitas (KTP)</h6>
                                 <p class="small text-muted mb-3">Scan KTP/Identitas yang diunggah</p>
-                                <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'ktp']) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye me-1"></i>Lihat File
-                                </a>
+                                <div class="d-flex gap-2 justify-content-center mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ktpModal">
+                                        <i class="fas fa-eye me-1"></i>Lihat File
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#updateKtpModal">
+                                        <i class="fas fa-upload me-1"></i>Ganti
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -877,3 +892,144 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Document View Modals -->
+<!-- Payment Proof Modal -->
+<div class="modal fade" id="paymentProofModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-receipt me-2"></i>Bukti Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center bg-light">
+                <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
+                     class="img-fluid" style="max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo View Modal -->
+<div class="modal fade" id="photoViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-circle me-2"></i>Foto Peserta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center bg-light">
+                <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'photo']) }}" 
+                     class="img-fluid" style="max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KTP Modal -->
+<div class="modal fade" id="ktpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Kartu Identitas (KTP)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center bg-light">
+                <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'ktp']) }}" 
+                     class="img-fluid" style="max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Update Modals -->
+<!-- Update Payment Proof Modal -->
+<div class="modal fade" id="updatePaymentProofModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ route('participant.document.update', $participant->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="document_type" value="payment_proof">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Ganti Bukti Pembayaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Hanya File JPG, PNG (Maksimal 2MB)
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih File Bukti Pembayaran Baru</label>
+                        <input type="file" class="form-control" name="document_file" accept="image/jpeg,image/jpg,image/png" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Photo Modal -->
+<div class="modal fade" id="updatePhotoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ route('participant.document.update', $participant->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="document_type" value="photo">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Ganti Foto Peserta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Hanya File JPG, PNG (Maksimal 2MB)
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih Foto Baru</label>
+                        <input type="file" class="form-control" name="document_file" accept="image/jpeg,image/jpg,image/png" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update KTP Modal -->
+<div class="modal fade" id="updateKtpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ route('participant.document.update', $participant->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="document_type" value="ktp">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Ganti Kartu Identitas (KTP)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Hanya File JPG, PNG (Maksimal 2MB)
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih File KTP Baru</label>
+                        <input type="file" class="form-control" name="document_file" accept="image/jpeg,image/jpg,image/png" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

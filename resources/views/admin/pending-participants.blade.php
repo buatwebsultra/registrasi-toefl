@@ -138,182 +138,271 @@
             </div>
             <div class="modal-body">
                 <div class="row">
+                    <!-- Left Column: Participant Details -->
                     <div class="col-md-6">
-                        <h6>Detail Peserta</h6>
-                        <table class="table table-sm border-0">
-                            <tr>
-                                <td width="40%"><strong>NIM</strong></td>
-                                <td width="5%">:</td>
-                                <td>{{ $participant->nim }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Nama</strong></td>
-                                <td>:</td>
-                                <td>{{ $participant->name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Email</strong></td>
-                                <td>:</td>
-                                <td>{{ $participant->email }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Jurusan</strong></td>
-                                <td>:</td>
-                                <td>{{ $participant->studyProgram->name }} {{ $participant->studyProgram->level }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Fakultas</strong></td>
-                                <td>:</td>
-                                <td>{{ $participant->faculty }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Kategori Tes</strong></td>
-                                <td>:</td>
-                                <td>{{ $participant->test_category }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Jadwal</strong></td>
-                                <td>:</td>
-                                <td>{{ $participant->schedule->room }} - {{ $participant->schedule->date->format('d M Y') }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Tanggal Pembayaran</strong></td>
-                                <td>:</td>
-                                <td>{{ $participant->payment_date ? $participant->payment_date->format('d M Y H:i:s') : '-' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>WhatsApp</strong></td>
-                                <td>:</td>
-                                <td>
-                                    @if($participant->phone)
-                                        <a href="#" class="text-success fw-bold text-decoration-none btn-whatsapp-contact" data-phone="{{ $participant->phone }}">
-                                            <i class="fab fa-whatsapp me-1"></i> {{ $participant->phone }}
-                                        </a>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Bukti Pembayaran</h6>
-                        <div class="text-center mb-3">
-                            @php
-                                $prevProofRoute = null;
-                                $isDuplicate = false;
-                                
-                                // Case 1: Proper Retake (Same ID, proof archived)
-                                if ($participant->previous_payment_proof_path) {
-                                    $prevProofRoute = route('participant.file.download', ['id' => $participant->id, 'type' => 'previous_payment_proof']);
-                                } 
-                                // Case 2: Duplicate Registration (Different ID, same NIM)
-                                elseif ($prevParticipant = $participant->previous_participation) {
-                                    if ($prevParticipant->payment_proof_path) {
-                                        $prevProofRoute = route('participant.file.download', ['id' => $prevParticipant->id, 'type' => 'payment_proof']);
-                                        $isDuplicate = true;
-                                    }
-                                }
-                            @endphp
-
-                            @if($prevProofRoute)
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="card h-100 border-primary">
-                                            <div class="card-header bg-primary text-white py-1">
-                                                <small>Baru (Saat Ini)</small>
-                                                <br>
-                                                <small class="fs-07rem">
-                                                    Input: {{ $participant->payment_date ? $participant->payment_date->format('d M Y H:i:s') : '-' }}
-                                                </small>
-                                            </div>
-                                            <div class="card-body p-2 d-flex align-items-center justify-content-center">
-                                                <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank">
-                                                    <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
-                                                          alt="Bukti Baru" 
-                                                          class="img-fluid rounded shadow-sm mh-150px">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-user me-2"></i>Detail Peserta</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td width="40%" class="text-muted"><small>NIM</small></td>
+                                        <td width="5%">:</td>
+                                        <td><strong>{{ $participant->nim }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>Nama</small></td>
+                                        <td>:</td>
+                                        <td><strong>{{ $participant->name }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>Email</small></td>
+                                        <td>:</td>
+                                        <td>{{ $participant->email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>Jurusan</small></td>
+                                        <td>:</td>
+                                        <td>{{ $participant->studyProgram->name }} {{ $participant->studyProgram->level }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>Fakultas</small></td>
+                                        <td>:</td>
+                                        <td>{{ $participant->faculty }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>Kategori Tes</small></td>
+                                        <td>:</td>
+                                        <td><span class="badge bg-info">{{ $participant->test_category }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>Jadwal</small></td>
+                                        <td>:</td>
+                                        <td>{{ $participant->schedule->room }} - {{ $participant->schedule->date->format('d M Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>Tanggal Pembayaran</small></td>
+                                        <td>:</td>
+                                        <td><span class="badge bg-secondary">{{ $participant->payment_date ? $participant->payment_date->format('d M Y H:i:s') : '-' }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted"><small>WhatsApp</small></td>
+                                        <td>:</td>
+                                        <td>
+                                            @if($participant->phone)
+                                                <a href="#" class="text-success fw-bold text-decoration-none btn-whatsapp-contact" data-phone="{{ $participant->phone }}">
+                                                    <i class="fab fa-whatsapp me-1"></i> {{ $participant->phone }}
                                                 </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="card h-100 border-secondary">
-                                            <div class="card-header bg-secondary text-white py-1">
-                                                <small>Lama (Sebelumnya)</small>
-                                                <br>
-                                                <small class="fs-07rem">
-                                                    @if($isDuplicate && isset($prevParticipant))
-                                                        Input: {{ $prevParticipant->payment_date ? $prevParticipant->payment_date->format('d M Y H:i:s') : '-' }}
-                                                    @elseif($participant->previous_payment_proof_path)
-                                                        {{-- For same-ID retakes, we lost the old payment_date, show created_at as approx --}}
-                                                        Reg: {{ $participant->created_at->format('d M Y H:i:s') }}
-                                                    @else
-                                                        -
-                                                    @endif
-                                                </small>
-                                            </div>
-                                            <div class="card-body p-2 d-flex align-items-center justify-content-center">
-                                                <a href="{{ $prevProofRoute }}" target="_blank">
-                                                    <img src="{{ $prevProofRoute }}" 
-                                                          alt="Bukti Lama" 
-                                                          class="img-fluid rounded shadow-sm opacity-75 mh-150px">
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="alert alert-info mt-2 py-1 px-2" role="alert">
-                                    <small><i class="fas fa-info-circle"></i> 
-                                        @php
-                                            // Count how many times this NIM has appeared BEFORE this current record
-                                            $retakeCount = \App\Models\Participant::where('nim', $participant->nim)
-                                                ->where('created_at', '<', $participant->created_at)
-                                                ->count();
-                                        @endphp
-                                        Peserta ini Mendaftar Ulang Ke {{ $retakeCount }}
-                                    </small>
-                                </div>
-                            @else
-                                <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank">
-                                    <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
-                                          alt="Bukti Pembayaran" 
-                                          class="img-fluid rounded shadow-sm border mh-200px">
-                                </a>
-                            @endif
-                            <small class="text-muted d-block mt-2">
-                                Klik gambar untuk memperbesar
-                            </small>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
                         </div>
-                        
-                        <h6>Informasi Tambahan</h6>
-                        <table class="table table-sm border-0">
-                            <tr>
-                                <td width="40%"><span class="text-muted">Tanggal Daftar</span></td>
-                                <td width="5%">:</td>
-                                <td><strong>{{ $participant->created_at->format('d M Y H:i') }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td><span class="text-muted">Status Saat Ini</span></td>
-                                <td>:</td>
-                                <td><span class="badge bg-warning">{{ $participant->status }}</span></td>
-                            </tr>
-                        </table>
+                    </div>
+
+                    <!-- Right Column: Payment Proof -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>Bukti Pembayaran</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                @php
+                                    $prevProofRoute = null;
+                                    $isDuplicate = false;
+                                    
+                                    // Case 1: Proper Retake (Same ID, proof archived)
+                                    if ($participant->previous_payment_proof_path) {
+                                        $prevProofRoute = route('participant.file.download', ['id' => $participant->id, 'type' => 'previous_payment_proof']);
+                                    } 
+                                    // Case 2: Duplicate Registration (Different ID, same NIM)
+                                    elseif ($prevParticipant = $participant->previous_participation) {
+                                        if ($prevParticipant->payment_proof_path) {
+                                            $prevProofRoute = route('participant.file.download', ['id' => $prevParticipant->id, 'type' => 'payment_proof']);
+                                            $isDuplicate = true;
+                                        }
+                                    }
+                                @endphp
+
+                                @if($prevProofRoute)
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="card h-100 border-primary">
+                                                <div class="card-header bg-primary text-white py-1">
+                                                    <small class="fw-bold">Baru (Saat Ini)</small>
+                                                    <br>
+                                                    <small class="fs-07rem">
+                                                        {{ $participant->payment_date ? $participant->payment_date->format('d M Y H:i:s') : '-' }}
+                                                    </small>
+                                                </div>
+                                                <div class="card-body p-2 d-flex align-items-center justify-content-center" style="min-height: 150px;">
+                                                    <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank">
+                                                        <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
+                                                              alt="Bukti Baru" 
+                                                              class="img-fluid rounded shadow-sm"
+                                                              style="max-height: 150px;">
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="card h-100 border-secondary">
+                                                <div class="card-header bg-secondary text-white py-1">
+                                                    <small class="fw-bold">Lama (Sebelumnya)</small>
+                                                    <br>
+                                                    <small class="fs-07rem">
+                                                        @if($isDuplicate && isset($prevParticipant))
+                                                            {{ $prevParticipant->payment_date ? $prevParticipant->payment_date->format('d M Y H:i:s') : '-' }}
+                                                        @elseif($participant->previous_payment_proof_path)
+                                                            {{ $participant->created_at->format('d M Y H:i:s') }}
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </small>
+                                                </div>
+                                                <div class="card-body p-2 d-flex align-items-center justify-content-center" style="min-height: 150px;">
+                                                    <a href="{{ $prevProofRoute }}" target="_blank">
+                                                        <img src="{{ $prevProofRoute }}" 
+                                                              alt="Bukti Lama" 
+                                                              class="img-fluid rounded shadow-sm opacity-75"
+                                                              style="max-height: 150px;">
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info mt-2 py-2 mb-0" role="alert">
+                                        <small><i class="fas fa-info-circle"></i> 
+                                            @php
+                                                $retakeCount = \App\Models\Participant::where('nim', $participant->nim)
+                                                    ->where('created_at', '<', $participant->created_at)
+                                                    ->count();
+                                            @endphp
+                                            <strong>Pendaftaran Ulang Ke-{{ $retakeCount }}</strong>
+                                        </small>
+                                    </div>
+                                @else
+                                    <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank">
+                                        <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
+                                              alt="Bukti Pembayaran" 
+                                              class="img-fluid rounded shadow border"
+                                              style="max-height: 250px;">
+                                    </a>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-search-plus"></i> Klik gambar untuk memperbesar
+                                    </small>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Date Editor Card -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card border-warning shadow-sm">
+                            <div class="card-header bg-warning bg-opacity-10 border-warning">
+                                <h6 class="mb-0 text-dark">
+                                    <i class="fas fa-calendar-edit me-2"></i>Edit Tanggal & Waktu Pembayaran
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form action="{{ route('admin.participant.confirm', $participant->id) }}" method="POST" id="confirmForm{{ $participant->id }}">
+                                    @csrf
+                                    @method('PUT')
+                                    
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-5">
+                                            <label class="form-label fw-semibold text-muted mb-1">
+                                                <i class="fas fa-calendar me-1"></i> Tanggal
+                                            </label>
+                                            <input type="date" 
+                                                   class="form-control" 
+                                                   name="payment_date" 
+                                                   value="{{ $participant->payment_date ? $participant->payment_date->format('Y-m-d') : date('Y-m-d') }}"
+                                                   required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label fw-semibold text-muted mb-1">
+                                                <i class="fas fa-clock me-1"></i> Jam
+                                            </label>
+                                            <input type="number" 
+                                                   class="form-control text-center" 
+                                                   name="payment_hour" 
+                                                   min="0" 
+                                                   max="23" 
+                                                   value="{{ $participant->payment_date ? $participant->payment_date->format('H') : '00' }}"
+                                                   placeholder="00"
+                                                   required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label fw-semibold text-muted mb-1">Menit</label>
+                                            <input type="number" 
+                                                   class="form-control text-center" 
+                                                   name="payment_minute" 
+                                                   min="0" 
+                                                   max="59" 
+                                                   value="{{ $participant->payment_date ? $participant->payment_date->format('i') : '00' }}"
+                                                   placeholder="00"
+                                                   required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label fw-semibold text-muted mb-1">Detik</label>
+                                            <input type="number" 
+                                                   class="form-control text-center" 
+                                                   name="payment_second" 
+                                                   min="0" 
+                                                   max="59" 
+                                                   value="{{ $participant->payment_date ? $participant->payment_date->format('s') : '00' }}"
+                                                   placeholder="00"
+                                                   required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-info mt-3 mb-0 py-2">
+                                        <small>
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            <strong>Petunjuk:</strong> Sesuaikan tanggal dan waktu dengan yang tertera pada bukti pembayaran di atas
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body py-2">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Tanggal Daftar</small>
+                                        <strong>{{ $participant->created_at->format('d M Y H:i') }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Status Saat Ini</small>
+                                        <span class="badge bg-warning">{{ $participant->status }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <!-- Tolak Modal -->
+            
+            <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $participant->id }}">
-                    <i class="fas fa-times"></i> Tolak
+                    <i class="fas fa-times me-1"></i> Tolak Pendaftaran
                 </button>
-
-                <form action="{{ route('admin.participant.confirm', $participant->id) }}" method="POST" class="d-inline">
-                    @csrf
-                    @method('PUT')
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check"></i> Konfirmasi
-                    </button>
-                </form>
+                <button type="submit" form="confirmForm{{ $participant->id }}" class="btn btn-success btn-lg px-4">
+                    <i class="fas fa-check me-1"></i> Konfirmasi & Simpan
+                </button>
             </div>
         </div>
     </div>

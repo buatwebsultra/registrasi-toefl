@@ -246,14 +246,14 @@
                         <!-- Step 3: Document Uploads -->
                         <div id="step3" class="form-step" style="display: none;">
                             <h4 class="mb-3">Unggah Dokumen yang Diperlukan</h4>
-                            <p class="text-muted">Harap unggah dokumen-dokumen berikut dalam format JPG, PNG, atau PDF (maks 2MB per file)</p>
+                            <p class="text-muted">Harap unggah dokumen-dokumen berikut dalam format JPG atau PNG (maksimal 2MB per file)</p>
 
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="payment_proof" class="form-label">Bukti Pembayaran <span class="text-danger">*</span></label>
-                                        <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/*,application/pdf" required>
-                                        <div class="form-text">File JPG, PNG, atau PDF (maks 2MB)</div>
+                                        <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/jpeg,image/jpg,image/png" required>
+                                        <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                                         <div id="payment_proof_preview" class="mt-2"></div>
                                     </div>
                                 </div>
@@ -261,15 +261,15 @@
                                     <div class="mb-3">
                                         <label for="photo" class="form-label">Foto <span class="text-danger">*</span></label>
                                         <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
-                                        <div class="form-text">File JPG atau PNG (maks 2MB)</div>
+                                        <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                                         <div id="photo_preview" class="mt-2"></div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="ktp" class="form-label">KTP <span class="text-danger">*</span></label>
-                                        <input type="file" class="form-control" id="ktp" name="ktp" accept="image/*,application/pdf" required>
-                                        <div class="form-text">File JPG, PNG, atau PDF (maks 2MB)</div>
+                                        <input type="file" class="form-control" id="ktp" name="ktp" accept="image/jpeg,image/jpg,image/png" required>
+                                        <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                                         <div id="ktp_preview" class="mt-2"></div>
                                     </div>
                                 </div>

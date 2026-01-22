@@ -691,9 +691,31 @@ class AdminController extends Controller
         return view('admin.pending-participants', compact('pendingParticipants', 'schedules'));
     }
 
-    public function confirmParticipant($id)
+    public function confirmParticipant(Request $request, $id)
     {
         $participant = Participant::findOrFail($id);
+
+        // Validate payment date/time if provided
+        $validatedData = $request->validate([
+            'payment_date' => 'nullable|date',
+            'payment_hour' => 'nullable|integer|min:0|max:23',
+            'payment_minute' => 'nullable|integer|min:0|max:59',
+            'payment_second' => 'nullable|integer|min:0|max:59',
+        ]);
+
+        // Update payment_date if provided
+        if ($request->filled('payment_date') && $request->filled('payment_hour') && 
+            $request->filled('payment_minute') && $request->filled('payment_second')) {
+            
+            $paymentDateTime = \Carbon\Carbon::parse($request->payment_date)
+                ->setTime(
+                    $request->payment_hour,
+                    $request->payment_minute,
+                    $request->payment_second
+                );
+            
+            $participant->payment_date = $paymentDateTime;
+        }
 
         // Only assign seat number if it's still reserved
         if ($participant->seat_status === 'reserved') {
@@ -707,12 +729,14 @@ class AdminController extends Controller
             $participant->update([
                 'seat_number' => $seatNumber,
                 'seat_status' => 'confirmed',
-                'status' => 'confirmed'
+                'status' => 'confirmed',
+                'payment_date' => $participant->payment_date
             ]);
         } else {
             // If seat is not reserved, just update the status
             $participant->update([
-                'status' => 'confirmed'
+                'status' => 'confirmed',
+                'payment_date' => $participant->payment_date
             ]);
         }
 

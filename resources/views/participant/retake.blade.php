@@ -101,8 +101,8 @@
                         <div class="col-md-12">
                             <div class="mb-3">
                                 <label for="payment_proof" class="form-label">Bukti Pembayaran <span class="text-danger">*</span></label>
-                                <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/*,application/pdf" required>
-                                <div class="form-text">Unggah file JPG, PNG, atau PDF (maks 2MB)</div>
+                                <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/jpeg,image/jpg,image/png" required>
+                                <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                             </div>
                         </div>
                     </div>

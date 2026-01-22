@@ -39,7 +39,7 @@ class ParticipantController extends Controller
         $validator = Validator::make($request->all(), [
             'schedule_id' => 'required|exists:schedules,id',
             'nim' => 'required|string|max:255',
-            'name' => 'required|string|max:255|regex:/^[A-Za-z\s\.\-]+$/',
+            'name' => 'required|string|max:255|regex:/^[A-Za-z_]+$/',
             'gender' => 'required|in:male,female',
             'birth_place' => 'required|string|max:255|regex:/^[A-Za-z\s\.\-]+$/',
             'birth_date' => 'required|date',
@@ -52,69 +52,86 @@ class ParticipantController extends Controller
             'payment_proof' => [
                 'required',
                 'file',
+                'max:2048', // 2MB max - check this first
                 function ($attribute, $value, $fail) {
-                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-                    $mimeType = $value->getMimeType();
-                    $extension = $value->getClientOriginalExtension();
-
-                    if (!in_array($mimeType, $allowedMimes) && !in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'pdf'])) {
-                        $fail('Format file bukti pembayaran tidak valid.');
+                    // Check file size first (in KB)
+                    $fileSizeKB = $value->getSize() / 1024;
+                    if ($fileSizeKB > 2048) {
+                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).');
+                        return;
                     }
 
-                    // Additional check: verify that the file is actually an image or pdf, not a disguised file
-                    $extensionCheck = strtolower($extension);
-                    if (in_array($extensionCheck, ['jpg', 'jpeg', 'png'])) {
-                        // Check if it's actually an image
-                        $imageInfo = getimagesize($value->getRealPath());
-                        if (!$imageInfo) {
-                            $fail('File bukti pembayaran harus berupa gambar yang valid.');
-                        }
+                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    $mimeType = $value->getMimeType();
+                    $extension = strtolower($value->getClientOriginalExtension());
+
+                    if (!in_array($mimeType, $allowedMimes) && !in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $fail('Kesalahan jenis file yang di-upload. Bukti pembayaran hanya boleh JPG atau PNG.');
+                        return;
+                    }
+
+                    // Additional check: verify that the file is actually an image
+                    $imageInfo = @getimagesize($value->getRealPath());
+                    if (!$imageInfo) {
+                        $fail('Kesalahan jenis file yang di-upload. File bukti pembayaran harus berupa gambar yang valid (JPG atau PNG).');
                     }
                 },
-                'max:2048' // 2MB max
             ],
             'photo' => [
                 'required',
                 'file',
+                'max:2048', // 2MB max - check this first
                 function ($attribute, $value, $fail) {
+                    // Check file size first (in KB)
+                    $fileSizeKB = $value->getSize() / 1024;
+                    if ($fileSizeKB > 2048) {
+                        $fail('Ukuran file foto melebihi kapasitas maksimal (2MB).');
+                        return;
+                    }
+
                     $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
                     $mimeType = $value->getMimeType();
-                    $extension = $value->getClientOriginalExtension();
+                    $extension = strtolower($value->getClientOriginalExtension());
 
-                    if (!in_array($mimeType, $allowedMimes) && !in_array(strtolower($extension), ['jpg', 'jpeg', 'png'])) {
-                        $fail('Format file foto tidak valid.');
+                    if (!in_array($mimeType, $allowedMimes) && !in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $fail('Kesalahan jenis file yang di-upload. Foto hanya boleh JPG atau PNG.');
+                        return;
                     }
 
                     // Additional check: verify that the file is actually an image
-                    $imageInfo = getimagesize($value->getRealPath());
+                    $imageInfo = @getimagesize($value->getRealPath());
                     if (!$imageInfo) {
-                        $fail('File foto harus berupa gambar yang valid.');
+                        $fail('Kesalahan jenis file yang di-upload. File foto harus berupa gambar yang valid (JPG atau PNG).');
                     }
                 },
-                'max:2048' // 2MB max
             ],
             'ktp' => [
                 'required',
                 'file',
+                'max:2048', // 2MB max - check this first
                 function ($attribute, $value, $fail) {
-                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-                    $mimeType = $value->getMimeType();
-                    $extension = $value->getClientOriginalExtension();
-
-                    if (!in_array($mimeType, $allowedMimes) && !in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'pdf'])) {
-                        $fail('Format file KTP tidak valid.');
+                    // Check file size first (in KB)
+                    $fileSizeKB = $value->getSize() / 1024;
+                    if ($fileSizeKB > 2048) {
+                        $fail('Ukuran file KTP melebihi kapasitas maksimal (2MB).');
+                        return;
                     }
 
-                    // Additional check: verify that the file is actually an image or pdf
-                    $extensionCheck = strtolower($extension);
-                    if (in_array($extensionCheck, ['jpg', 'jpeg', 'png'])) {
-                        $imageInfo = getimagesize($value->getRealPath());
-                        if (!$imageInfo) {
-                            $fail('File KTP harus berupa gambar yang valid.');
-                        }
+                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    $mimeType = $value->getMimeType();
+                    $extension = strtolower($value->getClientOriginalExtension());
+
+                    if (!in_array($mimeType, $allowedMimes) && !in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $fail('Kesalahan jenis file yang di-upload. KTP hanya boleh JPG atau PNG.');
+                        return;
+                    }
+
+                    // Additional check: verify that the file is actually an image
+                    $imageInfo = @getimagesize($value->getRealPath());
+                    if (!$imageInfo) {
+                        $fail('Kesalahan jenis file yang di-upload. File KTP harus berupa gambar yang valid (JPG atau PNG).');
                     }
                 },
-                'max:2048' // 2MB max
             ],
             'username' => 'required|string|max:255|regex:/^[a-z0-9._%+-]+$/',
             'password' => [
@@ -133,7 +150,7 @@ class ParticipantController extends Controller
             'password.min' => 'Password minimal harus 12 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
             'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter khusus (@$!%*?&).',
-            'name.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, dan tanda hubung.',
+            'name.regex' => 'Nama hanya boleh berisi huruf dan underscore (_).',
             'birth_place.regex' => 'Tempat lahir hanya boleh berisi huruf, spasi, titik, dan tanda hubung.',
             'payment_hour.required' => 'Jam pembayaran wajib dipilih.',
             'payment_minute.required' => 'Menit pembayaran wajib dipilih.',
@@ -469,7 +486,7 @@ class ParticipantController extends Controller
             'payment_minute' => 'required|string|max:2',
             'payment_second' => 'required|string|max:2',
             'test_category' => 'required|string|max:255',
-            'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'payment_proof' => 'required|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -619,26 +636,30 @@ class ParticipantController extends Controller
             'payment_proof' => [
                 'required',
                 'file',
+                'max:2048', // 2MB max - check this first
                 function ($attribute, $value, $fail) {
-                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-                    $mimeType = $value->getMimeType();
-                    $extension = $value->getClientOriginalExtension();
-
-                    if (!in_array($mimeType, $allowedMimes) && !in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'pdf'])) {
-                        $fail('Format file bukti pembayaran tidak valid.');
+                    // Check file size first (in KB)
+                    $fileSizeKB = $value->getSize() / 1024;
+                    if ($fileSizeKB > 2048) {
+                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).');
+                        return;
                     }
 
-                    // Additional check: verify that the file is actually an image or pdf, not a disguised file
-                    $extensionCheck = strtolower($extension);
-                    if (in_array($extensionCheck, ['jpg', 'jpeg', 'png'])) {
-                        // Check if it's actually an image
-                        $imageInfo = getimagesize($value->getRealPath());
-                        if (!$imageInfo) {
-                            $fail('File bukti pembayaran harus berupa gambar yang valid.');
-                        }
+                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    $mimeType = $value->getMimeType();
+                    $extension = strtolower($value->getClientOriginalExtension());
+
+                    if (!in_array($mimeType, $allowedMimes) && !in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $fail('Kesalahan jenis file yang di-upload. Bukti pembayaran hanya boleh JPG atau PNG.');
+                        return;
+                    }
+
+                    // Additional check: verify that the file is actually an image
+                    $imageInfo = @getimagesize($value->getRealPath());
+                    if (!$imageInfo) {
+                        $fail('Kesalahan jenis file yang di-upload. File bukti pembayaran harus berupa gambar yang valid (JPG atau PNG).');
                     }
                 },
-                'max:2048' // 2MB max
             ],
         ], [
             'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
@@ -774,5 +795,117 @@ class ParticipantController extends Controller
         ]);
 
         return response()->file($fullPath);
+    }
+
+    /**
+     * Update participant document (payment proof, photo, or KTP)
+     */
+    public function updateDocument(Request $request, $id)
+    {
+        $this->authorizeParticipant($id);
+        $participant = Participant::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'document_type' => 'required|in:payment_proof,photo,ktp',
+            'document_file' => [
+                'required',
+                'file',
+                'max:2048', // 2MB max - check this first
+                function ($attribute, $value, $fail) use ($request) {
+                    // Check file size first (in KB)
+                    $fileSizeKB = $value->getSize() / 1024;
+                    if ($fileSizeKB > 2048) {
+                        $fail('Ukuran file yang di-upload melebihi kapasitas maksimal (2MB).');
+                        return;
+                    }
+
+                    $docType = $request->document_type;
+                    $mimeType = $value->getMimeType();
+                    $extension = strtolower($value->getClientOriginalExtension());
+
+                    // All document types only accept JPG and PNG
+                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    $allowedExtensions = ['jpg', 'jpeg', 'png'];
+
+                    if (!in_array($mimeType, $allowedMimes) && !in_array($extension, $allowedExtensions)) {
+                        $fail('Kesalahan jenis file yang di-upload. File hanya boleh JPG atau PNG.');
+                        return;
+                    }
+
+                    // Verify image files
+                    $imageInfo = @getimagesize($value->getRealPath());
+                    if (!$imageInfo) {
+                        $fail('Kesalahan jenis file yang di-upload. File harus berupa gambar yang valid (JPG atau PNG).');
+                    }
+                },
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->with('error', 'Gagal mengupdate dokumen. Silakan periksa file yang diupload.');
+        }
+
+        $documentType = $request->document_type;
+        $file = $request->file('document_file');
+
+        try {
+            // Determine storage directory based on type
+            $directory = match($documentType) {
+                'payment_proof' => 'payment_proofs',
+                'photo' => 'photos',
+                'ktp' => 'ktps',
+            };
+
+            // Store new file in private storage
+            $newFilePath = $file->store($directory, 'private');
+
+            // Get old file path and backup it before replacing
+            $oldFilePath = match($documentType) {
+                'payment_proof' => $participant->payment_proof_path,
+                'photo' => $participant->photo_path,
+                'ktp' => $participant->ktp_path,
+            };
+
+            // Update participant with new file path
+            $updateData = match($documentType) {
+                'payment_proof' => [
+                    'payment_proof_path' => $newFilePath,
+                    'previous_payment_proof_path' => $oldFilePath,
+                ],
+                'photo' => ['photo_path' => $newFilePath],
+                'ktp' => ['ktp_path' => $newFilePath],
+            };
+
+            $participant->update($updateData);
+
+            // Delete old file (except we keep previous_payment_proof for record)
+            if ($oldFilePath && \Storage::disk('private')->exists($oldFilePath)) {
+                if ($documentType !== 'payment_proof') {
+                    \Storage::disk('private')->delete($oldFilePath);
+                }
+            }
+
+            // Log activity
+            $docLabel = match($documentType) {
+                'payment_proof' => 'Bukti Pembayaran',
+                'photo' => 'Foto Peserta',
+                'ktp' => 'Kartu Identitas (KTP)',
+            };
+            ActivityLogger::log('Update Dokumen', $participant->name . ' (NIM: ' . $participant->nim . ') mengupdate ' . $docLabel . '.');
+
+            return redirect()->route('participant.dashboard', $participant->id)
+                ->with('success', $docLabel . ' berhasil diperbarui.');
+        } catch (\Exception $e) {
+            // Delete uploaded file if error occurs
+            if (isset($newFilePath) && \Storage::disk('private')->exists($newFilePath)) {
+                \Storage::disk('private')->delete($newFilePath);
+            }
+
+            \Log::error('Document update error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat mengupdate dokumen. Silakan coba lagi nanti.');
+        }
     }
 }

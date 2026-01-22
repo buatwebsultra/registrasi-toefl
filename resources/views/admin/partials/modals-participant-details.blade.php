@@ -78,7 +78,7 @@
                 <div class="modal-body p-4">
                     <div class="alert alert-warning border-0 bg-warning bg-opacity-10 mb-4">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        Anda akan mereset password untuk peserta <strong>{{ $participant->name }}</strong>.
+                        Anda akan mereset password untuk peserta <strong>{{ $participant->name }}</strong> dengan Username <strong>{{ $participant->username }}</strong>.
                     </div>
                     
                     <div class="mb-3">

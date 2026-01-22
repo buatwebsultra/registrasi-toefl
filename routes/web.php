@@ -45,7 +45,9 @@ Route::middleware(['participant'])->prefix('participant')->group(function () {
     Route::post('/retake/{id}', [ParticipantController::class, 'processRetake'])->name('participant.retake.process')->middleware('throttle:5,1'); // SECURITY: Rate limit 5/min
     Route::get('/resubmit-payment/{id}', [ParticipantController::class, 'showResubmitPaymentForm'])->name('participant.resubmit.payment.form');
     Route::post('/resubmit-payment/{id}', [ParticipantController::class, 'processResubmitPayment'])->name('participant.resubmit.payment')->middleware('throttle:3,1'); // SECURITY: Rate limit 3/min
+    Route::post('/document/update/{id}', [ParticipantController::class, 'updateDocument'])->name('participant.document.update')->middleware('throttle:5,1'); // SECURITY: Rate limit 5/min
 });
+
 
 // PUBLIC Participant Routes (Registration & Login)
 Route::prefix('participant')->group(function () {

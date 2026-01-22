@@ -163,13 +163,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="payment_proof" class="form-label">Upload Ulang Bukti Pembayaran <span class="text-danger">*</span></label>
-                        <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept="image/*,application/pdf" required>
+                        <label for="payment_proof" class="form-label fw-bold">Bukti Pembayaran Baru <span class="text-danger">*</span></label>
+                        <input type="file" name="payment_proof" id="payment_proof" class="form-control" accept="image/jpeg,image/jpg,image/png" required>
                         <div class="form-text">
-                            Format file: JPG, JPEG, PNG, atau PDF. Ukuran maksimal: 2MB.
+                            <strong>Hanya File JPG, PNG</strong>. Ukuran maksimal: 2MB.
                         </div>
-
-                        @if($participant->payment_proof_path)
+                    </div>     @if($participant->payment_proof_path)
                             <div class="mt-2">
                                 <label class="form-label">Bukti Pembayaran Sebelumnya:</label>
                                 <div>
