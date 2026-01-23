@@ -698,9 +698,9 @@ class AdminController extends Controller
         // Validate payment date/time if provided
         $validatedData = $request->validate([
             'payment_date' => 'nullable|date',
-            'payment_hour' => 'nullable|integer|min:0|max:23',
-            'payment_minute' => 'nullable|integer|min:0|max:59',
-            'payment_second' => 'nullable|integer|min:0|max:59',
+            'payment_hour' => 'nullable|numeric|min:0|max:23',
+            'payment_minute' => 'nullable|numeric|min:0|max:59',
+            'payment_second' => 'nullable|numeric|min:0|max:59',
         ]);
 
         // Update payment_date if provided

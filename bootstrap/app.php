@@ -25,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             // Determine redirect based on the request path
             if ($request->is('admin/*') || $request->is('admin')) {
-                return redirect()->route('admin.login')
+                return redirect()->route('admin.login.form')
                     ->with('error', 'Sesi Anda telah habis. Silakan login kembali.');
             }
             

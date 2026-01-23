@@ -39,7 +39,7 @@ class ParticipantController extends Controller
         $validator = Validator::make($request->all(), [
             'schedule_id' => 'required|exists:schedules,id',
             'nim' => 'required|string|max:255',
-            'name' => 'required|string|max:255|regex:/^[A-Za-z_]+$/',
+            'name' => 'required|string|max:255|regex:/^[A-Za-z\s\.\,\'\-]+$/',
             'gender' => 'required|in:male,female',
             'birth_place' => 'required|string|max:255|regex:/^[A-Za-z\s\.\-]+$/',
             'birth_date' => 'required|date',
@@ -150,7 +150,7 @@ class ParticipantController extends Controller
             'password.min' => 'Password minimal harus 12 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
             'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter khusus (@$!%*?&).',
-            'name.regex' => 'Nama hanya boleh berisi huruf dan underscore (_).',
+            'name.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, koma, tanda petik tunggal, dan tanda hubung.',
             'birth_place.regex' => 'Tempat lahir hanya boleh berisi huruf, spasi, titik, dan tanda hubung.',
             'payment_hour.required' => 'Jam pembayaran wajib dipilih.',
             'payment_minute.required' => 'Menit pembayaran wajib dipilih.',
