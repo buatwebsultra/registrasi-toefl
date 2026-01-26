@@ -252,7 +252,10 @@
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="payment_proof" class="form-label">Bukti Pembayaran <span class="text-danger">*</span></label>
-                                        <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/jpeg,image/jpg,image/png" required>
+                                        <input type="file" class="form-control @error('payment_proof') is-invalid @enderror" id="payment_proof" name="payment_proof" accept="image/jpeg,image/jpg,image/png" required>
+                                        @error('payment_proof')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                         <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                                         <div id="payment_proof_preview" class="mt-2"></div>
                                     </div>
@@ -260,7 +263,10 @@
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="photo" class="form-label">Foto <span class="text-danger">*</span></label>
-                                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
+                                        <input type="file" class="form-control @error('photo') is-invalid @enderror" id="photo" name="photo" accept="image/*" required>
+                                        @error('photo')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                         <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                                         <div id="photo_preview" class="mt-2"></div>
                                     </div>
@@ -268,7 +274,10 @@
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="ktp" class="form-label">KTP <span class="text-danger">*</span></label>
-                                        <input type="file" class="form-control" id="ktp" name="ktp" accept="image/jpeg,image/jpg,image/png" required>
+                                        <input type="file" class="form-control @error('ktp') is-invalid @enderror" id="ktp" name="ktp" accept="image/jpeg,image/jpg,image/png" required>
+                                        @error('ktp')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                         <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                                         <div id="ktp_preview" class="mt-2"></div>
                                     </div>
@@ -470,10 +479,39 @@ document.addEventListener('DOMContentLoaded', function() {
             if (usernameInput) {
                 const isValid = validateUsername(usernameInput.value);
                 if (!isValid) {
-                    e.preventDefault(); // Prevent form submission if invalid
-                    usernameInput.focus(); // Focus on the invalid field
+                    e.preventDefault();
+                    usernameInput.focus();
                     return false;
                 }
+            }
+
+            // Comprehensive re-validation of ALL steps before final submission
+            let allStepsValid = true;
+            for (let i = 1; i <= totalSteps; i++) {
+                if (!validateStep(i)) {
+                    allStepsValid = false;
+                    showStep(i); // Show the first step that contains error
+                    e.preventDefault();
+                    return false;
+                }
+            }
+
+            // Cumulative file size check to prevent "413 Content Too Large"
+            const fileInputs = form.querySelectorAll('input[type="file"]');
+            let totalSizeBytes = 0;
+            fileInputs.forEach(input => {
+                if (input.files.length > 0) {
+                    totalSizeBytes += input.files[0].size;
+                }
+            });
+
+            const totalSizeMB = totalSizeBytes / 1024 / 1024;
+            const maxTotalSizeMB = 5.0; // Stay safe within post_max_size (6M)
+
+            if (totalSizeMB > maxTotalSizeMB) {
+                e.preventDefault();
+                alert('Total ukuran semua file (' + totalSizeMB.toFixed(2) + ' MB) melebihi batas maksimal yang diizinkan (5 MB). Mohon perkecil ukuran file Anda sebelum mengirim.');
+                return false;
             }
         });
     }
@@ -592,6 +630,27 @@ function validateStep(step) {
             errorDiv.className = 'invalid-feedback';
             errorDiv.textContent = 'File wajib diunggah.';
             field.parentNode.appendChild(errorDiv);
+        } else if (field.type === 'file' && field.files.length > 0) {
+            const file = field.files[0];
+            const fileSize = file.size / 1024 / 1024; // in MB
+            const allowedExtensions = ['jpg', 'jpeg', 'png'];
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+
+            if (fileSize > 2) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                errorDiv.textContent = 'Ukuran file melebihi kapasitas maksimal (2MB).';
+                field.parentNode.appendChild(errorDiv);
+            } else if (!allowedExtensions.includes(fileExtension)) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                errorDiv.textContent = 'Format file tidak didukung. Gunakan JPG atau PNG.';
+                field.parentNode.appendChild(errorDiv);
+            }
         }
     });
 

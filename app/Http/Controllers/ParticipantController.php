@@ -155,6 +155,15 @@ class ParticipantController extends Controller
             'payment_hour.required' => 'Jam pembayaran wajib dipilih.',
             'payment_minute.required' => 'Menit pembayaran wajib dipilih.',
             'payment_second.required' => 'Detik pembayaran wajib dipilih.',
+            'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
+            'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 2MB.',
+            'payment_proof.file' => 'Bukti pembayaran harus berupa file.',
+            'photo.required' => 'Foto wajib diunggah.',
+            'photo.max' => 'Ukuran file foto maksimal 2MB.',
+            'photo.file' => 'Foto harus berupa file.',
+            'ktp.required' => 'KTP wajib diunggah.',
+            'ktp.max' => 'Ukuran file KTP maksimal 2MB.',
+            'ktp.file' => 'KTP harus berupa file.',
         ]);
 
         if ($validator->fails()) {
@@ -486,7 +495,32 @@ class ParticipantController extends Controller
             'payment_minute' => 'required|string|max:2',
             'payment_second' => 'required|string|max:2',
             'test_category' => 'required|string|max:255',
-            'payment_proof' => 'required|file|mimes:jpg,jpeg,png|max:2048',
+            'payment_proof' => [
+                'required',
+                'file',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    $fileSizeKB = $value->getSize() / 1024;
+                    if ($fileSizeKB > 2048) {
+                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).');
+                        return;
+                    }
+
+                    $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    $mimeType = $value->getMimeType();
+                    $extension = strtolower($value->getClientOriginalExtension());
+
+                    if (!in_array($mimeType, $allowedMimes) && !in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $fail('Kesalahan jenis file yang di-upload. Bukti pembayaran hanya boleh JPG atau PNG.');
+                        return;
+                    }
+
+                    $imageInfo = @getimagesize($value->getRealPath());
+                    if (!$imageInfo) {
+                        $fail('Kesalahan jenis file yang di-upload. File bukti pembayaran harus berupa gambar yang valid (JPG atau PNG).');
+                    }
+                },
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -663,7 +697,7 @@ class ParticipantController extends Controller
             ],
         ], [
             'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
-            'payment_proof.file' => 'File bukti pembayaran harus berupa file.',
+            'payment_proof.file' => 'Bukti pembayaran harus berupa file.',
             'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 2MB.',
         ]);
 
@@ -844,6 +878,7 @@ class ParticipantController extends Controller
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
+                ->withInput()
                 ->with('error', 'Gagal mengupdate dokumen. Silakan periksa file yang diupload.');
         }
 

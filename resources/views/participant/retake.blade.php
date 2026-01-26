@@ -101,7 +101,10 @@
                         <div class="col-md-12">
                             <div class="mb-3">
                                 <label for="payment_proof" class="form-label">Bukti Pembayaran <span class="text-danger">*</span></label>
-                                <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/jpeg,image/jpg,image/png" required>
+                                <input type="file" class="form-control @error('payment_proof') is-invalid @enderror" id="payment_proof" name="payment_proof" accept="image/jpeg,image/jpg,image/png" required>
+                                @error('payment_proof')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                                 <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
                             </div>
                         </div>
@@ -109,13 +112,60 @@
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{{ route('participant.dashboard', $participant->id) }}" class="btn btn-secondary me-md-2">Batal</a>
-                        <button type="submit" class="btn btn-primary btn-lg">Kirim Pendaftaran Ulang</button>
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Kirim Pendaftaran Ulang</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const paymentProof = document.getElementById('payment_proof');
+
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Clear previous error states
+        paymentProof.classList.remove('is-invalid');
+        const existingErrors = form.querySelectorAll('.invalid-feedback');
+        existingErrors.forEach(error => {
+            if (error.id !== 'paymentErrorMessage') error.remove();
+        });
+
+        // Validate payment proof if a file is selected
+        if (paymentProof.files.length > 0) {
+            const file = paymentProof.files[0];
+            const fileSize = file.size / 1024 / 1024; // MB
+            const allowedExtensions = ['jpg', 'jpeg', 'png'];
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+
+            if (fileSize > 2) {
+                paymentProof.classList.add('is-invalid');
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                errorDiv.textContent = 'Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).';
+                paymentProof.parentNode.appendChild(errorDiv);
+                isValid = false;
+            } else if (!allowedExtensions.includes(fileExtension)) {
+                paymentProof.classList.add('is-invalid');
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                errorDiv.textContent = 'Format file tidak didukung. Gunakan JPG atau PNG.';
+                paymentProof.parentNode.appendChild(errorDiv);
+                isValid = false;
+            }
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            paymentProof.focus();
+        }
+    });
+});
+</script>
 
 
 </script>

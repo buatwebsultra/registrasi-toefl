@@ -782,6 +782,50 @@
     </div>
 </div>
 </div> <!-- Closing tab-content -->
+
+<script nonce="{{ $csp_nonce ?? '' }}">
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all forms that update documents
+    const documentForms = document.querySelectorAll('form[action*="document/update"]');
+    
+    documentForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const fileInput = form.querySelector('input[type="file"]');
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileSize = file.size / 1024 / 1024; // MB
+                const allowedExtensions = ['jpg', 'jpeg', 'png'];
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+                
+                let isValid = true;
+                let errorMessage = '';
+
+                // Clear existing error messages
+                fileInput.classList.remove('is-invalid');
+                const existingError = form.querySelector('.invalid-feedback');
+                if (existingError) existingError.remove();
+
+                if (fileSize > 2) {
+                    isValid = false;
+                    errorMessage = 'Ukuran file melebihi kapasitas maksimal (2MB).';
+                } else if (!allowedExtensions.includes(fileExtension)) {
+                    isValid = false;
+                    errorMessage = 'Format file tidak didukung. Gunakan JPG atau PNG.';
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    fileInput.classList.add('is-invalid');
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = errorMessage;
+                    fileInput.parentNode.appendChild(errorDiv);
+                }
+            }
+        });
+    });
+});
+</script>
 @endsection
 
 
