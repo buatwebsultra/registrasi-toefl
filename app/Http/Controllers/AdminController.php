@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Schedule;
 use App\Models\Participant;
 use App\Services\ActivityLogger;
+use App\Services\ScoreConverter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -55,7 +56,7 @@ class AdminController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'nip' => 'nullable|string|max:255',
@@ -126,11 +127,13 @@ class AdminController extends Controller
             return redirect()->route('prodi.dashboard');
         }
         $searchDate = request('search_date');
-        
+
         $query = Schedule::withCount('participants')
-            ->withCount(['participants as pending_count' => function ($query) {
-                $query->where('status', 'pending');
-            }]);
+            ->withCount([
+                'participants as pending_count' => function ($query) {
+                    $query->where('status', 'pending');
+                }
+            ]);
 
         if ($searchDate) {
             $query->whereDate('date', $searchDate);
@@ -148,15 +151,15 @@ class AdminController extends Controller
             if ($schedule->used_capacity !== $schedule->participants_count) {
                 $schedule->update(['used_capacity' => $schedule->participants_count]);
             }
-            
+
             // Determine if schedule should be 'full' (either reached capacity, is past, or within 2-day registration window)
             // Logic: Close registration if today is within 2 days of test date
             $isPast = $schedule->date->isPast() && !$schedule->date->isToday();
-            
+
             // Check H-2 logic. If test is on Friday (Day 5), close on Wednesday (Day 3) end of day?
             // User requirement: "sudah 2 hari". usually means D-2.
             $isWithinTwoDays = $schedule->date->lte(now()->addDays(1)->endOfDay());
-            
+
             if (($schedule->used_capacity >= $schedule->capacity || $isPast || $isWithinTwoDays)) {
                 if ($schedule->status !== 'full') {
                     $schedule->update(['status' => 'full']);
@@ -275,7 +278,7 @@ class AdminController extends Controller
             $isPast = $schedule->date->isPast() && !$schedule->date->isToday();
             // Registration closes 2 days before test
             $isWithinTwoDays = $schedule->date->lte(now()->addDays(1)->endOfDay());
-            
+
             if ($isPast || $isWithinTwoDays) {
                 $schedule->update(['status' => 'full']);
             } else {
@@ -308,7 +311,7 @@ class AdminController extends Controller
     {
         $schedule = Schedule::findOrFail($id);
         $schedule->update(['status' => 'full']);
-        
+
         ActivityLogger::log('Tandai Jadwal Penuh', 'Admin menandai jadwal ID: ' . $id . ' sebagai penuh.');
 
         return redirect()->route('admin.dashboard')->with('success', 'Schedule marked as full.');
@@ -323,7 +326,7 @@ class AdminController extends Controller
         }
 
         $fullPath = storage_path('app/private/' . $user->photo_path);
-        
+
         return response()->file($fullPath);
     }
 
@@ -334,20 +337,39 @@ class AdminController extends Controller
         }
         $schedule = Schedule::findOrFail($scheduleId);
 
-        // Ambil parameter pencarian
+        // Ambil parameter pencarian dan pengurutan
         $searchNim = request('search_nim');
         $status = request('status');
+        $sort = request('sort');
 
-        $query = $schedule->participants()->with('studyProgram');
+        $query = $schedule->participants()->with('studyProgram')
+            ->addSelect([
+                'participants.*',
+                'test_count' => Participant::selectRaw('count(*)')
+                    ->from('participants as history')
+                    ->whereColumn('history.nim', 'participants.nim')
+                    ->whereNotNull('history.test_score')
+                    ->whereNull('history.deleted_at')
+            ]);
 
         // Jika ada parameter pencarian NIM, cari peserta dengan NIM tertentu
         if ($searchNim) {
             $query->where('nim', $searchNim);
         }
-        
+
         // Filter by status if provided
         if ($status) {
             $query->where('status', $status);
+        }
+
+        // Handle sorting
+        if ($sort === 'name_asc') {
+            $query->orderBy('name', 'asc');
+        } elseif ($sort === 'score_desc') {
+            $query->orderBy('test_score', 'desc');
+        } else {
+            // Default sorting - using raw SQL to handle the logical "effective seat number"
+            $query->orderByRaw('COALESCE(seat_number, temp_seat_number, id) ASC');
         }
 
         $participants = $query->paginate(10);
@@ -355,7 +377,7 @@ class AdminController extends Controller
         // Hitung total peserta untuk kebutuhan view
         $totalParticipants = $schedule->participants()->count();
 
-        return view('admin.participants-list', compact('schedule', 'participants', 'searchNim', 'totalParticipants'));
+        return view('admin.participants-list', compact('schedule', 'participants', 'searchNim', 'totalParticipants', 'sort'));
     }
 
     public function participantDetails($id)
@@ -364,7 +386,7 @@ class AdminController extends Controller
         if (!Auth::check() || !Auth::user()->isOperator()) {
             abort(403, 'Unauthorized access');
         }
-        
+
         $participant = Participant::findOrFail($id);
 
         // SECURITY: If user is prodi, they can only access data for their own study program
@@ -380,7 +402,7 @@ class AdminController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-    return view('admin.participant-details', compact('participant', 'testHistory'));
+        return view('admin.participant-details', compact('participant', 'testHistory'));
     }
 
     public function participantPhoto($id)
@@ -445,7 +467,7 @@ class AdminController extends Controller
         if (!Auth::check() || !Auth::user()->isOperator()) {
             abort(403, 'Unauthorized access');
         }
-        
+
         $participant = Participant::findOrFail($id);
 
         // Delete associated files from private storage
@@ -486,7 +508,7 @@ class AdminController extends Controller
         if (!Auth::check() || !Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized access');
         }
-        
+
         $participant = Participant::findOrFail($id);
 
         // Check if participant is present
@@ -497,31 +519,39 @@ class AdminController extends Controller
         // Only handle PBT format validation and processing
         $testFormat = 'PBT'; // Force to PBT since we're removing iBT logic
 
-        // PBT validation - Total score will be the sum of three parts (max 68+68+67=203)
+        // New Validation for Raw Scores (Jumlah Benar)
+        // Listening: 0-50, Structure: 0-40, Reading: 0-50
         $request->validate([
             'test_date' => 'required|date',
-            'listening_score_pbt' => 'required|numeric|min:0|max:68',
-            'structure_score_pbt' => 'required|numeric|min:0|max:68',
-            'reading_score_pbt' => 'required|numeric|min:0|max:67',
+            'raw_listening_pbt' => 'required|numeric|min:0|max:50',
+            'raw_structure_pbt' => 'required|numeric|min:0|max:40',
+            'raw_reading_pbt' => 'required|numeric|min:0|max:50',
             'test_format' => 'required|string|in:PBT',
+        ], [
+            'raw_listening_pbt.max' => 'Jumlah Benar Listening tidak bisa lebih dari 50.',
+            'raw_structure_pbt.max' => 'Jumlah Benar Structure tidak bisa lebih dari 40.',
+            'raw_reading_pbt.max' => 'Jumlah Benar Reading tidak bisa lebih dari 50.',
         ]);
+
+        // Convert Raw Scores to Scaled Scores
+        $listeningScaled = ScoreConverter::convert(1, $request->raw_listening_pbt);
+        $structureScaled = ScoreConverter::convert(2, $request->raw_structure_pbt);
+        $readingScaled = ScoreConverter::convert(3, $request->raw_reading_pbt);
 
         // Update test format to PBT
         $updateData = [
             'test_date' => $request->test_date,
             'test_format' => $testFormat,
+            'raw_listening_pbt' => $request->raw_listening_pbt,
+            'raw_structure_pbt' => $request->raw_structure_pbt,
+            'raw_reading_pbt' => $request->raw_reading_pbt,
+            'listening_score_pbt' => $listeningScaled,
+            'structure_score_pbt' => $structureScaled,
+            'reading_score_pbt' => $readingScaled,
         ];
 
-        // PBT scores
-        $updateData['listening_score_pbt'] = $request->listening_score_pbt;
-        $updateData['structure_score_pbt'] = $request->structure_score_pbt;
-        $updateData['reading_score_pbt'] = $request->reading_score_pbt;
-
-        // Calculate and set test score based on formula: ((L+S+R)/3) * 10
-        $listening = $request->listening_score_pbt;
-        $structure = $request->structure_score_pbt;
-        $reading = $request->reading_score_pbt;
-        $calculatedTotal = round(($listening + $structure + $reading) * 10 / 3);
+        // Calculate and set test score using service
+        $calculatedTotal = ScoreConverter::calculateTotal($listeningScaled, $structureScaled, $readingScaled);
         $updateData['test_score'] = $calculatedTotal;
 
         // Get academic level automatically based on participant's study program
@@ -553,13 +583,13 @@ class AdminController extends Controller
         $updateData['academic_level'] = $academicLevel;
         $updateData['is_score_validated'] = false; // Reset validation on every score update
 
-    // Use the model's accessor logic to determine the passed status
-    // First, fill the participant with the new data
-    $participant->fill($updateData);
-    
-    // The 'passed' attribute is now calculated by the model's accessor getPassedAttribute()
-    // We explicitly set it in the update data to ensure it's saved to the database column
-    $updateData['passed'] = $participant->passed;
+        // Use the model's accessor logic to determine the passed status
+        // First, fill the participant with the new data
+        $participant->fill($updateData);
+
+        // The 'passed' attribute is now calculated by the model's accessor getPassedAttribute()
+        // We explicitly set it in the update data to ensure it's saved to the database column
+        $updateData['passed'] = $participant->passed;
 
         $participant->update($updateData);
 
@@ -572,7 +602,7 @@ class AdminController extends Controller
     public function updateAttendance(Request $request, $id)
     {
         $participant = Participant::findOrFail($id);
-        
+
         // Block if already passed
         if ($participant->passed) {
             return back()->with('error', 'Tidak dapat mengubah kehadiran peserta yang sudah dinyatakan LULUS.');
@@ -602,7 +632,7 @@ class AdminController extends Controller
             $updateData['structure_score_pbt'] = 0;
             $updateData['reading_score_pbt'] = 0;
             $updateData['test_format'] = 'PBT';
-        } 
+        }
 
         $participant->update($updateData);
 
@@ -611,36 +641,37 @@ class AdminController extends Controller
         return back()->with('success', 'Status kehadiran berhasil diperbarui.');
     }
 
-    public function rescheduleParticipant(Request $request, $id) {
+    public function rescheduleParticipant(Request $request, $id)
+    {
         $participant = Participant::findOrFail($id);
-        
+
         $request->validate([
             'new_schedule_id' => 'required|exists:schedules,id',
         ]);
-        
+
         $newSchedule = Schedule::findOrFail($request->new_schedule_id);
-        
+
         // Check capacity
         if ($newSchedule->used_capacity >= $newSchedule->capacity) {
             return back()->with('error', 'Jadwal yang dipilih sudah penuh.');
         }
-        
+
         // Update participant schedule
         // We keep the old record but soft delete it? Or move it? 
         // Requirement: "admin memindahkan jadwal yang tersedia" -> Implies moving.
         // Changing schedule_id is the simplest way to move.
-        
+
         // Decrement old schedule capacity
         $oldSchedule = $participant->schedule;
         if ($oldSchedule) {
             $oldSchedule->decrement('used_capacity');
-            
+
             // Update old schedule status to available if it was full
             if ($oldSchedule->used_capacity < $oldSchedule->capacity && $oldSchedule->status === 'full') {
                 $oldSchedule->update(['status' => 'available']);
             }
         }
-        
+
         // Generate new seat number
         $seatNumber = $this->generateSeatNumber($newSchedule);
 
@@ -655,7 +686,7 @@ class AdminController extends Controller
             'passed' => false,
             // Keep personal data and payment proof
         ]);
-        
+
         // Increment new schedule capacity
         $newSchedule->increment('used_capacity');
 
@@ -663,7 +694,7 @@ class AdminController extends Controller
         if ($newSchedule->used_capacity >= $newSchedule->capacity) {
             $newSchedule->update(['status' => 'full']);
         }
-        
+
         return redirect()->route('admin.participants.list', $oldSchedule->id)->with('success', 'Peserta berhasil dipindahkan ke jadwal baru.');
     }
 
@@ -704,16 +735,18 @@ class AdminController extends Controller
         ]);
 
         // Update payment_date if provided
-        if ($request->filled('payment_date') && $request->filled('payment_hour') && 
-            $request->filled('payment_minute') && $request->filled('payment_second')) {
-            
+        if (
+            $request->filled('payment_date') && $request->filled('payment_hour') &&
+            $request->filled('payment_minute') && $request->filled('payment_second')
+        ) {
+
             $paymentDateTime = \Carbon\Carbon::parse($request->payment_date)
                 ->setTime(
                     $request->payment_hour,
                     $request->payment_minute,
                     $request->payment_second
                 );
-            
+
             $participant->payment_date = $paymentDateTime;
         }
 
@@ -760,7 +793,7 @@ class AdminController extends Controller
         $existingSeats = $schedule->participants()
             ->whereNotNull('seat_number')
             ->where('seat_number', '!=', '')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('status', 'confirmed')->orWhere('seat_status', 'confirmed');
             })
             ->pluck('seat_number')
@@ -772,7 +805,7 @@ class AdminController extends Controller
             // Expected format: ROOM-XXX (e.g. UPT-01-001) or just numeric part at the end
             // Let's match the last sequence of digits after a hyphen
             if (preg_match('/-(\d+)$/', $seat, $matches)) {
-                $usedNumbers[] = (int)$matches[1];
+                $usedNumbers[] = (int) $matches[1];
             }
         }
 
@@ -819,7 +852,7 @@ class AdminController extends Controller
         if ($request->has('date') && !empty($request->date)) {
             // If date is specified, get participants for that date
             $participants = Participant::with(['schedule', 'studyProgram', 'faculty'])
-                ->whereHas('schedule', function($q) use ($request) {
+                ->whereHas('schedule', function ($q) use ($request) {
                     $q->whereDate('date', $request->date);
                 })
                 ->get();
@@ -840,7 +873,17 @@ class AdminController extends Controller
 
         // Define header row FIRST (before using it)
         $headers = [
-            'No', 'Nomor Kursi', 'NIM', 'Nama', 'Jurusan', 'Jenjang', 'Jadwal Tanggal', 'Ruangan', 'Kategori Tes', 'Nilai TOEFL', 'Status Kelulusan'
+            'No',
+            'Nomor Kursi',
+            'NIM',
+            'Nama',
+            'Jurusan',
+            'Jenjang',
+            'Jadwal Tanggal',
+            'Ruangan',
+            'Kategori Tes',
+            'Nilai TOEFL',
+            'Status Kelulusan'
         ];
 
         // Add header
@@ -952,7 +995,16 @@ class AdminController extends Controller
         // Removed 'Jadwal Tanggal' and 'Ruangan' from columns as they are in the header rows now
         // Added 'Kehadiran'
         $headers = [
-            'No', 'Nomor Kursi', 'NIM', 'Nama', 'Jurusan', 'Jenjang', 'Kategori Tes', 'Nilai TOEFL', 'Status Kelulusan', 'Kehadiran'
+            'No',
+            'Nomor Kursi',
+            'NIM',
+            'Nama',
+            'Jurusan',
+            'Jenjang',
+            'Kategori Tes',
+            'Nilai TOEFL',
+            'Status Kelulusan',
+            'Kehadiran'
         ];
 
         // Row 1: Title
@@ -1062,14 +1114,15 @@ class AdminController extends Controller
      * @param int $num
      * @return string
      */
-    private function getColumnLetter($num) {
+    private function getColumnLetter($num)
+    {
         $numeric = $num + 1; // Convert to 1-based index
         $letter = '';
 
         while ($numeric > 0) {
             $remainder = ($numeric - 1) % 26;
             $letter = chr(65 + $remainder) . $letter;
-            $numeric = (int)(($numeric - $remainder - 1) / 26);
+            $numeric = (int) (($numeric - $remainder - 1) / 26);
         }
 
         return $letter;
@@ -1229,7 +1282,7 @@ class AdminController extends Controller
         }
 
         $user = \App\Models\User::findOrFail($id);
-        
+
         if ($user->role === \App\Models\User::ROLE_SUPERADMIN) {
             return redirect()->back()->with('error', 'Cannot delete superadmin.');
         }
@@ -1293,7 +1346,7 @@ class AdminController extends Controller
         $content = $this->generateLogTextContent($logs, $request);
 
         // Log this download action
-        ActivityLogger::log('Download Log Aktivitas', 'SuperAdmin mendownload log aktivitas' . 
+        ActivityLogger::log('Download Log Aktivitas', 'SuperAdmin mendownload log aktivitas' .
             ($request->filled('start_date') ? ' dari ' . $request->start_date : '') .
             ($request->filled('end_date') ? ' sampai ' . $request->end_date : ''));
 
@@ -1354,7 +1407,7 @@ class AdminController extends Controller
         }
 
         $participant = Participant::findOrFail($id);
-        
+
         if ($participant->test_score === null) {
             return back()->with('error', 'Peserta belum memiliki nilai untuk divalidasi.');
         }
@@ -1376,7 +1429,7 @@ class AdminController extends Controller
         }
 
         $participantIds = $request->input('participant_ids', []);
-        
+
         if (empty($participantIds)) {
             return back()->with('error', 'Pilih setidaknya satu peserta untuk divalidasi.');
         }
@@ -1410,7 +1463,7 @@ class AdminController extends Controller
         foreach ($schedules as $schedule) {
             // Get all confirmed participants for this schedule, ordered by created_at (registration time)
             $participants = $schedule->participants()
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('status', 'confirmed')->orWhere('seat_status', 'confirmed');
                 })
                 ->orderBy('created_at', 'asc')
@@ -1420,20 +1473,20 @@ class AdminController extends Controller
             foreach ($participants as $participant) {
                 // Generate new seat number: RoomName-XXX
                 $newSeatNumber = $schedule->room . '-' . str_pad($seatIndex, 3, '0', STR_PAD_LEFT);
-                
+
                 // Update if different
                 if ($participant->seat_number !== $newSeatNumber) {
                     $participant->update(['seat_number' => $newSeatNumber]);
                     $totalFixed++;
                 }
-                
+
                 $seatIndex++;
             }
-            
+
             // Update used_capacity to match actual count of confirmed participants
             $confirmedCount = $participants->count();
             if ($schedule->used_capacity !== $confirmedCount) {
-                 $schedule->update(['used_capacity' => $confirmedCount]);
+                $schedule->update(['used_capacity' => $confirmedCount]);
             }
         }
 
@@ -1447,9 +1500,9 @@ class AdminController extends Controller
         // Fetch ONLY confirmed participants
         $participants = $schedule->participants()
             // We only want confirmed participants for the attendance list
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('status', 'confirmed')
-                  ->orWhere('seat_status', 'confirmed');
+                    ->orWhere('seat_status', 'confirmed');
             })
             ->with(['studyProgram', 'faculty'])
             ->orderBy('seat_number', 'asc') // Order by seat number
@@ -1459,13 +1512,13 @@ class AdminController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        
+
         // --- Header Section ---
         // Title
         $sheet->setCellValue('A1', 'DAFTAR HADIR PESERTA TOEFL');
-        
-        $sheet->mergeCells('A1:G1'); 
-        
+
+        $sheet->mergeCells('A1:G1');
+
         $styleTitle = [
             'font' => ['bold' => true, 'size' => 14],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
@@ -1476,13 +1529,13 @@ class AdminController extends Controller
         // Using Carbon for Indonesian date format requires proper locale setting or manual array
         // Let's use manual mapping or simple format to ensure compatibility without extra resource loading
         \Carbon\Carbon::setLocale('id'); // Attempt to set locale
-        
+
         $sheet->setCellValue('A3', 'HARI / TANGGAL');
         $sheet->setCellValue('C3', ': ' . strtoupper($schedule->date->translatedFormat('l, d F Y'))); // localized date
-        
+
         $sheet->setCellValue('A4', 'PUKUL');
         $sheet->setCellValue('C4', ': ' . \Carbon\Carbon::parse($schedule->time)->format('H:i') . ' WITA');
-        
+
         $sheet->setCellValue('A5', 'TEMPAT');
         $sheet->setCellValue('C5', ': ' . $schedule->room);
 
@@ -1490,13 +1543,13 @@ class AdminController extends Controller
         // Columns matching typical attendance list
         $headers = ['NO', 'NO PESERTA', 'NAMA PESERTA', 'NIM', 'GENDER', 'JURUSAN', 'TANDA TANGAN'];
         $headerRow = 7;
-        
+
         $colIndex = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($colIndex . $headerRow, $header);
             $colIndex++;
         }
-        
+
         // Manual column width adjustments
         $sheet->getColumnDimension('A')->setWidth(5); // No
         $sheet->getColumnDimension('B')->setWidth(18); // No Peserta
@@ -1523,56 +1576,56 @@ class AdminController extends Controller
         // --- Data Rows ---
         $row = 8;
         $no = 1;
-        
+
         foreach ($participants as $participant) {
             $sheet->setCellValue('A' . $row, $no);
-            $sheet->setCellValue('B' . $row, $participant->seat_number ?: '-'); 
+            $sheet->setCellValue('B' . $row, $participant->seat_number ?: '-');
             $sheet->setCellValue('C' . $row, strtoupper($participant->name));
             $sheet->setCellValue('D' . $row, $participant->nim);
-            
+
             // Gender Column
             $gender = $participant->gender == 'male' ? 'L' : 'P';
             $sheet->setCellValue('E' . $row, $gender);
-            
+
             // Study Program access
             $studyProgram = $participant->relationLoaded('studyProgram') ? $participant->getRelation('studyProgram') : $participant->studyProgram;
             $studyProgramName = (is_object($studyProgram) && isset($studyProgram->name)) ? $studyProgram->name : '-';
-            
+
             $sheet->setCellValue('F' . $row, $studyProgramName);
-            
+
             // Signature cell remains empty for manual signature
-            
+
             // Set row height for signature space
             $sheet->getRowDimension($row)->setRowHeight(35);
-            
+
             $no++;
             $row++;
         }
-        
+
         // Apply borders to all data rows
         $lastRow = $row - 1;
         $styleTable = [
-             'borders' => [
+            'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN]
             ],
             'alignment' => ['vertical' => Alignment::VERTICAL_CENTER]
         ];
-        
+
         if ($lastRow >= 8) {
-             $sheet->getStyle('A8:G' . $lastRow)->applyFromArray($styleTable);
-             // Center align No, No Peserta, NIM
-             $sheet->getStyle('A8:B' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-             $sheet->getStyle('D8:D' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-             $sheet->getStyle('E8:E' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Center Gender
-             $sheet->getStyle('C8:C' . $lastRow)->getAlignment()->setIndent(1); // Small indent for name
+            $sheet->getStyle('A8:G' . $lastRow)->applyFromArray($styleTable);
+            // Center align No, No Peserta, NIM
+            $sheet->getStyle('A8:B' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('D8:D' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('E8:E' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Center Gender
+            $sheet->getStyle('C8:C' . $lastRow)->getAlignment()->setIndent(1); // Small indent for name
         }
 
         // --- Summary Section ---
         $summaryRow = $lastRow + 2;
-        
+
         $sheet->setCellValue('B' . $summaryRow, 'Jumlah Peserta Hadir');
         $sheet->setCellValue('C' . $summaryRow, ': ....................... Orang');
-        
+
         $sheet->setCellValue('B' . ($summaryRow + 1), 'Jumlah Peserta Tidak Hadir');
         $sheet->setCellValue('C' . ($summaryRow + 1), ': ....................... Orang');
 
@@ -1580,17 +1633,17 @@ class AdminController extends Controller
         $signatureRow = $summaryRow + 3;
         $sheet->setCellValue('F' . $signatureRow, 'Pengawas / Petugas,');
         $sheet->getStyle('F' . $signatureRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        
+
         $sheet->setCellValue('F' . ($signatureRow + 4), '( ....................................................... )');
         $sheet->getStyle('F' . ($signatureRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Filename: DAFTAR_HADIR_YYYY-MM-DD_ROOM.xlsx
         $fileName = 'DAFTAR_HADIR_' . $schedule->date->format('Y-m-d') . '_' . \Str::slug($schedule->room) . '.xlsx';
-        
+
         $writer = new Xlsx($spreadsheet);
-        
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="'. urlencode($fileName) .'"');
+        header('Content-Disposition: attachment; filename="' . urlencode($fileName) . '"');
         $writer->save('php://output');
         exit;
     }

@@ -249,17 +249,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (fileSize > 2) {
                     paymentProof.classList.add('is-invalid');
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'invalid-feedback';
-                    errorDiv.textContent = 'Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).';
-                    paymentProof.parentNode.appendChild(errorDiv);
+                    let errorDiv = paymentProof.parentNode.querySelector('.invalid-feedback');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        paymentProof.parentNode.appendChild(errorDiv);
+                    }
+                    errorDiv.textContent = 'Ukuran file bukti pembayaran terlalu besar (' + fileSize.toFixed(2) + 'MB). Maksimal 2MB.';
                     isValid = false;
                 } else if (!allowedExtensions.includes(fileExtension)) {
                     paymentProof.classList.add('is-invalid');
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'invalid-feedback';
+                    let errorDiv = paymentProof.parentNode.querySelector('.invalid-feedback');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        paymentProof.parentNode.appendChild(errorDiv);
+                    }
                     errorDiv.textContent = 'Format file tidak didukung. Gunakan JPG atau PNG.';
-                    paymentProof.parentNode.appendChild(errorDiv);
                     isValid = false;
                 }
             }

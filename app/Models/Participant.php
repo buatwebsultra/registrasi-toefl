@@ -44,6 +44,9 @@ class Participant extends Model
         'total_score_pbt',
         'is_score_validated',
         'score_validated_at',
+        'raw_listening_pbt',
+        'raw_structure_pbt',
+        'raw_reading_pbt',
     ];
 
     /**
@@ -62,7 +65,7 @@ class Participant extends Model
         'birth_date' => 'date',
         'payment_date' => 'datetime',
         'test_date' => 'date',
-        'test_score' => 'decimal:2',
+        'test_score' => 'integer',
         'reading_score' => 'decimal:1',
         'listening_score' => 'decimal:1',
         'speaking_score' => 'decimal:1',
@@ -76,6 +79,9 @@ class Participant extends Model
         'attendance_marked_at' => 'datetime',
         'is_score_validated' => 'boolean',
         'score_validated_at' => 'datetime',
+        'raw_listening_pbt' => 'integer',
+        'raw_structure_pbt' => 'integer',
+        'raw_reading_pbt' => 'integer',
     ];
 
     public function schedule()
@@ -115,12 +121,12 @@ class Participant extends Model
             ];
 
             $rawLevel = strtolower(trim($this->studyProgram->level));
-            
+
             // Check exact match first
             if (isset($levelMap[$rawLevel])) {
                 return $levelMap[$rawLevel];
             }
-            
+
             // Check if level contains keywords
             if (str_contains($rawLevel, 's1') || str_contains($rawLevel, 'sarjana') || str_contains($rawLevel, 'bachelor')) {
                 return 'undergraduate';
@@ -131,7 +137,7 @@ class Participant extends Model
             if (str_contains($rawLevel, 's3') || str_contains($rawLevel, 'doktor') || str_contains($rawLevel, 'doctor')) {
                 return 'doctorate';
             }
-            
+
             return $rawLevel;
         }
 
@@ -240,12 +246,12 @@ class Participant extends Model
             ];
 
             $rawLevel = strtolower(trim($this->studyProgram->level));
-            
+
             // Check exact match first
             if (isset($levelMap[$rawLevel])) {
                 return $levelMap[$rawLevel];
             }
-            
+
             // Check if level contains keywords
             if (strpos($rawLevel, 's1') !== false || strpos($rawLevel, 'sarjana') !== false || strpos($rawLevel, 'bachelor') !== false) {
                 return 'undergraduate';
@@ -257,26 +263,32 @@ class Participant extends Model
                 return 'doctorate';
             }
         }
-        
+
         // Fallback to attributes
         if (isset($this->attributes['academic_level'])) {
             $attrLevel = strtolower(trim($this->attributes['academic_level']));
-            
+
             // Check keywords in attribute
-            if (strpos($attrLevel, 's1') !== false || strpos($attrLevel, 'sarjana') !== false || 
-                strpos($attrLevel, 'bachelor') !== false || strpos($attrLevel, 'undergraduate') !== false) {
+            if (
+                strpos($attrLevel, 's1') !== false || strpos($attrLevel, 'sarjana') !== false ||
+                strpos($attrLevel, 'bachelor') !== false || strpos($attrLevel, 'undergraduate') !== false
+            ) {
                 return 'undergraduate';
             }
-            if (strpos($attrLevel, 's2') !== false || strpos($attrLevel, 'magister') !== false || 
-                strpos($attrLevel, 'master') !== false) {
+            if (
+                strpos($attrLevel, 's2') !== false || strpos($attrLevel, 'magister') !== false ||
+                strpos($attrLevel, 'master') !== false
+            ) {
                 return 'master';
             }
-            if (strpos($attrLevel, 's3') !== false || strpos($attrLevel, 'doktor') !== false || 
-                strpos($attrLevel, 'doctor') !== false) {
+            if (
+                strpos($attrLevel, 's3') !== false || strpos($attrLevel, 'doktor') !== false ||
+                strpos($attrLevel, 'doctor') !== false
+            ) {
                 return 'doctorate';
             }
         }
-        
+
         // Default to undergraduate (safest default for majority of cases)
         return 'undergraduate';
     }
@@ -297,23 +309,23 @@ class Participant extends Model
         // 2. Fallback: Get normalized academic level and use hardcoded defaults if study program is missing or has no grade
         $normalizedLevel = $this->getNormalizedAcademicLevel();
 
-        // Apply thresholds based on normalized level
+        // Apply thresholds based on normalized level (UHO Standard)
         switch ($normalizedLevel) {
             case 'undergraduate':
-                // S1/Diploma: >= 400 = PASS
-                return $this->test_score >= 400;
-                
+                // S1/Diploma: >= 410 = PASS
+                return $this->test_score >= 410;
+
             case 'master':
                 // S2: >= 450 = PASS
                 return $this->test_score >= 450;
-                
+
             case 'doctorate':
                 // S3: >= 500 = PASS
                 return $this->test_score >= 500;
-                
+
             default:
                 // Fallback to undergraduate rules
-                return $this->test_score >= 400;
+                return $this->test_score >= 410;
         }
     }
 

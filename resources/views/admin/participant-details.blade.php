@@ -400,7 +400,7 @@
             @if(Auth::user()->isAdmin())
             <div class="secondary-section">
                 <div class="secondary-header bg-success bg-opacity-10" data-bs-toggle="collapse" data-bs-target="#scoreCollapse">
-                    <span class="text-success"><i class="fas fa-graduation-cap me-2"></i>Input Nilai / Penilaian</span>
+                    <span class="text-success"><i class="fas fa-graduation-cap me-2"></i>Input Nilai</span>
                     <i class="fas fa-chevron-down text-muted"></i>
                 </div>
                 <div class="collapse show" id="scoreCollapse">
@@ -414,21 +414,24 @@
                                 
                                 <div class="row g-2 mb-3">
                                     <div class="col-4">
-                                        <label class="small fw-bold text-muted">Listening</label>
-                                        <input type="number" class="form-control" name="listening_score_pbt" value="{{ $participant->listening_score_pbt }}" placeholder="0-68" min="0" max="68" oninput="calculateTotalScore()" id="listening_score_pbt">
+                                        <label class="small fw-bold text-muted">L: Jumlah Benar (0-50)</label>
+                                        <input type="number" class="form-control" name="raw_listening_pbt" value="{{ $participant->raw_listening_pbt }}" placeholder="0-50" min="0" max="50" oninput="updateConvertedScores()" id="raw_listening_pbt">
+                                        <div class="small mt-1 text-primary fw-bold">Konversi: <span id="listening_converted">{{ $participant->listening_score_pbt ?? '-' }}</span></div>
                                     </div>
                                     <div class="col-4">
-                                        <label class="small fw-bold text-muted">Structure</label>
-                                        <input type="number" class="form-control" name="structure_score_pbt" value="{{ $participant->structure_score_pbt }}" placeholder="0-68" min="0" max="68" oninput="calculateTotalScore()" id="structure_score_pbt">
+                                        <label class="small fw-bold text-muted">S: Jumlah Benar (0-40)</label>
+                                        <input type="number" class="form-control" name="raw_structure_pbt" value="{{ $participant->raw_structure_pbt }}" placeholder="0-40" min="0" max="40" oninput="updateConvertedScores()" id="raw_structure_pbt">
+                                        <div class="small mt-1 text-primary fw-bold">Konversi: <span id="structure_converted">{{ $participant->structure_score_pbt ?? '-' }}</span></div>
                                     </div>
                                     <div class="col-4">
-                                        <label class="small fw-bold text-muted">Reading</label>
-                                        <input type="number" class="form-control" name="reading_score_pbt" value="{{ $participant->reading_score_pbt }}" placeholder="0-67" min="0" max="67" oninput="calculateTotalScore()" id="reading_score_pbt">
+                                        <label class="small fw-bold text-muted">R: Jumlah Benar (0-50)</label>
+                                        <input type="number" class="form-control" name="raw_reading_pbt" value="{{ $participant->raw_reading_pbt }}" placeholder="0-50" min="0" max="50" oninput="updateConvertedScores()" id="raw_reading_pbt">
+                                        <div class="small mt-1 text-primary fw-bold">Konversi: <span id="reading_converted">{{ $participant->reading_score_pbt ?? '-' }}</span></div>
                                     </div>
                                 </div>
                                 
                                 <div class="p-3 bg-light rounded text-center mb-3">
-                                    <div class="small text-muted text-uppercase ls-1">Total Score</div>
+                                    <div class="small text-muted text-uppercase ls-1">Total Score (Konversi)</div>
                                     <div class="h2 mb-0 fw-bold text-primary" id="total_score_display">{{ $participant->test_score ?? '-' }}</div>
                                 </div>
                                 
@@ -569,14 +572,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function calculateTotalScore() {
-    const listening = parseFloat(document.getElementById('listening_score_pbt')?.value) || 0;
-    const structure = parseFloat(document.getElementById('structure_score_pbt')?.value) || 0;
-    const reading = parseFloat(document.getElementById('reading_score_pbt')?.value) || 0;
-    const total = Math.round(((listening + structure + reading) / 3) * 10);
+function updateConvertedScores() {
+    const rawL = parseInt(document.getElementById('raw_listening_pbt')?.value) || 0;
+    const rawS = parseInt(document.getElementById('raw_structure_pbt')?.value) || 0;
+    const rawR = parseInt(document.getElementById('raw_reading_pbt')?.value) || 0;
+
+    // TOEFL PBT Conversion Mapping (from image)
+    const conversion = {
+        50: [68, null, 67], 49: [67, null, 66], 48: [66, null, 65], 47: [65, null, 63], 46: [63, null, 61],
+        45: [62, null, 60], 44: [61, null, 59], 43: [60, null, 58], 42: [59, null, 57], 41: [58, null, 56],
+        40: [57, 68, 55], 39: [57, 67, 54], 38: [56, 65, 54], 37: [55, 63, 53], 36: [54, 61, 52],
+        35: [54, 60, 52], 34: [53, 58, 51], 33: [52, 57, 50], 32: [52, 56, 49], 31: [51, 55, 48],
+        30: [51, 54, 48], 29: [50, 53, 47], 28: [49, 52, 46], 27: [49, 51, 46], 26: [48, 50, 45],
+        25: [48, 49, 44], 24: [47, 48, 43], 23: [47, 47, 43], 22: [46, 46, 42], 21: [45, 45, 41],
+        20: [45, 44, 40], 19: [44, 43, 39], 18: [43, 43, 38], 17: [42, 41, 37], 16: [41, 40, 36],
+        15: [41, 40, 35], 14: [39, 38, 34], 13: [38, 37, 32], 12: [37, 36, 31], 11: [35, 35, 30],
+        10: [33, 33, 29], 9: [32, 31, 28], 8: [32, 29, 28], 7: [31, 27, 27], 6: [30, 26, 26],
+        5: [29, 25, 25], 4: [28, 23, 24], 3: [27, 22, 23], 2: [26, 21, 23], 1: [25, 20, 22],
+        0: [24, 20, 21]
+    };
+
+    const getScaled = (session, raw) => {
+        const val = raw > 50 ? 50 : (raw < 0 ? 0 : raw);
+        const idx = session - 1;
+        // Adjust for structure (max 40)
+        if (session === 2) {
+            const rawSFixed = raw > 40 ? 40 : raw;
+            return conversion[rawSFixed][idx] || 20;
+        }
+        return conversion[val][idx] || 20;
+    };
+
+    const scaledL = getScaled(1, rawL);
+    const scaledS = getScaled(2, rawS);
+    const scaledR = getScaled(3, rawR);
+    
+    const total = Math.round(((scaledL + scaledS + scaledR) / 3) * 10);
+
+    // Update UI
+    if(document.getElementById('listening_converted')) document.getElementById('listening_converted').textContent = scaledL;
+    if(document.getElementById('structure_converted')) document.getElementById('structure_converted').textContent = scaledS;
+    if(document.getElementById('reading_converted')) document.getElementById('reading_converted').textContent = scaledR;
     
     const display = document.getElementById('total_score_display');
-    if(display) display.textContent = (listening+structure+reading) > 0 ? total : '-';
+    if(display) display.textContent = (rawL + rawS + rawR) > 0 ? total : '-';
 }
 
 // Card Preview Modal Logic

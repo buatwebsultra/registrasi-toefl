@@ -21,12 +21,11 @@ use App\Models\Schedule;
 
 // Home route
 Route::get('/', function () {
-    $latestSchedules = Schedule::where('status', 'available')
-                               ->whereColumn('used_capacity', '<', 'capacity')
-                               ->orderBy('date', 'asc')
-                               ->orderBy('time', 'asc')
-                               ->get();
-    
+    $latestSchedules = Schedule::available()
+        ->orderBy('date', 'asc')
+        ->orderBy('time', 'asc')
+        ->get();
+
     $galleryItems = \App\Models\GalleryItem::where('is_active', true)->latest()->get();
 
     return view('welcome', compact('latestSchedules', 'galleryItems'));
@@ -35,9 +34,9 @@ Route::get('/', function () {
 // Participant routes
 Route::middleware(['participant'])->prefix('participant')->group(function () {
     // Registration routes are NOW PUBLIC (moved below)
-    
+
     Route::get('/dashboard/{id}', [ParticipantController::class, 'showDashboard'])->name('participant.dashboard');
-    
+
     Route::get('/card/preview/{id}', [PDFController::class, 'showTestCardPreview'])->name('participant.card.preview');
     Route::get('/card/download/{id}', [PDFController::class, 'generateTestCard'])->name('participant.card.download');
     Route::get('/certificate/download/{id}', [PDFController::class, 'generateCertificate'])->name('participant.certificate.download');
@@ -109,8 +108,8 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
     // Clear all participants for specific schedule
     Route::post('/schedule/{schedule}/participants/clear', [AdminController::class, 'clearScheduleParticipants'])->name('admin.schedule.clear-participants');
 
-        // Export attendance list (Daftar Hadir)
-        Route::get('/schedule/{schedule}/attendance/export', [AdminController::class, 'exportAttendanceList'])->name('admin.schedule.attendance.export');
+    // Export attendance list (Daftar Hadir)
+    Route::get('/schedule/{schedule}/attendance/export', [AdminController::class, 'exportAttendanceList'])->name('admin.schedule.attendance.export');
 
     // Card generation routes for admin
     Route::get('/participant/{id}/card/preview', [PDFController::class, 'showTestCardPreview'])->name('admin.participant.card.preview')->middleware('admin');
@@ -140,7 +139,7 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
         Route::post('/users/store', [AdminController::class, 'storeUser'])->name('admin.users.store');
         Route::put('/users/{id}/update', [AdminController::class, 'updateUser'])->name('admin.users.update');
         Route::delete('/users/{id}/delete', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
-        
+
         Route::get('/logs', [AdminController::class, 'activityLogs'])->name('admin.logs.index');
         Route::post('/logs/download', [AdminController::class, 'downloadLogs'])->name('admin.logs.download');
     });

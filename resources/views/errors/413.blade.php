@@ -1,40 +1,39 @@
 @extends('layouts.app')
 
-@section('title', 'Ukuran Berkas Terlalu Besar - 413')
+@section('title', 'File Terlalu Besar')
 
 @section('content')
-<div class="container py-5 mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="card-body p-5">
-                    <div class="mb-4">
-                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
-                            <i class="fas fa-file-export fa-4x"></i>
-                        </div>
-                        <h1 class="display-4 fw-bold text-dark mb-2">413</h1>
-                        <h2 class="h3 fw-bold text-muted mb-4">Berkas Terlalu Besar</h2>
-                    </div>
-                    
-                    <p class="lead text-muted mb-5">
-                        Maaf, berkas yang Anda unggah secara keseluruhan melebihi batas maksimal yang diizinkan oleh server kami. <br>
-                        Pastikan total ukuran semua file yang diunggah tidak melebihi <strong>5 MB</strong>.
-                    </p>
-                    
-                    <div class="d-flex justify-content-center gap-3">
-                        <button onclick="window.history.back()" class="btn btn-outline-secondary rounded-pill px-4 py-2">
-                            <i class="fas fa-arrow-left me-2"></i>Kembali
-                        </button>
-                        <a href="{{ route('home') }}" class="btn btn-primary rounded-pill px-4 py-2 shadow">
-                            <i class="fas fa-home me-2"></i>Beranda
-                        </a>
-                    </div>
+    <div class="container h-100 py-5">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-8 col-lg-6 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-file-export fa-5x text-warning opacity-50"></i>
                 </div>
-                <div class="card-footer bg-light border-0 py-3">
-                    <small class="text-muted">TOEFL Registration System &copy; {{ date('Y') }}</small>
+                <h1 class="display-4 fw-bold mb-3">413</h1>
+                <h2 class="h3 mb-4">File Terlalu Besar!</h2>
+                <p class="lead text-muted mb-5">
+                    Maaf bro, file yang kamu upload kegedean buat server kita.
+                    Batas maksimal upload per file adalah <strong>2MB</strong>, dan total kiriman maksimal
+                    <strong>5MB</strong>.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url()->previous() }}" class="btn btn-primary btn-lg rounded-pill px-5">
+                        <i class="fas fa-arrow-left me-2"></i>Kembali & Coba Lagi
+                    </a>
+                    <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-5">
+                        Halaman Utama
+                    </a>
+                </div>
+
+                <div class="mt-5 p-4 bg-light rounded-4 text-start">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Tips buat kamu:</h6>
+                    <ul class="mb-0 small text-muted">
+                        <li>Gunakan format <strong>JPG</strong> atau <strong>PNG</strong>.</li>
+                        <li>Kompres gambar kamu sebelum diupload (banyak tool online gratis kok).</li>
+                        <li>Pastikan ukuran masing-masing file tidak lebih dari <strong>2MB</strong>.</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection

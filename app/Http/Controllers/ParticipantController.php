@@ -133,7 +133,7 @@ class ParticipantController extends Controller
                     }
                 },
             ],
-            'username' => 'required|string|max:255|regex:/^[a-z0-9._%+-]+$/',
+            'username' => 'required|string|max:255|regex:/^[a-z0-9_]+$/',
             'password' => [
                 'required',
                 'string',
@@ -144,7 +144,7 @@ class ParticipantController extends Controller
         ], [
             'email.regex' => 'Format email tidak valid.',
             'phone.regex' => 'Format nomor WhatsApp tidak valid. Gunakan format: 081234567890',
-            'username.regex' => 'Username hanya boleh berisi huruf kecil, angka, titik, underscore, dan tanda hubung.',
+            'username.regex' => 'Username hanya boleh berisi huruf kecil, angka, dan underscore (tanpa spasi atau titik).',
             'username.required' => 'Username tidak boleh kosong.',
             'password.required' => 'Password tidak boleh kosong.',
             'password.min' => 'Password minimal harus 12 karakter.',
@@ -175,10 +175,10 @@ class ParticipantController extends Controller
 
         // Combine payment date and time
         $paymentDateTime = $request->payment_date . ' ' . $request->payment_hour . ':' . $request->payment_minute . ':' . $request->payment_second;
-        
+
         // Standardize NIM for comparison
         $standardizedNim = strtoupper(trim($request->nim));
-        
+
         // Detect Duplicate Payment: Check BOTH NIM AND payment timestamp
         // REJECT only if the SAME person (same NIM) uses the SAME payment timestamp
         // ALLOW if different NIM (different person can have same payment time)
@@ -186,7 +186,7 @@ class ParticipantController extends Controller
         $duplicatePayment = Participant::where('nim', $standardizedNim)
             ->where('payment_date', $paymentDateTime)
             ->first();
-            
+
         if ($duplicatePayment) {
             return redirect()->back()
                 ->withInput()
@@ -199,9 +199,9 @@ class ParticipantController extends Controller
         // Check if this NIM already has an active or completed registration
         // We block if they are 'pending' or 'confirmed', or if they have already 'passed'
         $existingParticipant = Participant::where('nim', $standardizedNim)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereIn('status', ['pending', 'confirmed'])
-                      ->orWhere('passed', true);
+                    ->orWhere('passed', true);
             })
             ->first();
 
@@ -365,9 +365,11 @@ class ParticipantController extends Controller
             if ($e->getCode() == 23000) { // Error code untuk constraint violation
                 // Check if the error is specifically about NIM uniqueness
                 $errorMessage = $e->getMessage();
-                if (strpos(strtolower($errorMessage), 'participants.nim') !== false ||
+                if (
+                    strpos(strtolower($errorMessage), 'participants.nim') !== false ||
                     strpos(strtolower($errorMessage), 'nim') !== false ||
-                    strpos(strtolower($errorMessage), 'participants_nim_unique') !== false) {
+                    strpos(strtolower($errorMessage), 'participants_nim_unique') !== false
+                ) {
 
                     // Double-check if this NIM actually exists with confirmed status in non-deleted database records
                     $standardizedNim = strtoupper($request->nim);
@@ -427,10 +429,10 @@ class ParticipantController extends Controller
         // Extract room letter (assuming format like A, B, C, etc.)
         preg_match('/^([A-Za-z])/', $room, $matches);
         $roomLetter = isset($matches[1]) ? strtoupper($matches[1]) : 'A';
-        
+
         // Format position as 2 digits
         $seatNumber = $roomLetter . '-' . str_pad($position, 2, '0', STR_PAD_LEFT);
-        
+
         return $seatNumber;
     }
 
@@ -560,68 +562,68 @@ class ParticipantController extends Controller
         }
 
         try {
-        // Create a new participant record for the retake to preserve history
-        $newParticipant = $participant->replicate();
-        
-        $newParticipant->fill([
-            'schedule_id' => $request->schedule_id,
-            'temp_seat_number' => $this->generateSeatNumber($schedule->room, 'TBA'),
-            'status' => 'pending', // Reset to pending for new payment verification
-            'payment_date' => $paymentDateTime,
-            'test_category' => $request->test_category,
-            'payment_proof_path' => $paymentProofPath,
-            'seat_status' => 'reserved', // Reserved until admin verifies payment
-            'seat_number' => 'TBA', // Set to 'TBA' for new registration
-            'test_score' => null, // Clear results for new attempt
-            'passed' => false,
-            'test_date' => null,
-            'reading_score' => null,
-            'listening_score' => null,
-            'speaking_score' => null,
-            'writing_score' => null,
-            'listening_score_pbt' => null,
-            'structure_score_pbt' => null,
-            'reading_score_pbt' => null,
-            'total_score_pbt' => null,
-            'attendance' => null,
-            'attendance_marked_at' => null,
-            'rejection_message' => null,
-            'verification_token' => (string) Str::uuid(), // New token
-        ]);
+            // Create a new participant record for the retake to preserve history
+            $newParticipant = $participant->replicate();
 
-        $newParticipant->save();
-
-        // Update schedule used capacity - increment for NEW registration
-        $schedule->increment('used_capacity');
-
-        // Check if new schedule is now full
-        if ($schedule->used_capacity >= $schedule->capacity) {
-            $schedule->update(['status' => 'full']);
-        }
-
-        // Log the participant in by setting the session to the NEW record
-        session(['participant_id' => $newParticipant->id]);
-
-        // Log activity
-        ActivityLogger::log('Pendaftaran Ulang', 'Peserta ' . $newParticipant->name . ' (NIM: ' . $newParticipant->nim . ') melakukan pendaftaran ulang tes TOEFL.');
-
-        return redirect()->route('participant.dashboard', ['id' => $newParticipant->id])
-            ->with([
-                'success' => 'Pendaftaran Ulang Berhasil! Anda telah dialihkan ke dashboard peserta. Bukti pembayaran Anda sedang diverifikasi. Nomor kursi akan ditentukan setelah pembayaran dikonfirmasi oleh admin.',
-                'account_details' => [
-                    'username' => $newParticipant->username,
-                    'password' => 'Sama dengan akun sebelumnya',
-                    'message' => 'Akun Anda tetap sama. Silakan simpan username dan password Anda. Tunggu konfirmasi dari petugas UPA Bahasa Universitas Halu Oleo.'
-                ]
+            $newParticipant->fill([
+                'schedule_id' => $request->schedule_id,
+                'temp_seat_number' => $this->generateSeatNumber($schedule->room, 'TBA'),
+                'status' => 'pending', // Reset to pending for new payment verification
+                'payment_date' => $paymentDateTime,
+                'test_category' => $request->test_category,
+                'payment_proof_path' => $paymentProofPath,
+                'seat_status' => 'reserved', // Reserved until admin verifies payment
+                'seat_number' => 'TBA', // Set to 'TBA' for new registration
+                'test_score' => null, // Clear results for new attempt
+                'passed' => false,
+                'test_date' => null,
+                'reading_score' => null,
+                'listening_score' => null,
+                'speaking_score' => null,
+                'writing_score' => null,
+                'listening_score_pbt' => null,
+                'structure_score_pbt' => null,
+                'reading_score_pbt' => null,
+                'total_score_pbt' => null,
+                'attendance' => null,
+                'attendance_marked_at' => null,
+                'rejection_message' => null,
+                'verification_token' => (string) Str::uuid(), // New token
             ]);
-    } catch (\Illuminate\Database\QueryException $e) {
-        // Hapus file yang sudah diupload jika terjadi kesalahan
-        \Storage::disk('private')->delete($paymentProofPath);
 
-        \Log::error('Retake registration error: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Terjadi kesalahan sistem. Silakan coba lagi nanti.')->withInput();
+            $newParticipant->save();
+
+            // Update schedule used capacity - increment for NEW registration
+            $schedule->increment('used_capacity');
+
+            // Check if new schedule is now full
+            if ($schedule->used_capacity >= $schedule->capacity) {
+                $schedule->update(['status' => 'full']);
+            }
+
+            // Log the participant in by setting the session to the NEW record
+            session(['participant_id' => $newParticipant->id]);
+
+            // Log activity
+            ActivityLogger::log('Pendaftaran Ulang', 'Peserta ' . $newParticipant->name . ' (NIM: ' . $newParticipant->nim . ') melakukan pendaftaran ulang tes TOEFL.');
+
+            return redirect()->route('participant.dashboard', ['id' => $newParticipant->id])
+                ->with([
+                    'success' => 'Pendaftaran Ulang Berhasil! Anda telah dialihkan ke dashboard peserta. Bukti pembayaran Anda sedang diverifikasi. Nomor kursi akan ditentukan setelah pembayaran dikonfirmasi oleh admin.',
+                    'account_details' => [
+                        'username' => $newParticipant->username,
+                        'password' => 'Sama dengan akun sebelumnya',
+                        'message' => 'Akun Anda tetap sama. Silakan simpan username dan password Anda. Tunggu konfirmasi dari petugas UPA Bahasa Universitas Halu Oleo.'
+                    ]
+                ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Hapus file yang sudah diupload jika terjadi kesalahan
+            \Storage::disk('private')->delete($paymentProofPath);
+
+            \Log::error('Retake registration error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem. Silakan coba lagi nanti.')->withInput();
+        }
     }
-}
 
     public function showResubmitPaymentForm($id)
     {
@@ -786,7 +788,7 @@ class ParticipantController extends Controller
     private function authorizeParticipant($id)
     {
         $sessionParticipantId = session('participant_id');
-        if (!$sessionParticipantId || (string)$sessionParticipantId !== (string)$id) {
+        if (!$sessionParticipantId || (string) $sessionParticipantId !== (string) $id) {
             abort(403, 'Unauthorized access.');
         }
     }
@@ -798,7 +800,7 @@ class ParticipantController extends Controller
         // Allow access for Super Admin, Admin, and Operator roles
         if (Auth::check() && Auth::user()->isOperator()) {
             $participant = Participant::findOrFail($id);
-            
+
             // SECURITY: If user is prodi, they can only access files for their own study program
             if (Auth::user()->isProdi() && $participant->study_program_id !== Auth::user()->study_program_id) {
                 abort(403, 'Anda tidak memiliki akses ke berkas peserta dari Program Studi lain.');
@@ -808,7 +810,7 @@ class ParticipantController extends Controller
             $participant = Participant::findOrFail($id);
         }
 
-        $filePath = match($type) {
+        $filePath = match ($type) {
             'payment_proof' => $participant->payment_proof_path,
             'previous_payment_proof' => $participant->previous_payment_proof_path,
             'photo' => $participant->photo_path,
@@ -887,7 +889,7 @@ class ParticipantController extends Controller
 
         try {
             // Determine storage directory based on type
-            $directory = match($documentType) {
+            $directory = match ($documentType) {
                 'payment_proof' => 'payment_proofs',
                 'photo' => 'photos',
                 'ktp' => 'ktps',
@@ -897,14 +899,14 @@ class ParticipantController extends Controller
             $newFilePath = $file->store($directory, 'private');
 
             // Get old file path and backup it before replacing
-            $oldFilePath = match($documentType) {
+            $oldFilePath = match ($documentType) {
                 'payment_proof' => $participant->payment_proof_path,
                 'photo' => $participant->photo_path,
                 'ktp' => $participant->ktp_path,
             };
 
             // Update participant with new file path
-            $updateData = match($documentType) {
+            $updateData = match ($documentType) {
                 'payment_proof' => [
                     'payment_proof_path' => $newFilePath,
                     'previous_payment_proof_path' => $oldFilePath,
@@ -923,7 +925,7 @@ class ParticipantController extends Controller
             }
 
             // Log activity
-            $docLabel = match($documentType) {
+            $docLabel = match ($documentType) {
                 'payment_proof' => 'Bukti Pembayaran',
                 'photo' => 'Foto Peserta',
                 'ktp' => 'Kartu Identitas (KTP)',
