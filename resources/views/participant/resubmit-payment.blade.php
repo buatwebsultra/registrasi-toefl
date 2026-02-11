@@ -2,7 +2,51 @@
 
 @section('title', 'Unggah Ulang Bukti Pembayaran')
 
+@section('styles')
+<style>
+    .hover-elevate {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .hover-elevate:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    .fs-07rem {
+        font-size: 0.7rem;
+    }
+</style>
+@endsection
+
 @section('content')
+@php
+    $historyRecords = \App\Models\Participant::where('nim', $participant->nim)
+        ->orderBy('created_at', 'desc')
+        ->get();
+    
+    $allRejectedProofs = collect();
+    foreach($historyRecords as $rec) {
+        if ($rec->payment_proof_path) {
+            $allRejectedProofs->push([
+                'path' => $rec->payment_proof_path,
+                'date' => $rec->payment_date ?: $rec->created_at,
+                'type' => 'payment_proof',
+                'participant_id' => $rec->id,
+            ]);
+        }
+        if ($rec->previous_payment_proof_path) {
+            $allRejectedProofs->push([
+                'path' => $rec->previous_payment_proof_path,
+                'date' => $rec->created_at,
+                'type' => 'previous_payment_proof',
+                'participant_id' => $rec->id,
+            ]);
+        }
+    }
+    $allRejectedProofs = $allRejectedProofs->unique('path')->values();
+@endphp
 <div class="row">
     <div class="col-md-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -171,21 +215,71 @@
                         <div class="form-text">
                             <strong>Hanya File JPG, PNG</strong>. Ukuran maksimal: 2MB.
                         </div>
-                    </div>     @if($participant->payment_proof_path)
-                            <div class="mt-2">
-                                <label class="form-label">Bukti Pembayaran Sebelumnya:</label>
-                                <div>
-                                    <a href="{{ asset('storage/' . $participant->payment_proof_path) }}" target="_blank" class="btn btn-outline-info btn-sm">
-                                        <i class="fas fa-file-image"></i> Lihat Bukti Pembayaran
-                                    </a>
-                                </div>
-                            </div>
-                        @endif
-
-                        @error('payment_proof')
-                            <div class="text-danger">{{ $message }}</div>
-                        @enderror
                     </div>
+
+                    @if($allRejectedProofs->isNotEmpty())
+                        <div class="mt-4 pt-3 border-top">
+                            <label class="form-label fw-bold mb-3"><i class="fas fa-history me-1"></i> Riwayat Bukti Pembayaran (Ditolak):</label>
+                            <div class="row g-3">
+                                @foreach($allRejectedProofs as $index => $proof)
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <div class="card h-100 border shadow-sm hover-elevate cursor-pointer overflow-hidden" 
+                                             data-bs-toggle="modal" 
+                                             data-bs-target="#proofModal{{ $index }}">
+                                            <div class="position-relative">
+                                                <img src="{{ route('participant.file.download', ['id' => $proof['participant_id'], 'type' => $proof['type']]) }}" 
+                                                     class="card-img-top" 
+                                                     style="height: 120px; object-fit: cover; background-color: #f8f9fa;" 
+                                                     alt="Bukti Ditolak">
+                                                 <div class="position-absolute top-0 end-0 p-1">
+                                                     <span class="badge bg-dark bg-opacity-75 fs-07rem">#{{ $allRejectedProofs->count() - $index }}</span>
+                                                 </div>
+                                            </div>
+                                            <div class="card-footer p-1 text-center bg-white border-top-0">
+                                                <small class="text-muted d-block fs-07rem fw-bold">
+                                                    {{ $proof['date'] instanceof \Carbon\Carbon ? $proof['date']->format('d M Y') : 'Arsip' }}
+                                                </small>
+                                                <small class="text-muted fs-07rem">
+                                                    {{ $proof['date'] instanceof \Carbon\Carbon ? $proof['date']->format('H:i') : '' }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal for this specific proof -->
+                                    <div class="modal fade" id="proofModal{{ $index }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                                                <div class="modal-header bg-danger text-white border-0">
+                                                    <h5 class="modal-title fw-bold"><i class="fas fa-receipt me-2"></i>Bukti Pembayaran (Ditolak)</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center p-2 bg-light">
+                                                    <div class="p-2 bg-white rounded-3 shadow-sm mb-2 text-dark">
+                                                        <small class="fw-bold">Waktu Upload:</small> 
+                                                        {{ $proof['date'] instanceof \Carbon\Carbon ? $proof['date']->format('d F Y, H:i:s') : 'Tidak tersedia' }}
+                                                    </div>
+                                                    <div class="rounded-3 overflow-hidden border shadow-sm mx-auto" style="max-height: 70vh; display: inline-block;">
+                                                        <img src="{{ route('participant.file.download', ['id' => $proof['participant_id'], 'type' => $proof['type']]) }}" 
+                                                             class="img-fluid" 
+                                                             alt="Full Proof">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-0 bg-light justify-content-center">
+                                                    <a href="{{ route('participant.file.download', ['id' => $proof['participant_id'], 'type' => $proof['type']]) }}" 
+                                                       target="_blank" 
+                                                       class="btn btn-outline-danger btn-sm rounded-pill px-4">
+                                                        <i class="fas fa-external-link-alt me-1"></i> Buka Original
+                                                    </a>
+                                                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">

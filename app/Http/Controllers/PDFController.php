@@ -18,9 +18,9 @@ class PDFController extends Controller
         // Check authorization: must be participant themselves or admin
         $sessionParticipantId = session('participant_id');
         $isParticipant = !is_null($sessionParticipantId) && (string)$sessionParticipantId === (string)$id;
-        $isAdmin = auth()->guard('web')->check() && auth()->user() && auth()->user()->isAdmin();
+        $isOperator = auth()->guard('web')->check() && auth()->user() && auth()->user()->isOperator();
 
-        if (!$isParticipant && !$isAdmin) {
+        if (!$isParticipant && !$isOperator) {
             abort(403, 'Unauthorized access to participant card');
         }
 
@@ -30,7 +30,7 @@ class PDFController extends Controller
         }
 
         // Restrict access if participant has failed
-        if ($participant->test_score !== null && !$participant->passed && !$isAdmin) {
+        if ($participant->test_score !== null && !$participant->passed && !$isOperator) {
             abort(403, 'Kartu ujian tidak tersedia untuk peserta yang tidak lulus.');
         }
 
@@ -47,9 +47,9 @@ class PDFController extends Controller
         // Check authorization: must be participant themselves or admin
         $sessionParticipantId = session('participant_id');
         $isParticipant = !is_null($sessionParticipantId) && (string)$sessionParticipantId === (string)$id;
-        $isAdmin = auth()->guard('web')->check() && auth()->user() && auth()->user()->isAdmin();
+        $isOperator = auth()->guard('web')->check() && auth()->user() && auth()->user()->isOperator();
 
-        if (!$isParticipant && !$isAdmin) {
+        if (!$isParticipant && !$isOperator) {
             abort(403, 'Unauthorized access to participant card');
         }
 
@@ -59,7 +59,7 @@ class PDFController extends Controller
         }
 
         // Restrict access if participant has failed
-        if ($participant->test_score !== null && !$participant->passed && !$isAdmin) {
+        if ($participant->test_score !== null && !$participant->passed && !$isOperator) {
             abort(403, 'Kartu ujian tidak tersedia untuk peserta yang tidak lulus.');
         }
 

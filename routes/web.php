@@ -72,6 +72,7 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
     Route::get('/fix-seat-numbers', [AdminController::class, 'fixSeatNumbers'])->name('admin.fix.seats');
     Route::get('/schedule/{id}/participants', [AdminController::class, 'participantsList'])->name('admin.participants.list');
     Route::get('/participant/{id}/details', [AdminController::class, 'participantDetails'])->name('admin.participant.details');
+    Route::put('/participant/{id}/update-data', [AdminController::class, 'updateParticipantData'])->name('admin.participant.update-data');
     Route::get('/participant/{id}/photo', [AdminController::class, 'participantPhoto'])->name('admin.participant.photo');
     Route::delete('/participant/{id}/delete', [AdminController::class, 'deleteParticipant'])->name('admin.participant.delete');
 
@@ -112,8 +113,8 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
     Route::get('/schedule/{schedule}/attendance/export', [AdminController::class, 'exportAttendanceList'])->name('admin.schedule.attendance.export');
 
     // Card generation routes for admin
-    Route::get('/participant/{id}/card/preview', [PDFController::class, 'showTestCardPreview'])->name('admin.participant.card.preview')->middleware('admin');
-    Route::get('/participant/{id}/card/download', [PDFController::class, 'generateTestCard'])->name('admin.participant.card.download')->middleware('admin');
+    Route::get('/participant/{id}/card/preview', [PDFController::class, 'showTestCardPreview'])->name('admin.participant.card.preview');
+    Route::get('/participant/{id}/card/download', [PDFController::class, 'generateTestCard'])->name('admin.participant.card.download');
     Route::get('/participant/{id}/certificate/download', [PDFController::class, 'generateCertificate'])->name('admin.participant.certificate.download');
 
     // Pending validation routes

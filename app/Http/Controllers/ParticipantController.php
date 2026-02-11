@@ -572,6 +572,7 @@ class ParticipantController extends Controller
                 'payment_date' => $paymentDateTime,
                 'test_category' => $request->test_category,
                 'payment_proof_path' => $paymentProofPath,
+                'previous_payment_proof_path' => $participant->payment_proof_path, // Explicitly archive OLD proof from PREVIOUS record
                 'seat_status' => 'reserved', // Reserved until admin verifies payment
                 'seat_number' => 'TBA', // Set to 'TBA' for new registration
                 'test_score' => null, // Clear results for new attempt
@@ -830,7 +831,11 @@ class ParticipantController extends Controller
             'accessed_by' => Auth::check() ? 'admin' : 'participant',
         ]);
 
-        return response()->file($fullPath);
+        return response()->file($fullPath, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     /**

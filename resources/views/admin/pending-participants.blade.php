@@ -212,90 +212,131 @@
                             </div>
                             <div class="card-body text-center">
                                 @php
-                                    $prevProofRoute = null;
-                                    $isDuplicate = false;
+                                    // Gather ALL historical proofs across ALL records for this NIM
+                                    $historyRecords = \App\Models\Participant::where('nim', $participant->nim)
+                                        ->orderBy('created_at', 'desc')
+                                        ->get();
                                     
-                                    // Case 1: Proper Retake (Same ID, proof archived)
-                                    if ($participant->previous_payment_proof_path) {
-                                        $prevProofRoute = route('participant.file.download', ['id' => $participant->id, 'type' => 'previous_payment_proof']);
-                                    } 
-                                    // Case 2: Duplicate Registration (Different ID, same NIM)
-                                    elseif ($prevParticipant = $participant->previous_participation) {
-                                        if ($prevParticipant->payment_proof_path) {
-                                            $prevProofRoute = route('participant.file.download', ['id' => $prevParticipant->id, 'type' => 'payment_proof']);
-                                            $isDuplicate = true;
+                                    $allHistoryProofs = collect();
+                                    foreach($historyRecords as $rec) {
+                                        // 1. Check current proof in this record
+                                        if ($rec->payment_proof_path) {
+                                            // Exclude the proof that is CURRENTLY being validated (it's in the "Baru" column)
+                                            if (!($rec->id == $participant->id && $rec->payment_proof_path == $participant->payment_proof_path)) {
+                                                $allHistoryProofs->push([
+                                                    'path' => $rec->payment_proof_path,
+                                                    'date' => $rec->payment_date ?: $rec->created_at,
+                                                    'type' => 'payment_proof',
+                                                    'participant_id' => $rec->id,
+                                                    'origin' => $rec->id == $participant->id ? 'Current Record' : 'Record History'
+                                                ]);
+                                            }
+                                        }
+                                        // 2. Check archived proof in this record
+                                        if ($rec->previous_payment_proof_path) {
+                                            $allHistoryProofs->push([
+                                                'path' => $rec->previous_payment_proof_path,
+                                                'date' => $rec->created_at, // Approximate
+                                                'type' => 'previous_payment_proof',
+                                                'participant_id' => $rec->id,
+                                                'origin' => 'Archive'
+                                            ]);
                                         }
                                     }
+                                    // Unique by path to avoid duplicates
+                                    $allHistoryProofs = $allHistoryProofs->unique('path')->values();
                                 @endphp
 
-                                @if($prevProofRoute)
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <div class="card h-100 border-primary">
-                                                <div class="card-header bg-primary text-white py-1">
-                                                    <small class="fw-bold">Baru (Saat Ini)</small>
-                                                    <br>
-                                                    <small class="fs-07rem">
-                                                        {{ $participant->payment_date ? $participant->payment_date->format('d M Y H:i:s') : '-' }}
-                                                    </small>
-                                                </div>
-                                                <div class="card-body p-2 d-flex align-items-center justify-content-center" style="min-height: 150px;">
-                                                    <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank">
-                                                        <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
-                                                              alt="Bukti Baru" 
-                                                              class="img-fluid rounded shadow-sm"
-                                                              style="max-height: 150px;">
-                                                    </a>
-                                                </div>
+                                <div class="row g-2">
+                                    <!-- Current Proof (Baru) -->
+                                    <div class="col-6">
+                                        <div class="card h-100 border-primary shadow-sm">
+                                            <div class="card-header bg-primary text-white py-1">
+                                                <small class="fw-bold">Baru (Saat Ini)</small>
+                                                <br>
+                                                <small class="fs-07rem">
+                                                    {{ $participant->payment_date ? $participant->payment_date->format('d M Y H:i:s') : '-' }}
+                                                </small>
+                                            </div>
+                                            <div class="card-body p-2 d-flex flex-column align-items-center justify-content-center" style="min-height: 200px; background-color: #f8f9fa;">
+                                                <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank">
+                                                    <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
+                                                          alt="Bukti Baru" 
+                                                          class="img-fluid rounded border shadow-sm"
+                                                          style="max-height: 150px;">
+                                                </a>
+                                                <small class="text-muted mt-2 fs-07rem text-break text-center">
+                                                    <i class="fas fa-file-image me-1"></i>{{ basename($participant->payment_proof_path) }}
+                                                </small>
                                             </div>
                                         </div>
-                                        <div class="col-6">
-                                            <div class="card h-100 border-secondary">
-                                                <div class="card-header bg-secondary text-white py-1">
-                                                    <small class="fw-bold">Lama (Sebelumnya)</small>
-                                                    <br>
-                                                    <small class="fs-07rem">
-                                                        @if($isDuplicate && isset($prevParticipant))
-                                                            {{ $prevParticipant->payment_date ? $prevParticipant->payment_date->format('d M Y H:i:s') : '-' }}
-                                                        @elseif($participant->previous_payment_proof_path)
-                                                            {{ $participant->created_at->format('d M Y H:i:s') }}
-                                                        @else
-                                                            -
+                                    </div>
+
+                                    <!-- History Carousel (Lama) -->
+                                    <div class="col-6">
+                                        <div class="card h-100 border-secondary shadow-sm">
+                                            <div class="card-header bg-secondary text-white py-1">
+                                                <small class="fw-bold">Riwayat (Sebelumnya)</small>
+                                                <span class="badge bg-light text-dark fs-06rem float-end">{{ $allHistoryProofs->count() }} File</span>
+                                            </div>
+                                            <div class="card-body p-0 position-relative" style="min-height: 200px; background-color: #fdfdfd;">
+                                                @if($allHistoryProofs->isEmpty())
+                                                    <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5">
+                                                        <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                                                        <small class="text-muted italic">Tidak ada riwayat</small>
+                                                    </div>
+                                                @else
+                                                    <div id="carouselHistory{{ $participant->id }}" class="carousel slide h-100" data-bs-ride="false" data-bs-interval="false">
+                                                        <div class="carousel-inner h-100">
+                                                            @foreach($allHistoryProofs as $index => $history)
+                                                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }} h-100">
+                                                                    <div class="p-2 d-flex flex-column align-items-center justify-content-center h-100">
+                                                                        <div class="mb-1 text-center">
+                                                                            <span class="badge bg-light text-secondary border fs-06rem">
+                                                                                {{ $history['origin'] }} | {{ $history['date'] instanceof \Carbon\Carbon ? $history['date']->format('d M y H:i') : $history['date'] }}
+                                                                            </span>
+                                                                        </div>
+                                                                        @php
+                                                                            $historyRoute = route('participant.file.download', ['id' => $history['participant_id'], 'type' => $history['type']]);
+                                                                        @endphp
+                                                                        <a href="{{ $historyRoute }}" target="_blank">
+                                                                            <img src="{{ $historyRoute }}" 
+                                                                                  alt="Bukti Riwayat" 
+                                                                                  class="img-fluid rounded border shadow-sm opacity-85"
+                                                                                  style="max-height: 120px;">
+                                                                        </a>
+                                                                        <small class="text-muted mt-2 fs-07rem text-break text-center">
+                                                                            {{ basename($history['path']) }}
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                        
+                                                        @if($allHistoryProofs->count() > 1)
+                                                            <button class="carousel-control-prev w-auto ps-1" type="button" data-bs-target="#carouselHistory{{ $participant->id }}" data-bs-slide="prev" style="filter: invert(1); opacity: 0.8;">
+                                                                <span class="carousel-control-prev-icon" aria-hidden="true" style="width: 20px; height: 20px;"></span>
+                                                                <span class="visually-hidden">Previous</span>
+                                                            </button>
+                                                            <button class="carousel-control-next w-auto pe-1" type="button" data-bs-target="#carouselHistory{{ $participant->id }}" data-bs-slide="next" style="filter: invert(1); opacity: 0.8;">
+                                                                <span class="carousel-control-next-icon" aria-hidden="true" style="width: 20px; height: 20px;"></span>
+                                                                <span class="visually-hidden">Next</span>
+                                                            </button>
                                                         @endif
-                                                    </small>
-                                                </div>
-                                                <div class="card-body p-2 d-flex align-items-center justify-content-center" style="min-height: 150px;">
-                                                    <a href="{{ $prevProofRoute }}" target="_blank">
-                                                        <img src="{{ $prevProofRoute }}" 
-                                                              alt="Bukti Lama" 
-                                                              class="img-fluid rounded shadow-sm opacity-75"
-                                                              style="max-height: 150px;">
-                                                    </a>
-                                                </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="alert alert-info mt-2 py-2 mb-0" role="alert">
-                                        <small><i class="fas fa-info-circle"></i> 
-                                            @php
-                                                $retakeCount = \App\Models\Participant::where('nim', $participant->nim)
-                                                    ->where('created_at', '<', $participant->created_at)
-                                                    ->count();
-                                            @endphp
-                                            <strong>Pendaftaran Ulang Ke-{{ $retakeCount }}</strong>
-                                        </small>
-                                    </div>
-                                @else
-                                    <a href="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" target="_blank">
-                                        <img src="{{ route('participant.file.download', ['id' => $participant->id, 'type' => 'payment_proof']) }}" 
-                                              alt="Bukti Pembayaran" 
-                                              class="img-fluid rounded shadow border"
-                                              style="max-height: 250px;">
-                                    </a>
-                                    <small class="text-muted d-block mt-2">
-                                        <i class="fas fa-search-plus"></i> Klik gambar untuk memperbesar
+                                </div>
+                                <div class="alert alert-info mt-2 py-2 mb-0" role="alert">
+                                    <small><i class="fas fa-info-circle"></i> 
+                                        @php
+                                            $totalRegistrations = \App\Models\Participant::where('nim', $participant->nim)->count();
+                                        @endphp
+                                        <strong>Pendaftaran Ulang: {{ $totalRegistrations - 1 }} Kali</strong>
                                     </small>
-                                @endif
+                                </div>
                             </div>
                         </div>
                     </div>

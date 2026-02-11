@@ -405,6 +405,61 @@ class AdminController extends Controller
         return view('admin.participant-details', compact('participant', 'testHistory'));
     }
 
+    public function updateParticipantData(Request $request, $id)
+    {
+        // SECURITY: Explicit authorization check
+        if (!Auth::check() || !Auth::user()->isOperator()) {
+            abort(403, 'Unauthorized access');
+        }
+
+        $participant = Participant::findOrFail($id);
+
+        // SECURITY: If user is prodi, they can only access data for their own study program
+        if (Auth::user()->isProdi() && $participant->study_program_id !== Auth::user()->study_program_id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah data peserta dari Program Studi lain.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'gender' => 'required|in:male,female',
+            'birth_place' => 'required|string|max:255',
+            'birth_date' => 'required|date',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+        ]);
+
+        $oldData = [
+            'name' => $participant->name,
+            'gender' => $participant->gender,
+            'birth_place' => $participant->birth_place,
+            'birth_date' => $participant->birth_date ? $participant->birth_date->format('Y-m-d') : null,
+            'phone' => $participant->phone,
+            'email' => $participant->email,
+        ];
+
+        $participant->update([
+            'name' => $request->name,
+            'gender' => $request->gender,
+            'birth_place' => $request->birth_place,
+            'birth_date' => $request->birth_date,
+            'phone' => $request->phone,
+            'email' => $request->email,
+        ]);
+
+        $newData = [
+            'name' => $request->name,
+            'gender' => $request->gender,
+            'birth_place' => $request->birth_place,
+            'birth_date' => $request->birth_date,
+            'phone' => $request->phone,
+            'email' => $request->email,
+        ];
+
+        ActivityLogger::log('Update Data Peserta', "Admin memperbarui data pribadi peserta {$participant->name} (NIM: {$participant->nim}). Perubahan: " . json_encode(['old' => $oldData, 'new' => $newData]));
+
+        return redirect()->back()->with('success', 'Data peserta berhasil diperbarui.');
+    }
+
     public function participantPhoto($id)
     {
         // SECURITY: Explicit authorization check
