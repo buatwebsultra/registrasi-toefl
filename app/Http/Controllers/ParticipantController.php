@@ -52,12 +52,12 @@ class ParticipantController extends Controller
             'payment_proof' => [
                 'required',
                 'file',
-                'max:2048', // 2MB max - check this first
+                'max:1024', // 1MB max
                 function ($attribute, $value, $fail) {
                     // Check file size first (in KB)
                     $fileSizeKB = $value->getSize() / 1024;
-                    if ($fileSizeKB > 2048) {
-                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).');
+                    if ($fileSizeKB > 1024) {
+                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (1MB).');
                         return;
                     }
 
@@ -80,12 +80,12 @@ class ParticipantController extends Controller
             'photo' => [
                 'required',
                 'file',
-                'max:2048', // 2MB max - check this first
+                'max:1024', // 1MB max
                 function ($attribute, $value, $fail) {
                     // Check file size first (in KB)
                     $fileSizeKB = $value->getSize() / 1024;
-                    if ($fileSizeKB > 2048) {
-                        $fail('Ukuran file foto melebihi kapasitas maksimal (2MB).');
+                    if ($fileSizeKB > 1024) {
+                        $fail('Ukuran file foto melebihi kapasitas maksimal (1MB).');
                         return;
                     }
 
@@ -108,12 +108,12 @@ class ParticipantController extends Controller
             'ktp' => [
                 'required',
                 'file',
-                'max:2048', // 2MB max - check this first
+                'max:1024', // 1MB max
                 function ($attribute, $value, $fail) {
                     // Check file size first (in KB)
                     $fileSizeKB = $value->getSize() / 1024;
-                    if ($fileSizeKB > 2048) {
-                        $fail('Ukuran file KTP melebihi kapasitas maksimal (2MB).');
+                    if ($fileSizeKB > 1024) {
+                        $fail('Ukuran file KTP melebihi kapasitas maksimal (1MB).');
                         return;
                     }
 
@@ -156,13 +156,13 @@ class ParticipantController extends Controller
             'payment_minute.required' => 'Menit pembayaran wajib dipilih.',
             'payment_second.required' => 'Detik pembayaran wajib dipilih.',
             'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
-            'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 2MB.',
+            'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 1MB.',
             'payment_proof.file' => 'Bukti pembayaran harus berupa file.',
             'photo.required' => 'Foto wajib diunggah.',
-            'photo.max' => 'Ukuran file foto maksimal 2MB.',
+            'photo.max' => 'Ukuran file foto maksimal 1MB.',
             'photo.file' => 'Foto harus berupa file.',
             'ktp.required' => 'KTP wajib diunggah.',
-            'ktp.max' => 'Ukuran file KTP maksimal 2MB.',
+            'ktp.max' => 'Ukuran file KTP maksimal 1MB.',
             'ktp.file' => 'KTP harus berupa file.',
         ]);
 
@@ -500,11 +500,11 @@ class ParticipantController extends Controller
             'payment_proof' => [
                 'required',
                 'file',
-                'max:2048',
+                'max:1024',
                 function ($attribute, $value, $fail) {
                     $fileSizeKB = $value->getSize() / 1024;
-                    if ($fileSizeKB > 2048) {
-                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).');
+                    if ($fileSizeKB > 1024) {
+                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (1MB).');
                         return;
                     }
 
@@ -673,12 +673,12 @@ class ParticipantController extends Controller
             'payment_proof' => [
                 'required',
                 'file',
-                'max:2048', // 2MB max - check this first
+                'max:1024', // 1MB max
                 function ($attribute, $value, $fail) {
                     // Check file size first (in KB)
                     $fileSizeKB = $value->getSize() / 1024;
-                    if ($fileSizeKB > 2048) {
-                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (2MB).');
+                    if ($fileSizeKB > 1024) {
+                        $fail('Ukuran file bukti pembayaran melebihi kapasitas maksimal (1MB).');
                         return;
                     }
 
@@ -701,7 +701,7 @@ class ParticipantController extends Controller
         ], [
             'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
             'payment_proof.file' => 'Bukti pembayaran harus berupa file.',
-            'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 2MB.',
+            'payment_proof.max' => 'Ukuran file bukti pembayaran maksimal 1MB.',
         ]);
 
         if ($validator->fails()) {
@@ -851,12 +851,12 @@ class ParticipantController extends Controller
             'document_file' => [
                 'required',
                 'file',
-                'max:2048', // 2MB max - check this first
+                'max:1024', // 1MB max
                 function ($attribute, $value, $fail) use ($request) {
                     // Check file size first (in KB)
                     $fileSizeKB = $value->getSize() / 1024;
-                    if ($fileSizeKB > 2048) {
-                        $fail('Ukuran file yang di-upload melebihi kapasitas maksimal (2MB).');
+                    if ($fileSizeKB > 1024) {
+                        $fail('Ukuran file yang di-upload melebihi kapasitas maksimal (1MB).');
                         return;
                     }
 

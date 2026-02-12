@@ -10,10 +10,10 @@
                     <i class="fas fa-map-signs fa-5x text-info opacity-50"></i>
                 </div>
                 <h1 class="display-4 fw-bold mb-3">404</h1>
-                <h2 class="h3 mb-4">Waduh, Kesasar Bro?</h2>
+                <h2 class="h3 mb-4">Halaman Tidak Ditemukan</h2>
                 <p class="lead text-muted mb-5">
-                    Halaman yang kamu cari sepertinya nggak ada atau sudah pindah alamat.
-                    Cek lagi URL-nya atau balik ke jalan yang benar (Dashboard/Home) ya.
+                    Halaman yang Anda cari tidak tersedia atau telah dipindahkan.
+                    Silakan periksa kembali tautan Anda atau kembali ke halaman utama.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
                     <a href="{{ url()->previous() }}" class="btn btn-primary btn-lg rounded-pill px-5">

@@ -962,8 +962,40 @@
             const documentForms = document.querySelectorAll('form[action*="document/update"]');
 
             documentForms.forEach(form => {
+                const fileInput = form.querySelector('input[type="file"]');
+                
+                // Real-time validation
+                if (fileInput) {
+                    fileInput.addEventListener('change', function() {
+                        if (this.files && this.files[0]) {
+                            const file = this.files[0];
+                            const fileSize = file.size / 1024 / 1024; // MB
+                            const allowedExtensions = ['jpg', 'jpeg', 'png'];
+                            const fileExtension = file.name.split('.').pop().toLowerCase();
+                            
+                            this.classList.remove('is-invalid');
+                            const existingError = form.querySelector('.invalid-feedback');
+                            if (existingError) existingError.remove();
+
+                            let errorMsg = '';
+                            if (fileSize > 1) {
+                                errorMsg = 'Ukuran file terlalu besar (' + fileSize.toFixed(2) + 'MB). Maksimal 1MB.';
+                            } else if (!allowedExtensions.includes(fileExtension)) {
+                                errorMsg = 'Format file tidak didukung. Gunakan JPG atau PNG.';
+                            }
+
+                            if (errorMsg) {
+                                this.classList.add('is-invalid');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'invalid-feedback';
+                                errorDiv.textContent = errorMsg;
+                                this.parentNode.appendChild(errorDiv);
+                            }
+                        }
+                    });
+                }
+
                 form.addEventListener('submit', function (e) {
-                    const fileInput = form.querySelector('input[type="file"]');
                     if (fileInput && fileInput.files.length > 0) {
                         const file = fileInput.files[0];
                         const fileSize = file.size / 1024 / 1024; // MB
@@ -978,9 +1010,9 @@
                         const existingError = form.querySelector('.invalid-feedback');
                         if (existingError) existingError.remove();
 
-                        if (fileSize > 2) {
+                        if (fileSize > 1) {
                             isValid = false;
-                            errorMessage = 'Ukuran file terlalu besar (' + fileSize.toFixed(2) + 'MB). Maksimal 2MB.';
+                            errorMessage = 'Ukuran file terlalu besar (' + fileSize.toFixed(2) + 'MB). Maksimal 1MB.';
                         } else if (!allowedExtensions.includes(fileExtension)) {
                             isValid = false;
                             errorMessage = 'Format file tidak didukung. Gunakan JPG atau PNG.';
@@ -1175,7 +1207,7 @@
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        Hanya File JPG, PNG (Maksimal 2MB)
+                        Hanya File JPG, PNG (Maksimal 1MB)
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Pilih File Bukti Pembayaran Baru</label>
@@ -1208,7 +1240,7 @@
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        Hanya File JPG, PNG (Maksimal 2MB)
+                        Hanya File JPG, PNG (Maksimal 1MB)
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Pilih Foto Baru</label>
@@ -1241,7 +1273,7 @@
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        Hanya File JPG, PNG (Maksimal 2MB)
+                        Hanya File JPG, PNG (Maksimal 1MB)
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Pilih File KTP Baru</label>

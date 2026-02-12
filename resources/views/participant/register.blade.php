@@ -385,7 +385,7 @@
                             <div id="step3" class="form-step" style="display: none;">
                                 <h4 class="mb-3">Unggah Dokumen yang Diperlukan</h4>
                                 <p class="text-muted">Harap unggah dokumen-dokumen berikut dalam format JPG atau PNG
-                                    (maksimal 2MB per file)</p>
+                                    (maksimal 1MB per file)</p>
 
                                 <div class="row">
                                     <div class="col-md-4">
@@ -399,7 +399,7 @@
                                             @error('payment_proof')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
+                                            <div class="form-text">Hanya File JPG, PNG (maks 1MB)</div>
                                             <div id="payment_proof_preview" class="mt-2"></div>
                                         </div>
                                     </div>
@@ -412,7 +412,7 @@
                                             @error('photo')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
+                                            <div class="form-text">Hanya File JPG, PNG (maks 1MB)</div>
                                             <div id="photo_preview" class="mt-2"></div>
                                         </div>
                                     </div>
@@ -425,7 +425,7 @@
                                             @error('ktp')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="form-text">Hanya File JPG, PNG (maks 2MB)</div>
+                                            <div class="form-text">Hanya File JPG, PNG (maks 1MB)</div>
                                             <div id="ktp_preview" class="mt-2"></div>
                                         </div>
                                     </div>
@@ -680,6 +680,39 @@
 
             // Initialize the first step
             showStep(1);
+
+            // Add real-time file validation
+            const fileInputs = document.querySelectorAll('input[type="image"], input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function () {
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        const fileSize = file.size / 1024 / 1024; // MB
+                        const allowedExtensions = ['jpg', 'jpeg', 'png'];
+                        const fileExtension = file.name.split('.').pop().toLowerCase();
+
+                        // Clear existing error
+                        this.classList.remove('is-invalid');
+                        const existingError = this.parentNode.querySelector('.invalid-feedback');
+                        if (existingError) existingError.remove();
+
+                        let errorMsg = '';
+                        if (fileSize > 1) {
+                            errorMsg = 'Ukuran file terlalu besar (' + fileSize.toFixed(2) + 'MB). Maksimal 1MB.';
+                        } else if (!allowedExtensions.includes(fileExtension)) {
+                            errorMsg = 'Format file tidak didukung. Gunakan JPG atau PNG.';
+                        }
+
+                        if (errorMsg) {
+                            this.classList.add('is-invalid');
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'invalid-feedback';
+                            errorDiv.textContent = errorMsg;
+                            this.parentNode.appendChild(errorDiv);
+                        }
+                    }
+                });
+            });
         });
 
         // Multi-step form functionality
@@ -773,12 +806,12 @@
                     const allowedExtensions = ['jpg', 'jpeg', 'png'];
                     const fileExtension = file.name.split('.').pop().toLowerCase();
 
-                    if (fileSize > 2) {
+                    if (fileSize > 1) {
                         field.classList.add('is-invalid');
                         isValid = false;
                         const errorDiv = document.createElement('div');
                         errorDiv.className = 'invalid-feedback';
-                        errorDiv.textContent = 'Ukuran file melebihi kapasitas maksimal (2MB).';
+                        errorDiv.textContent = 'Ukuran file melebihi kapasitas maksimal (1MB).';
                         field.parentNode.appendChild(errorDiv);
                     } else if (!allowedExtensions.includes(fileExtension)) {
                         field.classList.add('is-invalid');
@@ -821,8 +854,13 @@
                 }
             }
 
-            // Special validation for password confirmation
+            // Special validation for username and password confirmation
             if (step === 4) {
+                const username = document.getElementById('username').value;
+                if (!validateUsername(username)) {
+                    isValid = false;
+                }
+
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('password_confirmation').value;
                 if (password !== confirmPassword) {
@@ -1010,9 +1048,9 @@
                         preview.innerHTML = '';
                         const fileInfo = document.createElement('div');
                         fileInfo.innerHTML = `
-                                                            <span class="badge bg-primary">${file.name}</span>
-                                                            <small class="text-muted d-block mt-1">${formatFileSize(file.size)}</small>
-                                                        `;
+                                                                    <span class="badge bg-primary">${file.name}</span>
+                                                                    <small class="text-muted d-block mt-1">${formatFileSize(file.size)}</small>
+                                                                `;
                         preview.appendChild(fileInfo);
                     }
                 } else {
@@ -1066,8 +1104,8 @@
         const usernameInput = document.getElementById('username');
 
         function validateUsername(value) {
-            // Regex pattern: lowercase letters, numbers, dots, underscores, and hyphens only
-            const regex = /^[a-z0-9._%-]+$/;
+            // Regex pattern: lowercase letters, numbers, and underscores only
+            const regex = /^[a-z0-9_]+$/;
 
             if (!regex.test(value)) {
                 // Mark as invalid and show error message
@@ -1083,7 +1121,7 @@
                 const errorDiv = document.createElement('div');
                 errorDiv.id = 'username-error';
                 errorDiv.className = 'invalid-feedback';
-                errorDiv.textContent = 'Username hanya boleh berisi huruf kecil, angka, titik, underscore, dan tanda hubung.';
+                errorDiv.textContent = 'Username hanya boleh berisi huruf kecil, angka, dan underscore. (Dilarang menggunakan spasi atau titik).';
                 errorDiv.style.display = 'block';
 
                 // Insert after the input element

@@ -10,10 +10,10 @@
                     <i class="fas fa-history fa-5x text-warning opacity-50"></i>
                 </div>
                 <h1 class="display-4 fw-bold mb-3">419</h1>
-                <h2 class="h3 mb-4">Sesi Kamu Sudah Habis, Bro!</h2>
+                <h2 class="h3 mb-4">Sesi Anda Telah Berakhir</h2>
                 <p class="lead text-muted mb-5">
-                    Halamannya sudah "basi" karena terlalu lama didiamkan.
-                    Demi keamanan, kamu perlu refresh halaman atau login ulang untuk lanjut.
+                    Halaman ini sudah kedaluwarsa karena tidak ada aktivitas dalam waktu lama.
+                    Demi keamanan, silakan muat ulang halaman atau login kembali untuk melanjutkan.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
                     <a href="{{ url()->previous() }}" class="btn btn-primary btn-lg rounded-pill px-5">
@@ -27,9 +27,9 @@
                 <div class="mt-5 p-4 bg-light rounded-4 text-start">
                     <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb me-2"></i>Kenapa ini terjadi?</h6>
                     <ul class="mb-0 small text-muted">
-                        <li>Kamu mendiamkan halaman ini terlalu lama (CSRF Token Expired).</li>
-                        <li>Kamu membuka tab baru dan logout di sana.</li>
-                        <li>Silakan login kembali untuk melanjutkan aktivitasmu.</li>
+                        <li>Halaman ini didiamkan terlalu lama (Token CSRF kedaluwarsa).</li>
+                        <li>Anda membuka tab baru dan melakukan logout di sana.</li>
+                        <li>Silakan login kembali untuk melanjutkan aktivitas Anda.</li>
                     </ul>
                 </div>
             </div>
