@@ -8,6 +8,7 @@ use App\Models\StudyProgram;
 use App\Models\Faculty;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -228,22 +229,24 @@ class ParticipantController extends Controller
                 ->with('error', 'Program studi tidak sesuai dengan fakultas yang dipilih.');
         }
 
-        $schedule = Schedule::findOrFail($request->schedule_id);
-
-        // Check if schedule is full
-        if ($schedule->isFull()) {
-            return redirect()->back()
-                ->withErrors(['schedule_id' => 'Jadwal yang dipilih sudah penuh. Silakan pilih jadwal lain.'])
-                ->withInput()
-                ->with('error', 'Jadwal yang dipilih sudah penuh.');
-        }
-
-        // Handle file uploads
-        $paymentProofPath = null;
-        $photoPath = null;
-        $ktpPath = null;
-
+        DB::beginTransaction();
         try {
+            $schedule = Schedule::where('id', $request->schedule_id)->lockForUpdate()->firstOrFail();
+
+            // Check if schedule is full
+            if ($schedule->isFull()) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->withErrors(['schedule_id' => 'Jadwal yang dipilih sudah penuh. Silakan pilih jadwal lain.'])
+                    ->withInput()
+                    ->with('error', 'Jadwal yang dipilih sudah penuh.');
+            }
+
+            // Handle file uploads
+            $paymentProofPath = null;
+            $photoPath = null;
+            $ktpPath = null;
+
             if ($request->hasFile('payment_proof')) {
                 // SECURITY: Store in private storage, not publicly accessible
                 $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'private');
@@ -251,13 +254,17 @@ class ParticipantController extends Controller
                 // Check if payment proof has been used before
                 $existingParticipant = Participant::where('payment_proof_path', $paymentProofPath)->first();
                 if ($existingParticipant) {
-                    \Storage::disk('private')->delete($paymentProofPath); // Delete the uploaded file
+                    if ($paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
+                        \Storage::disk('private')->delete($paymentProofPath); // Delete the uploaded file
+                    }
+                    DB::rollBack();
                     return redirect()->back()
                         ->withErrors(['payment_proof' => 'Bukti pembayaran sudah pernah digunakan. Silakan unggah bukti pembayaran yang baru.'])
                         ->withInput()
                         ->with('error', 'Bukti pembayaran sudah pernah digunakan.');
                 }
             } else {
+                DB::rollBack();
                 return redirect()->back()
                     ->withErrors(['payment_proof' => 'Bukti pembayaran wajib diunggah.'])
                     ->withInput()
@@ -268,6 +275,7 @@ class ParticipantController extends Controller
                 // SECURITY: Store in private storage
                 $photoPath = $request->file('photo')->store('photos', 'private');
             } else {
+                DB::rollBack();
                 return redirect()->back()
                     ->withErrors(['photo' => 'Foto wajib diunggah.'])
                     ->withInput()
@@ -278,6 +286,7 @@ class ParticipantController extends Controller
                 // SECURITY: Store in private storage
                 $ktpPath = $request->file('ktp')->store('ktps', 'private');
             } else {
+                DB::rollBack();
                 return redirect()->back()
                     ->withErrors(['ktp' => 'KTP wajib diunggah.'])
                     ->withInput()
@@ -334,6 +343,8 @@ class ParticipantController extends Controller
                 $schedule->update(['status' => 'full']);
             }
 
+            DB::commit();
+
             // Log the participant in by setting the session
             session(['participant_id' => $participant->id]);
 
@@ -351,16 +362,7 @@ class ParticipantController extends Controller
                     ]
                 ]);
         } catch (\Illuminate\Database\QueryException $e) {
-            // Hapus file yang sudah diupload jika terjadi kesalahan
-            if ($paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
-                \Storage::disk('private')->delete($paymentProofPath);
-            }
-            if ($photoPath && \Storage::disk('private')->exists($photoPath)) {
-                \Storage::disk('private')->delete($photoPath);
-            }
-            if ($ktpPath && \Storage::disk('private')->exists($ktpPath)) {
-                \Storage::disk('private')->delete($ktpPath);
-            }
+            DB::rollBack();
 
             if ($e->getCode() == 23000) { // Error code untuk constraint violation
                 // Check if the error is specifically about NIM uniqueness
@@ -406,6 +408,7 @@ class ParticipantController extends Controller
                     ->with('error', 'Terjadi kesalahan sistem saat menyimpan data.');
             }
         } catch (\Exception $e) {
+            DB::rollBack();
             // Hapus file yang sudah diupload jika terjadi kesalahan umum
             if ($paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
                 \Storage::disk('private')->delete($paymentProofPath);
@@ -543,25 +546,30 @@ class ParticipantController extends Controller
                 ->with('payment_error', 'Slip pembayaran sudah pernah dipakai. Silakan masukkan data pembayaran yang valid.');
         }
 
-        $schedule = Schedule::findOrFail($request->schedule_id);
-
-        // Check if schedule is full
-        if ($schedule->isFull()) {
-            return redirect()->back()->withErrors(['schedule_id' => 'Selected schedule is full.'])->withInput();
-        }
-
-        // Handle file uploads
-        // SECURITY: Store in private storage
-        $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'private');
-
-        // Check if payment proof has been used by any other participant
-        $existingProof = Participant::where('payment_proof_path', $paymentProofPath)->first();
-        if ($existingProof && $existingProof->id != $participant->id) {
-            \Storage::disk('private')->delete($paymentProofPath); // Delete the uploaded file
-            return redirect()->back()->withErrors(['payment_proof' => 'Payment proof has already been used.'])->withInput();
-        }
-
+        DB::beginTransaction();
         try {
+            $schedule = Schedule::where('id', $request->schedule_id)->lockForUpdate()->firstOrFail();
+
+            // Check if schedule is full
+            if ($schedule->isFull()) {
+                DB::rollBack();
+                return redirect()->back()->withErrors(['schedule_id' => 'Selected schedule is full.'])->withInput();
+            }
+
+            // Handle file uploads
+            // SECURITY: Store in private storage
+            $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'private');
+
+            // Check if payment proof has been used by any other participant
+            $existingProof = Participant::where('payment_proof_path', $paymentProofPath)->first();
+            if ($existingProof && $existingProof->id != $participant->id) {
+                if ($paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
+                    \Storage::disk('private')->delete($paymentProofPath); // Delete the uploaded file
+                }
+                DB::rollBack();
+                return redirect()->back()->withErrors(['payment_proof' => 'Payment proof has already been used.'])->withInput();
+            }
+
             // Create a new participant record for the retake to preserve history
             $newParticipant = $participant->replicate();
 
@@ -602,6 +610,8 @@ class ParticipantController extends Controller
                 $schedule->update(['status' => 'full']);
             }
 
+            DB::commit();
+
             // Log the participant in by setting the session to the NEW record
             session(['participant_id' => $newParticipant->id]);
 
@@ -618,11 +628,21 @@ class ParticipantController extends Controller
                     ]
                 ]);
         } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
             // Hapus file yang sudah diupload jika terjadi kesalahan
-            \Storage::disk('private')->delete($paymentProofPath);
+            if (isset($paymentProofPath) && $paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
+                \Storage::disk('private')->delete($paymentProofPath);
+            }
 
             \Log::error('Retake registration error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan sistem. Silakan coba lagi nanti.')->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if (isset($paymentProofPath) && $paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
+                \Storage::disk('private')->delete($paymentProofPath);
+            }
+            \Log::error('Retake registration error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba kembali nanti.')->withInput();
         }
     }
 
@@ -722,31 +742,36 @@ class ParticipantController extends Controller
                 ->with('payment_error', 'Slip pembayaran sudah pernah dipakai. Silakan masukkan data pembayaran yang valid.');
         }
 
-        $schedule = Schedule::findOrFail($request->schedule_id);
-
-        // Check if schedule is full
-        if ($schedule->isFull()) {
-            return redirect()->back()
-                ->withErrors(['schedule_id' => 'Jadwal yang dipilih sudah penuh. Silakan pilih jadwal lain.'])
-                ->withInput()
-                ->with('error', 'Jadwal yang dipilih sudah penuh.');
-        }
-
-        // Handle file upload
-        // SECURITY: Store in private storage
-        $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'private');
-
-        // Check if payment proof has been used before
-        $existingParticipant = Participant::where('payment_proof_path', $paymentProofPath)->first();
-        if ($existingParticipant) {
-            \Storage::disk('private')->delete($paymentProofPath); // Delete the uploaded file
-            return redirect()->back()
-                ->withErrors(['payment_proof' => 'Bukti pembayaran sudah pernah digunakan. Silakan unggah bukti pembayaran yang baru.'])
-                ->withInput()
-                ->with('error', 'Bukti pembayaran sudah pernah digunakan.');
-        }
-
+        DB::beginTransaction();
         try {
+            $schedule = Schedule::where('id', $request->schedule_id)->lockForUpdate()->firstOrFail();
+
+            // Check if schedule is full
+            if ($schedule->isFull()) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->withErrors(['schedule_id' => 'Jadwal yang dipilih sudah penuh. Silakan pilih jadwal lain.'])
+                    ->withInput()
+                    ->with('error', 'Jadwal yang dipilih sudah penuh.');
+            }
+
+            // Handle file upload
+            // SECURITY: Store in private storage
+            $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'private');
+
+            // Check if payment proof has been used before
+            $existingParticipant = Participant::where('payment_proof_path', $paymentProofPath)->first();
+            if ($existingParticipant) {
+                if ($paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
+                    \Storage::disk('private')->delete($paymentProofPath); // Delete the uploaded file
+                }
+                DB::rollBack();
+                return redirect()->back()
+                    ->withErrors(['payment_proof' => 'Bukti pembayaran sudah pernah digunakan. Silakan unggah bukti pembayaran yang baru.'])
+                    ->withInput()
+                    ->with('error', 'Bukti pembayaran sudah pernah digunakan.');
+            }
+
             // Update participant with new payment details
             $participant->update([
                 'schedule_id' => $request->schedule_id,
@@ -766,6 +791,8 @@ class ParticipantController extends Controller
                 $schedule->update(['status' => 'full']);
             }
 
+            DB::commit();
+
             // Log activity
             ActivityLogger::log('Kirim Ulang Bukti Pembayaran', 'Peserta ' . $participant->name . ' (NIM: ' . $participant->nim . ') mengirim ulang bukti pembayaran.');
 
@@ -774,8 +801,9 @@ class ParticipantController extends Controller
                     'success' => 'Bukti pembayaran berhasil diunggah ulang. Data pendaftaran Anda sedang menunggu verifikasi dari admin.'
                 ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             // Delete the uploaded file if there's an error
-            if ($paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
+            if (isset($paymentProofPath) && $paymentProofPath && \Storage::disk('private')->exists($paymentProofPath)) {
                 \Storage::disk('private')->delete($paymentProofPath);
             }
 
@@ -785,6 +813,7 @@ class ParticipantController extends Controller
                 ->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
+
 
     private function authorizeParticipant($id)
     {

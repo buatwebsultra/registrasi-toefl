@@ -449,8 +449,6 @@
                                                 <i class="fas fa-id-card fa-3x text-info mb-2"></i>
                                                 <div class="small fw-bold">View KTP</div>
                                             </a>
-                                            <div class="mt-2 small text-muted text-break">{{ basename($participant->ktp_path) }}
-                                            </div>
                                         @else
                                             <i class="fas fa-times-circle fa-2x text-muted mb-2"></i>
                                             <div class="small">Tidak ada KTP</div>
@@ -489,10 +487,6 @@
                                                                         class="img-fluid rounded shadow-sm border"
                                                                         style="max-height: 180px;" alt="Bukti Bayar">
                                                                 </a>
-                                                                <div class="mt-2">
-                                                                    <small class="text-muted text-break d-block"><i
-                                                                            class="fas fa-file-image me-1"></i>{{ basename($proof['path']) }}</small>
-                                                                </div>
                                                             </div>
                                                         </div>
                                                     @endforeach

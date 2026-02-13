@@ -79,33 +79,44 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Cari Peserta berdasarkan NIM</h5>
+                    <h5 class="mb-0">Cari Peserta berdasarkan NIM / Nama</h5>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route('admin.participants.list', $schedule->id) }}">
+                    <form id="searchForm" method="GET" action="{{ route('admin.participants.list', $schedule->id) }}">
                         <div class="row align-items-end">
-                            <div class="col-md-5">
-                                <label class="form-label small fw-bold">Cari NIM</label>
-                                <input type="text" name="search_nim" class="form-control" placeholder="Masukkan NIM..."
-                                    value="{{ request('search_nim') }}">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Cari NIM / Nama</label>
+                                <input type="text" name="search_nim" id="search_nim_input" class="form-control" 
+                                    placeholder="Cari NIM atau Nama..."
+                                    value="{{ request('search_nim') }}" 
+                                    autofocus>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Urutkan Berdasarkan</label>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Urutkan</label>
                                 <select name="sort" class="form-select" onchange="this.form.submit()">
-                                    <option value="seat_asc" {{ $sort === 'seat_asc' ? 'selected' : '' }}>Nomor Kursi</option>
-                                    <option value="name_asc" {{ $sort === 'name_asc' ? 'selected' : '' }}>Nama (A-Z)</option>
-                                    <option value="score_desc" {{ $sort === 'score_desc' ? 'selected' : '' }}>Nilai
-                                        (Tertinggi-Terendah)</option>
+                                    <option value="seat_asc" {{ $sort === 'seat_asc' ? 'selected' : '' }}>Kursi</option>
+                                    <option value="name_asc" {{ $sort === 'name_asc' ? 'selected' : '' }}>Nama</option>
+                                    <option value="score_desc" {{ $sort === 'score_desc' ? 'selected' : '' }}>Nilai</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Tampilkan</label>
+                                <select name="per_page" class="form-select" onchange="this.form.submit()">
+                                    <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
+                                    <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
+                                    <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                                    <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <div class="d-grid gap-2 d-md-flex">
+                                <label class="form-label d-none d-md-block">&nbsp;</label>
+                                <div class="d-flex gap-2">
                                     <button type="submit" class="btn btn-primary flex-fill">
-                                        <i class="fas fa-search"></i> Cari & Sortir
+                                        <i class="fas fa-search me-1"></i> Cari
                                     </button>
                                     <a href="{{ route('admin.participants.list', $schedule->id) }}"
-                                        class="btn btn-secondary flex-fill">
-                                        <i class="fas fa-times"></i> Reset
+                                        class="btn btn-outline-secondary flex-fill">
+                                        <i class="fas fa-undo me-1"></i> Reset
                                     </a>
                                 </div>
                             </div>
@@ -335,10 +346,38 @@
                             </button>
 
                             <button type="button" class="btn btn-outline-warning p-3 text-start btn-set-attendance"
-                                data-status="permission">
+                                data-status="permission" id="btn-izin-attendance">
                                 <i class="fas fa-clock me-2"></i> <strong>Izin (Reschedule)</strong>
                                 <div class="small text-muted ms-4">Peserta minta pindah jadwal.</div>
                             </button>
+                        </div>
+
+                        <!-- Reschedule Selection (appears when Izin is clicked) -->
+                        <div id="rescheduleSelection" class="mt-4 p-3 border rounded-3 bg-light d-none">
+                            <h6 class="fw-bold mb-3">Pilih Jadwal Baru (Opsional)</h6>
+                            <div class="mb-3">
+                                <select name="new_schedule_id" id="new_schedule_id_attendance" class="form-select">
+                                    <option value="">-- Tetap di Jadwal Ini (Hanya Tandai Izin) --</option>
+                                    @if(isset($allAvailableSchedules) && count($allAvailableSchedules) > 0)
+                                        @foreach($allAvailableSchedules as $s)
+                                            <option value="{{ $s->id }}">
+                                                {{ $s->date->format('d M Y') }} - {{ $s->room }} 
+                                                ({{ $s->used_capacity }}/{{ $s->capacity }})
+                                            </option>
+                                        @endforeach
+                                    @else
+                                        <option value="" disabled>Tidak ada jadwal tersedia lainnya</option>
+                                    @endif
+                                </select>
+                                @if(!isset($allAvailableSchedules) || count($allAvailableSchedules) === 0)
+                                    <div class="mt-2 text-warning small">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Menunggu jadwal tersedia (tidak ada jadwal lain saat ini)
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-warning fw-bold">Konfirmasi & Pindahkan Peserta</button>
+                            </div>
                         </div>
 
                         <input type="hidden" name="attendance" id="attendanceInput">
@@ -554,6 +593,27 @@
             });
         });
 
+        // Live Search with Debounce
+        let typingTimer;
+        let doneTypingInterval = 500;
+        const searchInput = document.getElementById('search_nim_input');
+        const searchForm = document.getElementById('searchForm');
+
+        if (searchInput && searchForm) {
+            // Put cursor at the end of input
+            const val = searchInput.value;
+            searchInput.value = '';
+            searchInput.value = val;
+            searchInput.focus();
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    searchForm.submit();
+                }, doneTypingInterval);
+            });
+        }
+
         // Modal Objects
         const attendanceModalEl = document.getElementById('attendanceModal');
         const attendanceModal = attendanceModalEl ? new bootstrap.Modal(attendanceModalEl) : null;
@@ -566,7 +626,26 @@
             if (attendanceModal) attendanceModal.show();
         }
 
+        if (attendanceModalEl) {
+            attendanceModalEl.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('rescheduleSelection').classList.add('d-none');
+                document.getElementById('btn-izin-attendance').classList.remove('active');
+                document.getElementById('new_schedule_id_attendance').value = '';
+            });
+        }
+
         function setAttendance(status) {
+            if (status === 'permission') {
+                const selection = document.getElementById('rescheduleSelection');
+                document.getElementById('attendanceInput').value = 'permission';
+                if (selection.classList.contains('d-none')) {
+                    selection.classList.remove('d-none');
+                    // highlight the button
+                    document.getElementById('btn-izin-attendance').classList.add('active');
+                    return; // Don't submit yet, let user choose schedule
+                }
+            }
+            
             document.getElementById('attendanceInput').value = status;
             document.getElementById('attendanceForm').submit();
         }

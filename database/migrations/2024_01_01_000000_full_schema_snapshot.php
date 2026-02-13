@@ -4,13 +4,25 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
+        Schema::dropIfExists('participants');
+        Schema::dropIfExists('schedules');
+        Schema::dropIfExists('study_programs');
+        Schema::dropIfExists('faculties');
+        Schema::dropIfExists('failed_jobs');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('cache');
+        Schema::dropIfExists('cache_locks');
+        Schema::dropIfExists('jobs');
+        Schema::dropIfExists('job_batches');
+
         // 1. Users Table
         Schema::create('users', function (Blueprint $table) {
             $table->id();
@@ -78,7 +90,7 @@ return new class extends Migration
             $table->foreignId('schedule_id')->constrained()->onDelete('cascade');
             $table->foreignId('study_program_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('faculty_id')->nullable()->constrained()->onDelete('set null');
-            
+
             $table->string('seat_number')->nullable();
             $table->string('status')->default('pending'); // pending, verified, rejected
             $table->string('seat_status')->default('reserved');
@@ -92,42 +104,42 @@ return new class extends Migration
             $table->string('major'); // Assuming redundant with study_program implementation or legacy string
             $table->string('faculty'); // Assuming redundant or legacy string
             $table->string('phone');
-            
+
             $table->date('payment_date');
             $table->string('test_category');
             $table->date('previous_test_date')->nullable();
-            
+
             // File Paths
             $table->string('payment_proof_path');
             $table->string('photo_path');
             $table->string('ktp_path');
-            
+
             // Login credentials generated
             $table->string('username')->nullable();
             $table->string('password')->nullable();
-            
+
             // Results
             $table->decimal('test_score', 5, 2)->nullable();
             $table->boolean('passed')->default(false);
             $table->date('test_date')->nullable();
-            
+
             // Breakdown scores
             $table->decimal('reading_score', 4, 1)->nullable();
             $table->decimal('listening_score', 4, 1)->nullable();
             $table->decimal('speaking_score', 4, 1)->nullable();
             $table->decimal('writing_score', 4, 1)->nullable();
             $table->string('test_format')->default('iBT'); // iBT or PBT
-            
+
             // PBT specific
             $table->integer('listening_score_pbt')->nullable();
             $table->integer('structure_score_pbt')->nullable();
             $table->integer('reading_score_pbt')->nullable();
             $table->integer('total_score_pbt')->nullable();
-            
+
             $table->string('academic_level')->nullable();
             $table->string('temp_seat_number')->nullable();
             $table->string('rejection_message')->nullable();
-            
+
             $table->string('attendance')->nullable(); // present, absent, permission
             $table->dateTime('attendance_marked_at')->nullable();
             $table->string('verification_token')->nullable();
@@ -135,7 +147,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
-        
+
         // Standard Laravel Tables
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();

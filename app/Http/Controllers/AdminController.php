@@ -145,19 +145,10 @@ class AdminController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Sync status and capacity for the current page
+        // Update status for the current page based on date and capacity
+        // Note: we don't sync used_capacity here to avoid race conditions; it's handled in registration/deletion.
         foreach ($schedules as $schedule) {
-            // Sync used_capacity with actual participant count
-            if ($schedule->used_capacity !== $schedule->participants_count) {
-                $schedule->update(['used_capacity' => $schedule->participants_count]);
-            }
-
-            // Determine if schedule should be 'full' (either reached capacity, is past, or within 2-day registration window)
-            // Logic: Close registration if today is within 2 days of test date
             $isPast = $schedule->date->isPast() && !$schedule->date->isToday();
-
-            // Check H-2 logic. If test is on Friday (Day 5), close on Wednesday (Day 3) end of day?
-            // User requirement: "sudah 2 hari". usually means D-2.
             $isWithinTwoDays = $schedule->date->lte(now()->addDays(1)->endOfDay());
 
             if (($schedule->used_capacity >= $schedule->capacity || $isPast || $isWithinTwoDays)) {
@@ -165,7 +156,6 @@ class AdminController extends Controller
                     $schedule->update(['status' => 'full']);
                 }
             } else {
-                // If it was full but now conditions are met to be available again (e.g. date changed)
                 if ($schedule->status === 'full' && $schedule->used_capacity < $schedule->capacity) {
                     $schedule->update(['status' => 'available']);
                 }
@@ -341,6 +331,12 @@ class AdminController extends Controller
         $searchNim = request('search_nim');
         $status = request('status');
         $sort = request('sort');
+        $perPage = request('per_page', 10);
+
+        // Validate per_page
+        if (!in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 10;
+        }
 
         $query = $schedule->participants()->with('studyProgram')
             ->addSelect([
@@ -352,9 +348,12 @@ class AdminController extends Controller
                     ->whereNull('history.deleted_at')
             ]);
 
-        // Jika ada parameter pencarian NIM, cari peserta dengan NIM tertentu
+        // Jika ada parameter pencarian NIM / Nama
         if ($searchNim) {
-            $query->where('nim', $searchNim);
+            $query->where(function ($q) use ($searchNim) {
+                $q->where('nim', 'LIKE', "%{$searchNim}%")
+                    ->orWhere('name', 'LIKE', "%{$searchNim}%");
+            });
         }
 
         // Filter by status if provided
@@ -372,12 +371,19 @@ class AdminController extends Controller
             $query->orderByRaw('COALESCE(seat_number, temp_seat_number, id) ASC');
         }
 
-        $participants = $query->paginate(10);
+        $participants = $query->paginate($perPage)->appends(request()->query());
 
         // Hitung total peserta untuk kebutuhan view
         $totalParticipants = $schedule->participants()->count();
 
-        return view('admin.participants-list', compact('schedule', 'participants', 'searchNim', 'totalParticipants', 'sort'));
+        // Fetch all available schedules for rescheduling (filtered by category and MUST be later than current schedule)
+        $allAvailableSchedules = Schedule::available()
+            ->where('id', '!=', $schedule->id)
+            ->where('category', $schedule->category)
+            ->whereDate('date', '>', $schedule->date)
+            ->get();
+
+        return view('admin.participants-list', compact('schedule', 'participants', 'searchNim', 'totalParticipants', 'sort', 'allAvailableSchedules', 'perPage'));
     }
 
     public function participantDetails($id)
@@ -525,36 +531,46 @@ class AdminController extends Controller
 
         $participant = Participant::findOrFail($id);
 
-        // Delete associated files from private storage
-        if ($participant->photo_path && \Storage::disk('private')->exists($participant->photo_path)) {
-            \Storage::disk('private')->delete($participant->photo_path);
-        }
-        if ($participant->payment_proof_path && \Storage::disk('private')->exists($participant->payment_proof_path)) {
-            \Storage::disk('private')->delete($participant->payment_proof_path);
-        }
-        if ($participant->ktp_path && \Storage::disk('private')->exists($participant->ktp_path)) {
-            \Storage::disk('private')->delete($participant->ktp_path);
-        }
+        DB::beginTransaction();
+        try {
+            $scheduleId = $participant->schedule_id;
+            $participantName = $participant->name;
 
-        $scheduleId = $participant->schedule_id;
-        $participantName = $participant->name;
-        $participant->delete();
+            // Delete associated files from private storage
+            if ($participant->photo_path && \Storage::disk('private')->exists($participant->photo_path)) {
+                \Storage::disk('private')->delete($participant->photo_path);
+            }
+            if ($participant->payment_proof_path && \Storage::disk('private')->exists($participant->payment_proof_path)) {
+                \Storage::disk('private')->delete($participant->payment_proof_path);
+            }
+            if ($participant->ktp_path && \Storage::disk('private')->exists($participant->ktp_path)) {
+                \Storage::disk('private')->delete($participant->ktp_path);
+            }
 
-        // Decrement schedule used capacity
-        $schedule = Schedule::findOrFail($scheduleId);
-        if ($schedule->used_capacity > 0) {
-            $schedule->decrement('used_capacity');
+            $participant->delete();
+
+            // Decrement schedule used capacity
+            $schedule = Schedule::where('id', $scheduleId)->lockForUpdate()->first();
+            if ($schedule) {
+                if ($schedule->used_capacity > 0) {
+                    $schedule->decrement('used_capacity');
+                }
+
+                // Update schedule status if it was full
+                if ($schedule->capacity > $schedule->used_capacity) {
+                    $schedule->update(['status' => 'available']);
+                }
+            }
+
+            DB::commit();
+            ActivityLogger::log('Menghapus Peserta', 'Admin menghapus peserta: ' . $participantName . ' dari jadwal ID: ' . $scheduleId);
+
+            // Redirect to the participants list page for this schedule
+            return redirect()->route('admin.participants.list', $scheduleId)->with('success', 'Peserta berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus peserta.');
         }
-
-        // Update schedule status if it was full
-        if ($schedule->capacity > $schedule->used_capacity) {
-            $schedule->update(['status' => 'available']);
-        }
-
-        ActivityLogger::log('Menghapus Peserta', 'Admin menghapus peserta: ' . $participantName . ' dari jadwal ID: ' . $scheduleId);
-
-        // Redirect to the participants list page for this schedule
-        return redirect()->route('admin.participants.list', $scheduleId)->with('success', 'Peserta berhasil dihapus.');
     }
 
     public function updateTestScore(Request $request, $id)
@@ -670,6 +686,11 @@ class AdminController extends Controller
 
         $request->validate([
             'attendance' => 'required|in:present,absent,permission',
+            'new_schedule_id' => 'nullable|exists:schedules,id',
+        ], [
+            'attendance.required' => 'Status kehadiran wajib dipilih.',
+            'attendance.in' => 'Status kehadiran tidak valid.',
+            'new_schedule_id.exists' => 'Jadwal yang dipilih tidak valid.',
         ]);
 
         $attendance = $request->attendance;
@@ -678,22 +699,66 @@ class AdminController extends Controller
             'attendance_marked_at' => now(),
         ];
 
-        // If absent, they automatically fail
-        if ($attendance === 'absent') {
-            $updateData['test_score'] = 0;
-            $updateData['passed'] = false;
-            // Reset scores if any
-            $updateData['listening_score_pbt'] = 0;
-            $updateData['structure_score_pbt'] = 0;
-            $updateData['reading_score_pbt'] = 0;
-            $updateData['test_format'] = 'PBT';
+        DB::beginTransaction();
+        try {
+            // If absent, they automatically fail
+            if ($attendance === 'absent') {
+                $updateData['test_score'] = 0;
+                $updateData['passed'] = false;
+                // Reset scores if any
+                $updateData['listening_score_pbt'] = 0;
+                $updateData['structure_score_pbt'] = 0;
+                $updateData['reading_score_pbt'] = 0;
+                $updateData['test_format'] = 'PBT';
+            }
+
+            // If permission (Izin) and a new schedule is selected, perform duplication for history
+            if ($attendance === 'permission' && $request->new_schedule_id) {
+                $newSchedule = Schedule::where('id', $request->new_schedule_id)->lockForUpdate()->firstOrFail();
+
+                if (!$newSchedule->isAvailable()) {
+                    DB::rollBack();
+                    return back()->with('error', 'Jadwal yang dipilih tidak tersedia (mungkin penuh atau sudah tutup).');
+                }
+
+                // 1. Update status on CURRENT record to keep it as historical "Izin"
+                $participant->update([
+                    'attendance' => 'permission',
+                    'attendance_marked_at' => now(),
+                ]);
+
+                // 2. Create NEW record for the new schedule (Replicate)
+                $newParticipant = $participant->replicate();
+
+                // Reset/Update fields for the new schedule
+                $newParticipant->schedule_id = $newSchedule->id;
+                $newParticipant->attendance = null;
+                $newParticipant->attendance_marked_at = null;
+                $newParticipant->seat_number = $this->generateSeatNumber($newSchedule);
+                $newParticipant->seat_status = 'confirmed';
+                $newParticipant->status = 'confirmed';
+                $newParticipant->test_score = null;
+                $newParticipant->passed = false;
+                $newParticipant->is_score_validated = false;
+                $newParticipant->save();
+
+                // Increment new schedule capacity
+                $newSchedule->increment('used_capacity');
+
+                $msg = 'Status kehadiran diperbarui dan pendaftaran baru berhasil dibuat untuk jadwal tanggal ' . $newSchedule->date->format('d M Y') . '.';
+            } else {
+                $participant->update($updateData);
+                $msg = 'Status kehadiran berhasil diperbarui.';
+            }
+            DB::commit();
+
+            ActivityLogger::log('Update Kehadiran', 'Admin/Operator memperbarui kehadiran peserta: ' . $participant->name . ' (' . $attendance . ')');
+
+            return back()->with('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui status: ' . $e->getMessage());
         }
-
-        $participant->update($updateData);
-
-        ActivityLogger::log('Update Kehadiran', 'Admin/Operator memperbarui kehadiran peserta: ' . $participant->name . ' (' . $attendance . ')');
-
-        return back()->with('success', 'Status kehadiran berhasil diperbarui.');
     }
 
     public function rescheduleParticipant(Request $request, $id)
@@ -704,53 +769,58 @@ class AdminController extends Controller
             'new_schedule_id' => 'required|exists:schedules,id',
         ]);
 
-        $newSchedule = Schedule::findOrFail($request->new_schedule_id);
+        DB::beginTransaction();
+        try {
+            $newSchedule = Schedule::where('id', $request->new_schedule_id)->lockForUpdate()->firstOrFail();
 
-        // Check capacity
-        if ($newSchedule->used_capacity >= $newSchedule->capacity) {
-            return back()->with('error', 'Jadwal yang dipilih sudah penuh.');
-        }
-
-        // Update participant schedule
-        // We keep the old record but soft delete it? Or move it? 
-        // Requirement: "admin memindahkan jadwal yang tersedia" -> Implies moving.
-        // Changing schedule_id is the simplest way to move.
-
-        // Decrement old schedule capacity
-        $oldSchedule = $participant->schedule;
-        if ($oldSchedule) {
-            $oldSchedule->decrement('used_capacity');
-
-            // Update old schedule status to available if it was full
-            if ($oldSchedule->used_capacity < $oldSchedule->capacity && $oldSchedule->status === 'full') {
-                $oldSchedule->update(['status' => 'available']);
+            // Check capacity
+            if ($newSchedule->used_capacity >= $newSchedule->capacity) {
+                DB::rollBack();
+                return back()->with('error', 'Jadwal yang dipilih sudah penuh.');
             }
+
+            // Decrement old schedule capacity
+            $oldSchedule = Schedule::where('id', $participant->schedule_id)->lockForUpdate()->first();
+            if ($oldSchedule) {
+                if ($oldSchedule->used_capacity > 0) {
+                    $oldSchedule->decrement('used_capacity');
+                }
+
+                // Update old schedule status to available if it was full
+                if ($oldSchedule->used_capacity < $oldSchedule->capacity && $oldSchedule->status === 'full') {
+                    $oldSchedule->update(['status' => 'available']);
+                }
+            }
+
+            // Generate new seat number
+            $seatNumber = $this->generateSeatNumber($newSchedule);
+
+            // Update participant
+            $participant->update([
+                'schedule_id' => $newSchedule->id,
+                'seat_number' => $seatNumber, // Assign new seat number
+                'seat_status' => 'confirmed', // Auto-confirm seat
+                'attendance' => null, // Reset attendance logic for new schedule
+                'attendance_marked_at' => null,
+                'test_score' => null, // Reset score if they were absent/previous attempt
+                'passed' => false,
+                // Keep personal data and payment proof
+            ]);
+
+            // Increment new schedule capacity
+            $newSchedule->increment('used_capacity');
+
+            // Check if new schedule is now full
+            if ($newSchedule->used_capacity >= $newSchedule->capacity) {
+                $newSchedule->update(['status' => 'full']);
+            }
+
+            DB::commit();
+            return redirect()->route('admin.participants.list', $oldSchedule ? $oldSchedule->id : $newSchedule->id)->with('success', 'Peserta berhasil dipindahkan ke jadwal baru.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan saat memindahkan peserta.');
         }
-
-        // Generate new seat number
-        $seatNumber = $this->generateSeatNumber($newSchedule);
-
-        // Update participant
-        $participant->update([
-            'schedule_id' => $newSchedule->id,
-            'seat_number' => $seatNumber, // Assign new seat number
-            'seat_status' => 'confirmed', // Auto-confirm seat
-            'attendance' => null, // Reset attendance logic for new schedule
-            'attendance_marked_at' => null,
-            'test_score' => null, // Reset score if they were absent/previous attempt
-            'passed' => false,
-            // Keep personal data and payment proof
-        ]);
-
-        // Increment new schedule capacity
-        $newSchedule->increment('used_capacity');
-
-        // Check if new schedule is now full
-        if ($newSchedule->used_capacity >= $newSchedule->capacity) {
-            $newSchedule->update(['status' => 'full']);
-        }
-
-        return redirect()->route('admin.participants.list', $oldSchedule->id)->with('success', 'Peserta berhasil dipindahkan ke jadwal baru.');
     }
 
     public function pendingParticipants(Request $request)
@@ -758,6 +828,10 @@ class AdminController extends Controller
         if (Auth::user()->isProdi()) {
             return redirect()->route('prodi.dashboard');
         }
+
+        $search = $request->input('search');
+        $scheduleId = $request->input('schedule_id');
+        $perPage = $request->input('per_page', 10);
 
         // Get active schedules for filter
         $schedules = Schedule::where('date', '>=', now())
@@ -767,14 +841,30 @@ class AdminController extends Controller
         $query = Participant::with(['schedule', 'studyProgram', 'faculty'])
             ->where('status', 'pending');
 
-        // Apply filter if selected
-        if ($request->has('schedule_id') && $request->schedule_id != '') {
-            $query->where('schedule_id', $request->schedule_id);
+        // Apply Search (NIM or Name)
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nim', 'LIKE', "%{$search}%")
+                    ->orWhere('name', 'LIKE', "%{$search}%");
+            });
         }
 
-        $pendingParticipants = $query->orderBy('created_at', 'desc')->get();
+        // Apply filter if selected
+        if ($scheduleId) {
+            $query->where('schedule_id', $scheduleId);
+        }
 
-        return view('admin.pending-participants', compact('pendingParticipants', 'schedules'));
+        // Sorting: ASC for queue system (First In, First Out)
+        $query->orderBy('created_at', 'asc');
+
+        // Pagination
+        if ($perPage === 'all') {
+            $pendingParticipants = $query->paginate(1000)->appends($request->query());
+        } else {
+            $pendingParticipants = $query->paginate((int) $perPage)->appends($request->query());
+        }
+
+        return view('admin.pending-participants', compact('pendingParticipants', 'schedules', 'search', 'scheduleId', 'perPage'));
     }
 
     public function confirmParticipant(Request $request, $id)

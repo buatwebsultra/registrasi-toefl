@@ -234,34 +234,8 @@
         }
     </style>
 @php
-    // Gather ALL unique payment proofs across all history for this participant
-    $allPaymentProofs = collect();
-    foreach($testHistory as $history) {
-        if ($history->payment_proof_path) {
-            $allPaymentProofs->push([
-                'path' => $history->payment_proof_path,
-                'date' => $history->payment_date ?: $history->created_at,
-                'type' => 'payment_proof',
-                'participant_id' => $history->id,
-            ]);
-        }
-        if ($history->previous_payment_proof_path) {
-            $allPaymentProofs->push([
-                'path' => $history->previous_payment_proof_path,
-                'date' => $history->created_at,
-                'type' => 'previous_payment_proof',
-                'participant_id' => $history->id,
-            ]);
-        }
-    }
-    // Filter to get only history (exclude the current record's current proof if you want to separate them, 
-    // but the request is to "show all uploaded proofs that were rejected/past")
-    // Let's filter out the CURRENT proof from this collection to show it separately, 
-    // and keep the rest as "Riwayat/History"
-    $currentProofPath = $participant->payment_proof_path;
-    $historyProofs = $allPaymentProofs->filter(function($p) use ($currentProofPath, $participant) {
-        return $p['path'] != $currentProofPath;
-    })->unique('path')->values();
+    // The previous history proof logic was removed to simplify the participant UI.
+    // Participants now only see their active documents.
 @endphp
 
     <div class="welcome-banner">
@@ -536,8 +510,7 @@
                                 <div class="alert alert-warning shadow-sm rounded-4 mt-4 animate__animated animate__fadeIn">
                                     <h6 class="alert-heading fw-bold mb-2 text-warning"><i class="fas fa-clock me-2"></i>Status:
                                         Izin</h6>
-                                    <p class="mb-0 small text-dark opacity-75">Status kehadiran Anda adalah izin. Silakan
-                                        hubungi admin UPA Bahasa untuk penjadwalan mandiri.</p>
+                                    <p class="mb-0 small text-dark opacity-75">Status kehadiran Anda adalah <strong>izin</strong>. Silakan menunggu Admin untuk melakukan penjadwalan ulang ke jadwal berikutnya.</p>
                                 </div>
                             @endif
 
@@ -660,16 +633,19 @@
                                         </div>
                                     @endif
 
-                                    <a href="{{ route('participant.card.download', $participant->id) }}"
-                                        class="btn btn-premium btn-premium-primary text-white {{ ($participant->status === 'pending' || $isFail) ? 'disabled' : '' }}"
-                                        {{ $isFail ? 'onclick=return(false);' : '' }}>
-                                        <i class="fas fa-file-pdf me-2"></i>Unduh Kartu Tes
-                                    </a>
-                                    <button type="button"
-                                        class="btn btn-premium btn-outline-primary {{ ($participant->status === 'pending' || $isFail) ? 'disabled' : '' }}"
-                                        data-bs-toggle="modal" data-bs-target="{{ $isFail ? '' : '#cardPreviewModal' }}">
-                                        <i class="fas fa-file-pdf me-2"></i>Preview & Unduh PDF
-                                    </button>
+                                    @if($participant->attendance !== 'permission')
+                                        <a href="{{ route('participant.card.download', $participant->id) }}"
+                                            class="btn btn-premium btn-premium-primary text-white {{ ($participant->status === 'pending' || $isFail) ? 'disabled' : '' }}"
+                                            {{ $isFail ? 'onclick=return(false);' : '' }}>
+                                            <i class="fas fa-file-pdf me-2"></i>Unduh Kartu Tes
+                                        </a>
+                                        <button type="button"
+                                            class="btn btn-premium btn-outline-primary {{ ($participant->status === 'pending' || $isFail) ? 'disabled' : '' }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="{{ $isFail ? '' : '#cardPreviewModal' }}">
+                                            <i class="fas fa-file-pdf me-2"></i>Preview & Unduh PDF
+                                        </button>
+                                    @endif
                                 @endif
 
                                 @if($participant->status === 'rejected')
@@ -677,6 +653,10 @@
                                         class="btn btn-premium btn-warning">
                                         <i class="fas fa-cloud-upload-alt me-2"></i>Upload Ulang Pembayaran
                                     </a>
+                                @elseif($participant->attendance === 'permission')
+                                    <button class="btn btn-premium btn-light text-muted" disabled>
+                                        <i class="fas fa-clock me-2"></i>Menunggu Penjadwalan Admin
+                                    </button>
                                 @elseif($participant->attendance !== 'absent' && (is_null($participant->test_score) || !$participant->is_score_validated))
                                     <button class="btn btn-premium btn-light text-muted" disabled>
                                         <i class="fas fa-history me-2"></i>Belum Bisa Daftar Ulang
@@ -724,6 +704,7 @@
                                                 <th class="ps-4 py-3">Kategori</th>
                                                 <th class="py-3">Tanggal Tes</th>
                                                 <th class="py-3">Ruangan</th>
+                                                <th class="py-3 text-center">Status</th>
                                                 <th class="py-3 text-center">Skor Akhir</th>
                                                 <th class="py-3">Detail Section</th>
                                                 <th class="pe-4 py-3 text-end">Terdaftar Pada</th>
@@ -748,6 +729,34 @@
                                                         <span class="badge bg-light text-dark border fw-normal px-3 py-2">
                                                             <i class="fas fa-map-marker-alt me-1 text-danger"></i>
                                                             {{ $history->schedule->room ?? '-' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @php
+                                                            $statusClass = 'secondary';
+                                                            $statusLabel = 'Pending';
+                                                            
+                                                            if ($history->status === 'confirmed') {
+                                                                if ($history->attendance === 'permission') {
+                                                                    $statusClass = 'warning';
+                                                                    $statusLabel = 'Izin (Reschedule)';
+                                                                } elseif ($history->attendance === 'absent') {
+                                                                    $statusClass = 'danger';
+                                                                    $statusLabel = 'Tidak Hadir';
+                                                                } elseif ($history->attendance === 'present') {
+                                                                    $statusClass = 'success';
+                                                                    $statusLabel = 'Hadir';
+                                                                } else {
+                                                                    $statusClass = 'info';
+                                                                    $statusLabel = 'Terverifikasi';
+                                                                }
+                                                            } elseif ($history->status === 'rejected') {
+                                                                $statusClass = 'danger';
+                                                                $statusLabel = 'Ditolak';
+                                                            }
+                                                        @endphp
+                                                        <span class="badge bg-{{ $statusClass }} rounded-pill px-3 py-1 small">
+                                                            {{ $statusLabel }}
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
@@ -889,66 +898,10 @@
                                 </div>
                             </div>
 
-                            @if($historyProofs->isNotEmpty())
-                                <div class="mt-5 pt-4 border-top">
-                                    <h6 class="fw-bold mb-4 text-primary"><i class="fas fa-history me-2"></i>Riwayat Bukti Pembayaran (Ditolak/Lama)</h6>
-                                    <div class="row g-3">
-                                        @foreach($historyProofs as $index => $proof)
-                                            <div class="col-6 col-md-3 col-lg-2">
-                                                <div class="card h-100 border shadow-sm hover-elevate cursor-pointer overflow-hidden" 
-                                                     data-bs-toggle="modal" 
-                                                     data-bs-target="#historyProofModal{{ $index }}">
-                                                    <div class="position-relative">
-                                                        <img src="{{ route('participant.file.download', ['id' => $proof['participant_id'], 'type' => $proof['type']]) }}" 
-                                                             class="card-img-top" 
-                                                             style="height: 100px; object-fit: cover; background-color: #f8f9fa;" 
-                                                             alt="Bukti Riwayat">
-                                                         <div class="position-absolute top-0 end-0 p-1">
-                                                             <span class="badge bg-dark bg-opacity-75 fs-07rem">#{{ $historyProofs->count() - $index }}</span>
-                                                         </div>
-                                                    </div>
-                                                    <div class="card-footer p-1 text-center bg-white border-top-0">
-                                                        <small class="text-muted d-block fs-07rem fw-bold">
-                                                            {{ $proof['date'] instanceof \Carbon\Carbon ? $proof['date']->format('d M Y') : 'Arsip' }}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Modal for this specific history proof -->
-                                            <div class="modal fade" id="historyProofModal{{ $index }}" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
-                                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                                                        <div class="modal-header bg-primary text-white border-0">
-                                                            <h5 class="modal-title fw-bold"><i class="fas fa-receipt me-2"></i>Bukti Pembayaran (Riwayat)</h5>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body text-center p-2 bg-light">
-                                                            <div class="p-2 bg-white rounded-3 shadow-sm mb-2 text-dark">
-                                                                <small class="fw-bold">Waktu Upload:</small> 
-                                                                {{ $proof['date'] instanceof \Carbon\Carbon ? $proof['date']->format('d F Y, H:i:s') : 'Tidak tersedia' }}
-                                                            </div>
-                                                            <div class="rounded-3 overflow-hidden border shadow-sm mx-auto" style="max-height: 70vh; display: inline-block;">
-                                                                <img src="{{ route('participant.file.download', ['id' => $proof['participant_id'], 'type' => $proof['type']]) }}" 
-                                                                     class="img-fluid" 
-                                                                     alt="Full History Proof">
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer border-0 bg-light justify-content-center">
-                                                            <a href="{{ route('participant.file.download', ['id' => $proof['participant_id'], 'type' => $proof['type']]) }}" 
-                                                               target="_blank" 
-                                                               class="btn btn-outline-primary btn-sm rounded-pill px-4">
-                                                                <i class="fas fa-external-link-alt me-1"></i> Buka Original
-                                                            </a>
-                                                            <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
                         </div>
                     </div>
                 </div>
