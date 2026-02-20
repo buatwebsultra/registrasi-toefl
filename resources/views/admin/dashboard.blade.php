@@ -282,6 +282,10 @@
                                 class="btn btn-light px-4 py-2 border-end border-light-subtle">
                                 <i class="fas fa-history me-2"></i> History
                             </a>
+                            <a href="{{ route('admin.schedules.sync-capacity') }}"
+                                class="btn btn-light px-4 py-2 border-end border-light-subtle btn-sync-capacity">
+                                <i class="fas fa-sync-alt me-2"></i> Sync
+                            </a>
                         @endif
                         <a href="{{ route('admin.profile') }}"
                             class="btn btn-light px-4 py-2 border-end border-light-subtle">
@@ -479,7 +483,8 @@
                                         </td>
                                         <td>
                                             <div class="fw-bold">{{ min($schedule->participants_count, $schedule->capacity) }} /
-                                                {{ $schedule->capacity }}</div>
+                                                {{ $schedule->capacity }}
+                                            </div>
                                             <div class="progress mt-1 h-4px">
                                                 @php
                                                     $percent = $schedule->capacity > 0 ? ($schedule->participants_count / $schedule->capacity) * 100 : 0;
@@ -614,7 +619,8 @@
                                     @for($i = 1; $i <= 10; $i++)
                                         @php $roomValue = 'UPT-' . str_pad($i, 2, '0', STR_PAD_LEFT); @endphp
                                         <option value="{{ $roomValue }}" {{ $schedule->room == $roomValue ? 'selected' : '' }}>
-                                            {{ $roomValue }}</option>
+                                            {{ $roomValue }}
+                                        </option>
                                     @endfor
                                 </select>
                             </div>
@@ -665,6 +671,16 @@
                 logoutBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     document.getElementById('logout-form').submit();
+                });
+            }
+
+            // Sync Capacity button handler
+            const syncBtn = document.querySelector('.btn-sync-capacity');
+            if (syncBtn) {
+                syncBtn.addEventListener('click', function (e) {
+                    if (!confirm('Apakah Anda yakin ingin melakukan sinkronisasi data kapasitas? Ini akan menghitung ulang jumlah peserta di setiap jadwal.')) {
+                        e.preventDefault();
+                    }
                 });
             }
         });

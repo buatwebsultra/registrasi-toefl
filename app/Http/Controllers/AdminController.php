@@ -320,6 +320,46 @@ class AdminController extends Controller
         return response()->file($fullPath);
     }
 
+    public function syncScheduleCapacities()
+    {
+        $schedules = Schedule::all();
+        $count = 0;
+        foreach ($schedules as $schedule) {
+            $actual = Participant::where('schedule_id', $schedule->id)->count();
+            $changed = false;
+
+            if ($schedule->used_capacity != $actual) {
+                $schedule->used_capacity = $actual;
+                $changed = true;
+            }
+
+            // Re-evaluate status
+            $isPast = $schedule->date->isPast() && !$schedule->date->isToday();
+            $isWithinTwoDays = $schedule->date->lte(now()->addDays(1)->endOfDay());
+
+            if ($schedule->used_capacity >= $schedule->capacity || $isPast || $isWithinTwoDays) {
+                if ($schedule->status !== 'full') {
+                    $schedule->status = 'full';
+                    $changed = true;
+                }
+            } else {
+                if ($schedule->status === 'full' && $schedule->used_capacity < $schedule->capacity) {
+                    $schedule->status = 'available';
+                    $changed = true;
+                }
+            }
+
+            if ($changed) {
+                $schedule->save();
+                $count++;
+            }
+        }
+
+        ActivityLogger::log('Sinkronisasi Jadwal', "Admin melakukan sinkronisasi kapasitas untuk semua jadwal. $count jadwal diperbarui.");
+
+        return redirect()->route('admin.dashboard')->with('success', "Kapasitas jadwal berhasil disinkronkan. $count jadwal diperbarui.");
+    }
+
     public function participantsList($scheduleId)
     {
         if (Auth::user()->isProdi()) {
@@ -763,6 +803,11 @@ class AdminController extends Controller
 
     public function rescheduleParticipant(Request $request, $id)
     {
+        // Only super admin can reschedule participants
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memindahkan jadwal peserta.');
+        }
+
         $participant = Participant::findOrFail($id);
 
         $request->validate([
@@ -773,11 +818,7 @@ class AdminController extends Controller
         try {
             $newSchedule = Schedule::where('id', $request->new_schedule_id)->lockForUpdate()->firstOrFail();
 
-            // Check capacity
-            if ($newSchedule->used_capacity >= $newSchedule->capacity) {
-                DB::rollBack();
-                return back()->with('error', 'Jadwal yang dipilih sudah penuh.');
-            }
+            // Note: SuperAdmin bypasses capacity check by default here
 
             // Decrement old schedule capacity
             $oldSchedule = Schedule::where('id', $participant->schedule_id)->lockForUpdate()->first();
@@ -815,11 +856,13 @@ class AdminController extends Controller
                 $newSchedule->update(['status' => 'full']);
             }
 
+            ActivityLogger::log('Pindah Jadwal', 'Admin memindahkan peserta ' . $participant->name . ' (NIM: ' . $participant->nim . ') from ' . ($oldSchedule ? $oldSchedule->date->format('d/m/Y') : 'Unknown') . ' to ' . $newSchedule->date->format('d/m/Y'));
+
             DB::commit();
             return redirect()->route('admin.participants.list', $oldSchedule ? $oldSchedule->id : $newSchedule->id)->with('success', 'Peserta berhasil dipindahkan ke jadwal baru.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan saat memindahkan peserta.');
+            return back()->with('error', 'Terjadi kesalahan saat memindahkan peserta: ' . $e->getMessage());
         }
     }
 

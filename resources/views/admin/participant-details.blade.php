@@ -376,6 +376,12 @@
                         </button>
                     @endif
 
+                    @if(Auth::user()->isSuperAdmin())
+                        <button type="button" class="btn-action bg-primary text-white btn-reschedule"
+                            data-id="{{ $participant->id }}">
+                            <i class="fas fa-calendar-alt"></i> Pindah Jadwal
+                        </button>
+                    @endif
                     @if(Auth::user()->isOperator())
                         <button type="button" class="btn-action bg-info text-white" data-bs-toggle="modal"
                             data-bs-target="#editParticipantDataModal">
@@ -388,8 +394,7 @@
                         <form action="{{ route('admin.participant.delete', $participant->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn-action bg-danger text-white"
-                                onclick="return confirm('Apakah Anda yakin ingin menghapus peserta ini? data tidak dapat dikembalikan.')">
+                            <button type="submit" class="btn-action bg-danger text-white btn-confirm-delete">
                                 <i class="fas fa-trash"></i> Hapus
                             </button>
                         </form>
@@ -748,6 +753,9 @@
         </div>
 
         @include('admin.partials.modals-participant-details')
+        @if(Auth::user()->isSuperAdmin())
+            @include('admin.partials.modal-reschedule')
+        @endif
 
     </div>
 
@@ -828,6 +836,42 @@
             const display = document.getElementById('total_score_display');
             if (display) display.textContent = (rawL + rawS + rawR) > 0 ? total : '-';
         }
+
+        // Reschedule Modal Logic
+        const rescheduleModalEl = document.getElementById('rescheduleModal');
+        const rescheduleModal = rescheduleModalEl ? new bootstrap.Modal(rescheduleModalEl) : null;
+        function openRescheduleModal(id) {
+            document.getElementById('rescheduleForm').action = `/admin/participant/${id}/reschedule`;
+            if (rescheduleModal) rescheduleModal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Reschedule Modal Logic (Open)
+            const btnReschedule = document.querySelector('.btn-reschedule');
+            if (btnReschedule) {
+                btnReschedule.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    openRescheduleModal(id);
+                });
+            }
+
+            const btnSubmitReschedule = document.getElementById('btn-submit-reschedule');
+            if (btnSubmitReschedule) {
+                btnSubmitReschedule.addEventListener('click', function () {
+                    document.getElementById('rescheduleForm').submit();
+                });
+            }
+
+            // Confirm Delete Logic
+            const btnDelete = document.querySelector('.btn-confirm-delete');
+            if (btnDelete) {
+                btnDelete.addEventListener('click', function (e) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus peserta ini? data tidak dapat dikembalikan.')) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
 
         // Card Preview Modal Logic
         const previewModal = document.getElementById('cardPreviewModal');

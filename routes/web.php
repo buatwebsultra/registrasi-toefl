@@ -143,6 +143,7 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
 
         Route::get('/logs', [AdminController::class, 'activityLogs'])->name('admin.logs.index');
         Route::post('/logs/download', [AdminController::class, 'downloadLogs'])->name('admin.logs.download');
+        Route::get('/schedules/sync-capacity', [AdminController::class, 'syncScheduleCapacities'])->name('admin.schedules.sync-capacity');
     });
 
     // Admin Profile Routes

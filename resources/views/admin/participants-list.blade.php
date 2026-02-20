@@ -283,6 +283,12 @@
                             <td>
                                 <a href="{{ route('admin.participant.details', $participant->id) }}"
                                     class="btn btn-info btn-sm me-1">Lihat Detail</a>
+                                @if(Auth::user()->isSuperAdmin())
+                                    <button type="button" class="btn btn-primary btn-sm me-1 btn-reschedule" 
+                                        data-id="{{ $participant->id }}">
+                                        <i class="fas fa-calendar-alt"></i> Pindah
+                                    </button>
+                                @endif
                                 @if(Auth::user()->isOperator())
                                     <button type="button" class="btn btn-warning btn-sm me-1 btn-reset-password"
                                         data-id="{{ $participant->id }}" data-name="{{ $participant->name }}"
@@ -347,38 +353,51 @@
 
                             <button type="button" class="btn btn-outline-warning p-3 text-start btn-set-attendance"
                                 data-status="permission" id="btn-izin-attendance">
-                                <i class="fas fa-clock me-2"></i> <strong>Izin (Reschedule)</strong>
-                                <div class="small text-muted ms-4">Peserta minta pindah jadwal.</div>
+                                <i class="fas fa-clock me-2"></i> <strong>Izin @if(Auth::user()->isSuperAdmin())(Reschedule)@endif</strong>
+                                @if(Auth::user()->isSuperAdmin())
+                                    <div class="small text-muted ms-4">Peserta minta pindah jadwal.</div>
+                                @else
+                                    <div class="small text-muted ms-4">Peserta tidak dapat hadir dengan alasan tertentu.</div>
+                                @endif
                             </button>
                         </div>
 
-                        <!-- Reschedule Selection (appears when Izin is clicked) -->
-                        <div id="rescheduleSelection" class="mt-4 p-3 border rounded-3 bg-light d-none">
-                            <h6 class="fw-bold mb-3">Pilih Jadwal Baru (Opsional)</h6>
-                            <div class="mb-3">
-                                <select name="new_schedule_id" id="new_schedule_id_attendance" class="form-select">
-                                    <option value="">-- Tetap di Jadwal Ini (Hanya Tandai Izin) --</option>
-                                    @if(isset($allAvailableSchedules) && count($allAvailableSchedules) > 0)
-                                        @foreach($allAvailableSchedules as $s)
-                                            <option value="{{ $s->id }}">
-                                                {{ $s->date->format('d M Y') }} - {{ $s->room }} 
-                                                ({{ $s->used_capacity }}/{{ $s->capacity }})
-                                            </option>
-                                        @endforeach
-                                    @else
-                                        <option value="" disabled>Tidak ada jadwal tersedia lainnya</option>
+                        @if(Auth::user()->isSuperAdmin())
+                            <!-- Reschedule Selection (appears when Izin is clicked) -->
+                            <div id="rescheduleSelection" class="mt-4 p-3 border rounded-3 bg-light d-none">
+                                <h6 class="fw-bold mb-3">Pilih Jadwal Baru (Opsional)</h6>
+                                <div class="mb-3">
+                                    <select name="new_schedule_id" id="new_schedule_id_attendance" class="form-select">
+                                        <option value="">-- Tetap di Jadwal Ini (Hanya Tandai Izin) --</option>
+                                        @if(isset($allAvailableSchedules) && count($allAvailableSchedules) > 0)
+                                            @foreach($allAvailableSchedules as $s)
+                                                <option value="{{ $s->id }}">
+                                                    {{ $s->date->format('d M Y') }} - {{ $s->room }} 
+                                                    ({{ $s->used_capacity }}/{{ $s->capacity }})
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="" disabled>Tidak ada jadwal tersedia lainnya</option>
+                                        @endif
+                                    </select>
+                                    @if(!isset($allAvailableSchedules) || count($allAvailableSchedules) === 0)
+                                        <div class="mt-2 text-warning small">
+                                            <i class="fas fa-exclamation-triangle me-1"></i> Menunggu jadwal tersedia (tidak ada jadwal lain saat ini)
+                                        </div>
                                     @endif
-                                </select>
-                                @if(!isset($allAvailableSchedules) || count($allAvailableSchedules) === 0)
-                                    <div class="mt-2 text-warning small">
-                                        <i class="fas fa-exclamation-triangle me-1"></i> Menunggu jadwal tersedia (tidak ada jadwal lain saat ini)
-                                    </div>
-                                @endif
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-warning fw-bold">Konfirmasi & Pindahkan Peserta</button>
+                                </div>
                             </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-warning fw-bold">Konfirmasi & Pindahkan Peserta</button>
+                        @else
+                            <div id="rescheduleSelection" class="d-none">
+                                <!-- Hidden for non-SuperAdmin -->
+                                <div class="d-grid mt-4">
+                                    <button type="submit" class="btn btn-warning fw-bold">Simpan Status Izin</button>
+                                </div>
                             </div>
-                        </div>
+                        @endif
 
                         <input type="hidden" name="attendance" id="attendanceInput">
                     </form>
@@ -387,59 +406,9 @@
         </div>
     </div>
 
-    <!-- Reschedule Modal -->
-    <div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="rescheduleModalLabel">Pilih Jadwal Baru</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Silakan pilih jadwal tes pengganti untuk peserta ini:</p>
-                    <form id="rescheduleForm" action="" method="POST">
-                        @csrf
-                        @method('PUT')
-
-                        <div class="mb-3">
-                            <label for="new_schedule_id" class="form-label">Jadwal Tersedia</label>
-                            <select class="form-select" name="new_schedule_id" id="new_schedule_id" required>
-                                <option value="">-- Pilih Jadwal --</option>
-                                @php
-                                    // Fetch available schedules logic should ideally be passed from controller, 
-                                    // but for now we can use a direct query or View Composer. 
-                                    // TO AVOID N+1 or logic in view, a better way is to pass it from controller.
-                                    // For this prompt, I'll assume we can pass $availableSchedules from controller or fetch here for simplicity.
-                                    $availableSchedules = \App\Models\Schedule::where('status', 'available')
-                                        ->where('id', '!=', $schedule->id)
-                                        ->whereColumn('used_capacity', '<', 'capacity')
-                                        ->where('date', '>=', now())
-                                        ->orderBy('date')
-                                        ->get();
-                                @endphp
-                                @foreach($availableSchedules as $s)
-                                    <option value="{{ $s->id }}">
-                                        {{ $s->date->format('d M Y') }} - {{ $s->room }}
-                                        ({{ $s->used_capacity }}/{{ $s->capacity }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @if($availableSchedules->isEmpty())
-                                <div class="text-danger mt-2 small">
-                                    <i class="fas fa-exclamation-circle"></i> Tidak ada jadwal lain yang tersedia. Silakan buat
-                                    jadwal baru terlebih dahulu.
-                                </div>
-                            @endif
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" id="btn-submit-reschedule">Pindahkan Peserta</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    @if(Auth::user()->isSuperAdmin())
+        @include('admin.partials.modal-reschedule')
+    @endif
 
     <!-- Reset Password Modal (List) -->
     <div class="modal fade" id="resetPasswordListModal" tabindex="-1" aria-labelledby="resetPasswordListModalLabel"
@@ -697,12 +666,28 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Reschedule Modal Logic (Open)
+            document.querySelectorAll('.btn-reschedule').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    openRescheduleModal(id);
+                });
+            });
+
             // Bulk Validate Button Listener
             const bulkBtn = document.getElementById('bulkValidateBtn');
             if (bulkBtn) {
                 bulkBtn.addEventListener('click', function () {
                     const form = document.getElementById('bulkValidateForm');
                     if (form) form.submit();
+                });
+            }
+
+            // Reschedule Modal Logic (Submit)
+            const btnSubmitReschedule = document.getElementById('btn-submit-reschedule');
+            if (btnSubmitReschedule) {
+                btnSubmitReschedule.addEventListener('click', function () {
+                    document.getElementById('rescheduleForm').submit();
                 });
             }
 
