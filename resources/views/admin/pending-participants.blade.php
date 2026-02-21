@@ -105,6 +105,7 @@
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>No</th>
                                         <th>NIM</th>
                                         <th>Nama</th>
                                         <th>Email</th>
@@ -120,6 +121,7 @@
                                 <tbody>
                                     @foreach($pendingParticipants as $participant)
                                         <tr>
+                                            <td>{{ ($pendingParticipants->currentPage() - 1) * $pendingParticipants->perPage() + $loop->iteration }}</td>
                                             <td>{{ $participant->nim }}</td>
                                             <td>{{ $participant->name }}</td>
                                             <td>{{ $participant->email }}</td>
