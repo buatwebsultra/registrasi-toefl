@@ -199,6 +199,7 @@
                 <thead class="table-dark">
                     <tr>
                         <th class="w-40px"><input type="checkbox" id="selectAll"></th>
+                        <th class="w-40px">No</th>
                         <th>Nomor Kursi</th>
                         <th>NIM</th>
                         <th>Nama</th>
@@ -220,6 +221,9 @@
                                 @else
                                     <span class="text-muted opacity-25"><i class="fas fa-minus"></i></span>
                                 @endif
+                            </td>
+                            <td>
+                                {{ ($participants->currentPage() - 1) * $participants->perPage() + $loop->iteration }}
                             </td>
                             <td>{{ $participant->effective_seat_number }}</td>
                             <td>{{ $participant->nim }}</td>
@@ -307,9 +311,9 @@
                     @empty
                         <tr>
                             @if($searchNim)
-                                <td colspan="10" class="text-center">Tidak ditemukan peserta dengan NIM: {{ $searchNim }}</td>
+                                <td colspan="11" class="text-center">Tidak ditemukan peserta dengan NIM: {{ $searchNim }}</td>
                             @else
-                                <td colspan="10" class="text-center">Tidak ada peserta terdaftar untuk jadwal ini</td>
+                                <td colspan="11" class="text-center">Tidak ada peserta terdaftar untuk jadwal ini</td>
                             @endif
                         </tr>
                     @endforelse
