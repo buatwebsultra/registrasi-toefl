@@ -230,7 +230,7 @@
             <!-- Header -->
             <div class="id-header">
                 <div class="university-brand">
-                    <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}" class="university-logo" alt="Logo"
+                    <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}" class="university-logo" alt="Logo"
                         style="width: auto; height: 40px; border-radius: 0; background: transparent;">
                     <div>
                         <div class="fw-bold text-uppercase" style="font-size: 0.8rem; opacity: 0.9;">Pusat Bahasa</div>

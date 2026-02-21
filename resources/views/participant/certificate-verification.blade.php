@@ -243,7 +243,7 @@
         <div class="top-accent"></div>
 
         <header class="card-header-uho">
-            <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}" alt="Logo UHO" class="logo-main">
+            <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO" class="logo-main">
             <h2 class="header-unit">UPA BAHASA (LANGUAGE CENTER)</h2>
             <p class="header-labels">HALU OLEO UNIVERSITY</p>
         </header>

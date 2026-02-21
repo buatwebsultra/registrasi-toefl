@@ -452,7 +452,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top navbar-aligned rounded-custom">
         <div class="container-fluid px-3">
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
-                <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}" alt="Logo UHO dan Diktisaintek"
+                <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO dan Diktisaintek"
                     class="me-3 navbar-logo">
                 <span>SIPENA UPA BAHASA UHO</span>
             </a>
@@ -523,8 +523,8 @@
                 <!-- Information Section -->
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}"
-                            alt="Logo UHO dan Diktisaintek" class="mb-2 footer-logo">
+                        <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO dan Diktisaintek"
+                            class="mb-2 footer-logo">
                     </div>
                     <p class="text-light mb-3">
                         Sistem Informasi Pelayanan Bahasa (SIPENA) UHO Kendari.
