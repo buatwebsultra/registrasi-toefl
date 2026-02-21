@@ -6,46 +6,50 @@
 
 @section('content')
 <div class="registration-container">
-    <div class="row mb-5">
-        <div class="col-md-12 text-center">
+    <div class="row pt-5 mb-5 align-items-center">
+        <div class="col-lg-8 mx-auto text-center">
             <!-- University Logo -->
-            <div class="mb-4">
+            <div class="mb-4" data-aos="fade-down" data-aos-duration="1000">
                 <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}"
                      alt="Logo UHO dan Diktisaintek"
-                     class="img-fluid shadow rounded welcome-logo">
+                     class="img-fluid welcome-logo">
             </div>
 
-            <h1 class="display-4 fw-bold text-primary">Sistem Informasi Pelayanan Bahasa UHO (SIPENA)</h1>
-            <p class="lead text-muted">Daftar ujian TOEFL Anda dengan mudah dan cepat</p>
+            <h1 class="hero-title mb-3" style="font-size: clamp(1.8rem, 5vw, 2.8rem);" data-aos="fade-up" data-aos-delay="200">
+                Sistem Informasi Pelayanan Bahasa UHO (SIPENA)
+            </h1>
+            <p class="lead text-muted px-lg-5" data-aos="fade-up" data-aos-delay="400">
+                Solusi digital terintegrasi untuk kebutuhan ujian TOEFL dan layanan bahasa di Universitas Halu Oleo.
+            </p>
         </div>
     </div>
 
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-lg h-100 card-hover bg-light">
+        <div class="col-md-6" data-aos="fade-right" data-aos-delay="600">
+            <div class="card border-0 shadow-lg h-100 card-hover bg-white">
                 <div class="card-body d-flex flex-column text-center p-5">
                     <div class="mb-4">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-white rounded-circle p-4 shadow-sm" style="width: 100px; height: 100px;">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-4" style="width: 100px; height: 100px;">
                             <i class="fas fa-user-graduate fa-2x text-primary"></i>
                         </div>
                     </div>
-                    <h5 class="card-title fw-bold fs-4">Untuk Peserta</h5>
-                    <p class="card-text text-muted mb-4">Daftar ujian TOEFL mendatang, lihat status pendaftaran Anda, dan unduh kartu ujian Anda.</p>
+                    <h5 class="card-title fw-bold fs-4 text-dark">Untuk Peserta</h5>
+                    <p class="card-text text-muted mb-4">Daftar ujian TOEFL mendatang, pantau status pendaftaran, dan akses kartu ujian Anda dalam satu platform.</p>
                     <div class="d-grid gap-3 mt-auto">
-                        <a href="{{ route('participant.register.form') }}" class="btn btn-primary btn-lg rounded-pill px-4 py-3">Daftar Sekarang</a>
-                        <a href="{{ route('participant.login') }}" class="btn btn-outline-primary btn-lg rounded-pill px-4 py-3">Login Peserta</a>
+                        <a href="{{ route('participant.register.form') }}" class="btn btn-primary btn-lg rounded-pill px-4 py-3 shadow-sm">Daftar Sekarang</a>
+                        <a href="{{ route('participant.login') }}" class="btn btn-outline-primary btn-lg rounded-pill px-4 py-3">Portal Peserta</a>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-lg h-100 card-hover bg-light">
+        <div class="col-md-6" data-aos="fade-left" data-aos-delay="800">
+            <div class="card border-0 shadow-lg h-100 card-hover bg-white overflow-hidden">
                 <div class="card-body d-flex flex-column p-5">
                     <div class="d-flex align-items-center mb-4">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-white rounded-circle p-3 shadow-sm me-3" style="width: 60px; height: 60px;">
+                        <div class="d-inline-flex align-items-baseline justify-content-center bg-success bg-opacity-10 rounded-circle p-3 me-3" style="width: 50px; height: 50px;">
                             <i class="fas fa-calendar-alt fa-lg text-success"></i>
                         </div>
-                        <h5 class="card-title fw-bold fs-4 mb-0">Jadwal TOEFL Terbaru</h5>
+                        <h5 class="card-title fw-bold fs-4 mb-0 text-dark">Jadwal TOEFL Terbaru</h5>
                     </div>
                     <div class="flex-grow-1">
                         @if($latestSchedules && count($latestSchedules) > 0)
@@ -107,9 +111,12 @@
         <div class="col-md-12">
             <div class="card border-0 shadow-lg bg-light">
                 <div class="card-body p-5">
-                    <h5 class="card-title text-center fw-bold mb-5 fs-3 text-primary">Cara Pendaftaran</h5>
+                    <div class="text-center mb-5">
+                        <h2 class="fw-bold text-primary mb-2" data-aos="fade-up">Panduan Pendaftaran</h2>
+                        <p class="text-muted" data-aos="fade-up" data-aos-delay="100">Ikuti langkah-langstep berikut untuk mendaftar ujian TOEFL</p>
+                    </div>
                     <div class="row g-4">
-                        <div class="col-md-4">
+                        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
                             <div class="p-4 bg-white rounded-4 shadow-sm h-100 card-hover text-center border">
                                 <div class="step-number-container mb-4 mx-auto shadow">
                                     1
@@ -118,7 +125,7 @@
                                 <p class="mb-0 text-muted">Pilih jadwal ujian TOEFL yang tersedia di sistem sesuai dengan ketersediaan kuota yang ada.</p>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="400">
                             <div class="p-4 bg-white rounded-4 shadow-sm h-100 card-hover text-center border">
                                 <div class="step-number-container mb-4 mx-auto shadow">
                                     2
@@ -127,7 +134,7 @@
                                 <p class="mb-0 text-muted">Lengkapi FORMULIR pendaftaran dengan data diri yang valid, serta unggah berkas (Bukti Pembayaran, KTP, Pas Photo) pastikan jelas dan tidak buram untuk divalidasi.</p>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="600">
                             <div class="p-4 bg-white rounded-4 shadow-sm h-100 card-hover text-center border">
                                 <div class="step-number-container mb-4 mx-auto shadow">
                                     3
@@ -146,8 +153,8 @@
     @if(isset($galleryItems) && count($galleryItems) > 0)
     <div class="row mt-5 mb-5">
         <div class="col-md-12">
-            <h5 class="text-center fw-bold mb-4 fs-3 text-primary">Galeri Kegiatan</h5>
-            <div id="galleryCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden bg-dark" data-bs-ride="carousel">
+            <h5 class="text-center fw-bold mb-4 fs-3 text-primary" data-aos="fade-up">Galeri Kegiatan</h5>
+            <div id="galleryCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden bg-dark" data-bs-ride="carousel" data-aos="zoom-in" data-aos-delay="200">
                 <div class="carousel-indicators">
                     @foreach($galleryItems as $key => $item)
                         <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="{{ $key }}" class="{{ $key == 0 ? 'active' : '' }}" aria-current="{{ $key == 0 ? 'true' : 'false' }}" aria-label="Slide {{ $key + 1 }}"></button>

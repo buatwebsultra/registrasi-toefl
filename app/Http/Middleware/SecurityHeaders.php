@@ -26,17 +26,17 @@ class SecurityHeaders
 
         // Prevent clickjacking attacks
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
-        
+
         // Prevent MIME type sniffing
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        
+
         // Enable XSS protection (legacy, but still useful for older browsers)
         $response->headers->set('X-XSS-Protection', '1; mode=block');
-        
+
         // Force HTTPS for all future requests (1 year)
         // HSTS header should always be set in production
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-        
+
         // Control referrer information
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
@@ -44,7 +44,7 @@ class SecurityHeaders
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
         $response->headers->set('Cross-Origin-Embedder-Policy', 'require-corp');
-        
+
         // Content Security Policy
         // - Allow Bootstrap CDN (jsdelivr)
         // - Allow FontAwesome (cdnjs)
@@ -52,14 +52,14 @@ class SecurityHeaders
         // - Allow Vite dev server
         // - USE NONCE for inline scripts/styles to resolve "unsafe-inline"
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net http://127.0.0.1:5173 http://localhost:5173; " .
-               "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com http://127.0.0.1:5173 http://localhost:5173; " .
-               "img-src 'self' data: https:; " .
-               "font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; " .
-               "connect-src 'self' http://127.0.0.1:5173 http://localhost:5173 ws://127.0.0.1:5173 ws://localhost:5173;";
+            "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://unpkg.com http://127.0.0.1:5173 http://localhost:5173; " .
+            "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://unpkg.com http://127.0.0.1:5173 http://localhost:5173; " .
+            "img-src 'self' data: https:; " .
+            "font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; " .
+            "connect-src 'self' http://127.0.0.1:5173 http://localhost:5173 ws://127.0.0.1:5173 ws://localhost:5173;";
 
         $response->headers->set('Content-Security-Policy', $csp);
-        
+
         // Permissions Policy
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 

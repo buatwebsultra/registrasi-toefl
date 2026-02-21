@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,11 +10,39 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
+        rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
     <style nonce="{{ $csp_nonce ?? '' }}">
         body {
+            font-family: 'Outfit', sans-serif;
             padding-top: 56px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            background: radial-gradient(circle at top right, #f8fbff, #e9f0f7);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+
+        h1,
+        h2,
+        h3,
+        .fw-bold {
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
         }
 
         /* Rounded corners for navbar as separate class */
@@ -21,81 +50,168 @@
             border-radius: 0 0 10px 10px !important;
         }
 
-        /* Remove mt-4 from body since navbar is fixed-top again */
-        body {
-            padding-top: 56px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-        }
+
         .sidebar {
             min-height: calc(100vh - 56px);
         }
+
         .card-hover {
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
+
         .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+            border-color: rgba(13, 110, 253, 0.2);
         }
+
         .navbar-brand img {
             max-height: 40px;
             width: auto;
         }
+
         @media (max-width: 576px) {
             .navbar-brand img {
                 max-height: 30px;
             }
         }
-        
+
         .navbar-logo {
             height: 30px;
             width: auto;
         }
-        
+
         .footer-logo {
             height: 50px;
             width: auto;
         }
-        
+
         .welcome-logo {
-            max-width: 350px;
+            max-width: 320px;
             height: auto;
-            border: 2px solid #dee2e6;
+            border: none;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            transition: transform 0.3s ease;
         }
-        
-        .w-5p { width: 5% !important; }
-        .w-20p { width: 20% !important; }
-        .w-35px { width: 35px !important; }
-        .h-35px { height: 35px !important; }
-        .w-40px { width: 40px !important; }
-        .h-40px { height: 40px !important; }
-        .w-60px { width: 60px !important; }
-        .h-60px { height: 60px !important; }
-        .w-80px { width: 80px !important; }
-        .h-80px { height: 80px !important; }
-        .w-100px { width: 100px !important; }
-        .h-100px { height: 100px !important; }
-        .w-120px { width: 120px !important; }
-        .w-150px { width: 150px !important; }
-        .mh-150px { max-height: 150px !important; }
-        .mh-200px { max-height: 200px !important; }
-        .mh-300px { max-height: 300px !important; }
-        .h-300px { height: 300px !important; }
-        .min-h-500px { min-height: 500px !important; }
-        .fs-07rem { font-size: 0.7rem !important; }
-        .fs-2rem { font-size: 2rem !important; }
-        .object-cover { object-fit: cover !important; }
-        .grid-4-1 { display: grid !important; grid-template-columns: 4fr 1fr !important; gap: 1.5rem !important; }
-        .bg-teal-200 { background-color: #99f6e4 !important; }
-        .border-dashed { border-style: dashed !important; }
+
+        .welcome-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .w-5p {
+            width: 5% !important;
+        }
+
+        .w-20p {
+            width: 20% !important;
+        }
+
+        .w-35px {
+            width: 35px !important;
+        }
+
+        .h-35px {
+            height: 35px !important;
+        }
+
+        .w-40px {
+            width: 40px !important;
+        }
+
+        .h-40px {
+            height: 40px !important;
+        }
+
+        .w-60px {
+            width: 60px !important;
+        }
+
+        .h-60px {
+            height: 60px !important;
+        }
+
+        .w-80px {
+            width: 80px !important;
+        }
+
+        .h-80px {
+            height: 80px !important;
+        }
+
+        .w-100px {
+            width: 100px !important;
+        }
+
+        .h-100px {
+            height: 100px !important;
+        }
+
+        .w-120px {
+            width: 120px !important;
+        }
+
+        .w-150px {
+            width: 150px !important;
+        }
+
+        .mh-150px {
+            max-height: 150px !important;
+        }
+
+        .mh-200px {
+            max-height: 200px !important;
+        }
+
+        .mh-300px {
+            max-height: 300px !important;
+        }
+
+        .h-300px {
+            height: 300px !important;
+        }
+
+        .min-h-500px {
+            min-height: 500px !important;
+        }
+
+        .fs-07rem {
+            font-size: 0.7rem !important;
+        }
+
+        .fs-2rem {
+            font-size: 2rem !important;
+        }
+
+        .object-cover {
+            object-fit: cover !important;
+        }
+
+        .grid-4-1 {
+            display: grid !important;
+            grid-template-columns: 4fr 1fr !important;
+            gap: 1.5rem !important;
+        }
+
+        .bg-teal-200 {
+            background-color: #99f6e4 !important;
+        }
+
+        .border-dashed {
+            border-style: dashed !important;
+        }
 
         /* Custom scrollbar styling for scrollable tables */
         .table-responsive[style*="max-height"] {
-            -ms-overflow-style: -ms-autohiding-scrollbar; /* for Internet Explorer */
-            scrollbar-width: thin; /* for Firefox */
+            -ms-overflow-style: -ms-autohiding-scrollbar;
+            /* for Internet Explorer */
+            scrollbar-width: thin;
+            /* for Firefox */
         }
 
         .table-responsive[style*="max-height"]::-webkit-scrollbar {
-            width: 8px; /* for Chrome, Safari, and Opera */
+            width: 8px;
+            /* for Chrome, Safari, and Opera */
         }
 
         .table-responsive[style*="max-height"]::-webkit-scrollbar-track {
@@ -123,8 +239,13 @@
         }
 
         @keyframes marqueeScroll {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-50%); }
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-50%);
+            }
         }
 
         /* Sticky header for schedule table on welcome page */
@@ -133,7 +254,8 @@
             top: 0;
             background-color: #fff;
             z-index: 10;
-            border-bottom: 2px solid #dee2e6; /* Add border to make header separation clear */
+            border-bottom: 2px solid #dee2e6;
+            /* Add border to make header separation clear */
         }
 
 
@@ -144,7 +266,7 @@
 
         body.welcome-page .schedule-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
             border-left: 4px solid #0b5ed7 !important;
         }
 
@@ -184,7 +306,7 @@
             width: 100%;
         }
 
-        body.welcome-page .footer > .align-footer-with-content {
+        body.welcome-page .footer>.align-footer-with-content {
             width: 100%;
         }
 
@@ -322,17 +444,16 @@
         .rounded-4 {
             border-radius: 1.5rem !important;
         }
-
     </style>
 </head>
+
 <body class="@yield('body-class')">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top navbar-aligned rounded-custom">
         <div class="container-fluid px-3">
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
-                <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}"
-                     alt="Logo UHO dan Diktisaintek"
-                     class="me-3 navbar-logo">
+                <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}" alt="Logo UHO dan Diktisaintek"
+                    class="me-3 navbar-logo">
                 <span>SIPENA UPA BAHASA UHO</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -403,8 +524,7 @@
                 <div class="col-md-4">
                     <div class="mb-3">
                         <img src="{{ asset('logo-uho-dan-diktisaintek-768x143nobg.png') }}"
-                             alt="Logo UHO dan Diktisaintek"
-                             class="mb-2 footer-logo">
+                            alt="Logo UHO dan Diktisaintek" class="mb-2 footer-logo">
                     </div>
                     <p class="text-light mb-3">
                         Sistem Informasi Pelayanan Bahasa (SIPENA) UHO Kendari.
@@ -424,15 +544,20 @@
                     <div class="row">
                         <div class="col-md-6">
                             <ul class="list-unstyled mb-0">
-                                <li class="mb-1"><a href="{{ url('/') }}" class="text-light text-decoration-none">Beranda</a></li>
-                                <li class="mb-1"><a href="{{ route('participant.register.form') }}" class="text-light text-decoration-none">Pendaftaran</a></li>
-                                <li class="mb-1"><a href="{{ route('participant.login') }}" class="text-light text-decoration-none">Login Peserta</a></li>
+                                <li class="mb-1"><a href="{{ url('/') }}"
+                                        class="text-light text-decoration-none">Beranda</a></li>
+                                <li class="mb-1"><a href="{{ route('participant.register.form') }}"
+                                        class="text-light text-decoration-none">Pendaftaran</a></li>
+                                <li class="mb-1"><a href="{{ route('participant.login') }}"
+                                        class="text-light text-decoration-none">Login Peserta</a></li>
                             </ul>
                         </div>
                         <div class="col-md-6">
                             <ul class="list-unstyled mb-0">
-                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">Jadwal Ujian</a></li>
-                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">Cara Pendaftaran</a></li>
+                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">Jadwal Ujian</a>
+                                </li>
+                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">Cara
+                                        Pendaftaran</a></li>
                                 <li class="mb-1"><a href="#" class="text-light text-decoration-none">FAQ</a></li>
                                 <li class="mb-1"><a href="#" class="text-light text-decoration-none">Kontak</a></li>
                             </ul>
@@ -446,7 +571,8 @@
                     <ul class="list-unstyled mb-0">
                         <li class="mb-2">
                             <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                            <span class="text-light">Kampus Universitas Halu Oleo, Anduonohu, Kendari, Sulawesi Tenggara</span>
+                            <span class="text-light">Kampus Universitas Halu Oleo, Anduonohu, Kendari, Sulawesi
+                                Tenggara</span>
                         </li>
                         <li class="mb-2">
                             <i class="fab fa-whatsapp text-primary me-2"></i>
@@ -469,7 +595,8 @@
             <div class="row align-items-center px-3">
                 <div class="col-md-6">
                     <p class="mb-0 text-light">
-                        &copy; {{ date('Y') }} Sistem Informasi Pelayanan Bahasa UHO (SIPENA) - Universitas Halu Oleo. Hak Cipta Dilindungi.
+                        &copy; {{ date('Y') }} Sistem Informasi Pelayanan Bahasa UHO (SIPENA) - Universitas Halu Oleo.
+                        Hak Cipta Dilindungi.
                     </p>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -482,14 +609,26 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
     <script nonce="{{ $csp_nonce ?? '' }}">
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const logoutNavBtn = document.getElementById('btn-logout-nav');
             if (logoutNavBtn) {
-                logoutNavBtn.addEventListener('click', function(e) {
+                logoutNavBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     document.getElementById('logout-form-nav').submit();
+                });
+            }
+
+            // Initialize AOS
+            if (typeof AOS !== 'undefined') {
+                AOS.init({
+                    duration: 800,
+                    easing: 'ease-in-out',
+                    once: true,
+                    mirror: false
                 });
             }
         });
@@ -498,4 +637,5 @@
     @yield('modals')
     @yield('scripts')
 </body>
+
 </html>
