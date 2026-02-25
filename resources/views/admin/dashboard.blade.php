@@ -358,6 +358,112 @@
             </div>
         </div>
 
+        <!-- Participant Search Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="premium-card p-4 border-0 shadow-sm" style="border-radius: 1.25rem;">
+                    <form action="{{ route('admin.dashboard') }}" method="GET" class="row g-3 align-items-center">
+                        <div class="col-md-10">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"
+                                    style="border-radius: 0.75rem 0 0 0.75rem; border: 1px solid #e2e8f0;">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" name="search" class="form-control-premium border-start-0"
+                                    style="border-radius: 0 0.75rem 0.75rem 0; background: white;"
+                                    placeholder="Cari Peserta Berdasarkan NIM atau Nama..."
+                                    value="{{ $searchQuery ?? '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold"
+                                style="border-radius: 0.75rem;">
+                                <i class="fas fa-search me-2"></i>Cari
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @if($searchResults)
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="premium-card">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center border-0 p-4">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-search me-2 text-primary"></i>Hasil Pencarian:
+                                "{{ $searchQuery }}"</h5>
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-3">Bersihkan</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-premium mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Nama / NIM</th>
+                                        <th>Program Studi</th>
+                                        <th>Jadwal Tes</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($searchResults as $result)
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold">{{ $result->name }}</div>
+                                                <div class="small text-muted">{{ $result->nim }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="small">{{ $result->studyProgram->name ?? '-' }}</div>
+                                            </td>
+                                            <td>
+                                                @if($result->schedule)
+                                                    <div class="small fw-bold">{{ $result->schedule->date->format('d M Y') }}</div>
+                                                    <div class="small text-muted"><i
+                                                            class="far fa-clock me-1"></i>{{ $result->schedule->time ? \Carbon\Carbon::parse($result->schedule->time)->format('H:i') : '08:00' }}
+                                                        - {{ $result->schedule->room }}</div>
+                                                @else
+                                                    <span class="text-danger small">Jadwal tidak ditemukan</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($result->status === 'confirmed')
+                                                    <span class="status-badge bg-metric-emerald">Terkonfirmasi</span>
+                                                @elseif($result->status === 'pending')
+                                                    <span class="status-badge bg-metric-amber">Menunggu</span>
+                                                @else
+                                                    <span class="status-badge bg-metric-rose">{{ strtoupper($result->status) }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-end">
+                                                <a href="{{ route('admin.participant.details', $result->id) }}"
+                                                    class="action-btn bg-metric-blue" title="Detail Peserta">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5">
+                                                <p class="text-muted mb-0">Tidak ada peserta ditemukan dengan kata kunci
+                                                    "{{ $searchQuery }}"</p>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        @if($searchResults->hasPages())
+                            <div class="card-footer bg-white border-0 p-4">
+                                {{ $searchResults->links() }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="row">
             <!-- Sidebar Tasks / Actions -->
             <div class="col-lg-4 mb-4 mb-lg-0">

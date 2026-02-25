@@ -17,7 +17,7 @@ class PDFController extends Controller
 
         // Check authorization: must be participant themselves or admin
         $sessionParticipantId = session('participant_id');
-        $isParticipant = !is_null($sessionParticipantId) && (string)$sessionParticipantId === (string)$id;
+        $isParticipant = !is_null($sessionParticipantId) && (string) $sessionParticipantId === (string) $id;
         $isOperator = auth()->guard('web')->check() && auth()->user() && auth()->user()->isOperator();
 
         if (!$isParticipant && !$isOperator) {
@@ -35,8 +35,8 @@ class PDFController extends Controller
         }
 
         $verificationUrl = route('participant.card.show', ['id' => $participant->id, 'token' => $participant->verification_token]);
-
-        return view('participant.test-card', compact('participant', 'verificationUrl'));
+        $isPdf = false;
+        return view('participant.test-card', compact('participant', 'verificationUrl', 'isPdf'));
     }
 
     public function generateTestCard($id)
@@ -46,7 +46,7 @@ class PDFController extends Controller
 
         // Check authorization: must be participant themselves or admin
         $sessionParticipantId = session('participant_id');
-        $isParticipant = !is_null($sessionParticipantId) && (string)$sessionParticipantId === (string)$id;
+        $isParticipant = !is_null($sessionParticipantId) && (string) $sessionParticipantId === (string) $id;
         $isOperator = auth()->guard('web')->check() && auth()->user() && auth()->user()->isOperator();
 
         if (!$isParticipant && !$isOperator) {
@@ -64,8 +64,8 @@ class PDFController extends Controller
         }
 
         $verificationUrl = route('participant.card.show', ['id' => $participant->id, 'token' => $participant->verification_token]);
-
-        $pdf = Pdf::loadView('participant.test-card', compact('participant', 'verificationUrl'));
+        $isPdf = true;
+        $pdf = Pdf::loadView('participant.test-card', compact('participant', 'verificationUrl', 'isPdf'));
 
         // Set paper size to 13-inch Folio (8.5 x 13 inches)
         // 8.5" = 612pt, 13" = 936pt
@@ -81,23 +81,23 @@ class PDFController extends Controller
     {
         // This method is for QR code verification - accessed by scanning the QR code
         $participant = Participant::with('schedule')->findOrFail($id);
-        
+
         // Verify token for privacy
         if ($participant->verification_token !== $token) {
             abort(404, 'Invalid verification link atau token tidak valid.');
         }
 
         $verificationUrl = route('participant.card.show', ['id' => $participant->id, 'token' => $participant->verification_token]);
-
+        $isPdf = false;
         // Return a simplified view that shows verification information
-        return view('participant.test-card', compact('participant', 'verificationUrl'));
+        return view('participant.test-card', compact('participant', 'verificationUrl', 'isPdf'));
     }
 
     public function showCertificate($id, $token)
     {
         // This method is for certificate QR code verification
         $participant = Participant::with(['schedule', 'studyProgram'])->findOrFail($id);
-        
+
         // Verify token for privacy/security
         if ($participant->verification_token !== $token) {
             abort(404, 'Tautan verifikasi sertifikat tidak valid.');
@@ -115,7 +115,7 @@ class PDFController extends Controller
 
     public function terbilang($number)
     {
-        $number = (int)$number;
+        $number = (int) $number;
 
         if ($number < 0) {
             return 'minus ' . $this->terbilang(abs($number));
@@ -128,7 +128,7 @@ class PDFController extends Controller
         } elseif ($number < 20) {
             return $huruf[$number - 10] . ' Belas';
         } elseif ($number < 100) {
-            $puluhan = (int)($number / 10);
+            $puluhan = (int) ($number / 10);
             $sisa = $number % 10;
             if ($sisa == 0) {
                 return $huruf[$puluhan] . ' Puluh';
@@ -138,7 +138,7 @@ class PDFController extends Controller
         } elseif ($number < 200) {
             return 'Seratus ' . $this->terbilang($number - 100);
         } elseif ($number < 1000) {
-            $ratusan = (int)($number / 100);
+            $ratusan = (int) ($number / 100);
             $sisa = $number % 100;
             if ($sisa == 0) {
                 return $huruf[$ratusan] . ' Ratus';
@@ -148,7 +148,7 @@ class PDFController extends Controller
         } elseif ($number < 2000) {
             return 'Seribu ' . $this->terbilang($number - 1000);
         } elseif ($number < 1000000) {
-            $ribuan = (int)($number / 1000);
+            $ribuan = (int) ($number / 1000);
             $sisa = $number % 1000;
             if ($sisa == 0) {
                 return $this->terbilang($ribuan) . ' Ribu';
@@ -160,7 +160,7 @@ class PDFController extends Controller
                 }
             }
         } elseif ($number < 1000000000) {
-            $jutaan = (int)($number / 1000000);
+            $jutaan = (int) ($number / 1000000);
             $sisa = $number % 1000000;
             if ($sisa == 0) {
                 return $this->terbilang($jutaan) . ' Juta';
@@ -179,7 +179,7 @@ class PDFController extends Controller
 
         // Check authorization: must be participant themselves or admin/operator
         $sessionParticipantId = session('participant_id');
-        $isParticipant = !is_null($sessionParticipantId) && (string)$sessionParticipantId === (string)$id;
+        $isParticipant = !is_null($sessionParticipantId) && (string) $sessionParticipantId === (string) $id;
         $isStaff = auth()->guard('web')->check() && auth()->user() && auth()->user()->isOperator();
 
         if (!$isParticipant && !$isStaff) {
@@ -208,7 +208,7 @@ class PDFController extends Controller
 
         $pdf = Pdf::loadView('participant.certificate', compact('participant', 'verificationUrl'));
 
-    // Set paper size and orientation for certificate (216mm x 135mm)
+        // Set paper size and orientation for certificate (216mm x 135mm)
         // 216mm = 612.28 pt, 135mm = 382.68 pt
         $pdf->setPaper([0, 0, 382.68, 612.28], 'landscape');
 

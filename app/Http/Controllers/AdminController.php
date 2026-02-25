@@ -127,6 +127,22 @@ class AdminController extends Controller
             return redirect()->route('prodi.dashboard');
         }
         $searchDate = request('search_date');
+        $searchQuery = request('search');
+
+        // Handle Participant Search
+        $searchResults = null;
+        if ($searchQuery) {
+            $searchResults = Participant::with('schedule', 'studyProgram')
+                ->where(function ($query) use ($searchQuery) {
+                    $query->where('nim', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('name', 'LIKE', "%{$searchQuery}%");
+                })
+                ->latest()
+                ->paginate(20, ['*'], 'search_page')
+                ->withQueryString();
+
+            ActivityLogger::log('Pencarian Peserta', "Admin mencari peserta dengan keyword: {$searchQuery}");
+        }
 
         $query = Schedule::withCount('participants')
             ->withCount([
@@ -146,7 +162,6 @@ class AdminController extends Controller
             ->withQueryString();
 
         // Update status for the current page based on date and capacity
-        // Note: we don't sync used_capacity here to avoid race conditions; it's handled in registration/deletion.
         foreach ($schedules as $schedule) {
             $isPast = $schedule->date->isPast() && !$schedule->date->isToday();
             $isWithinTwoDays = $schedule->date->lte(now()->addDays(1)->endOfDay());
@@ -169,7 +184,7 @@ class AdminController extends Controller
             ->sort()
             ->values();
 
-        return view('admin.dashboard', compact('schedules', 'totalParticipants', 'availableDates', 'searchDate'));
+        return view('admin.dashboard', compact('schedules', 'totalParticipants', 'availableDates', 'searchDate', 'searchResults', 'searchQuery'));
     }
 
     public function createSchedule(Request $request)

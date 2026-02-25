@@ -639,16 +639,10 @@
                                             {{ $isFail ? 'onclick=return(false);' : '' }}>
                                             <i class="fas fa-file-pdf me-2"></i>Unduh Kartu Tes
                                         </a>
-                                        <button type="button"
-                                            class="btn btn-premium btn-outline-primary {{ ($participant->status === 'pending' || $isFail) ? 'disabled' : '' }}"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="{{ $isFail ? '' : '#cardPreviewModal' }}">
-                                            <i class="fas fa-file-pdf me-2"></i>Preview & Unduh PDF
-                                        </button>
                                     @endif
                                 @endif
 
-                                @if($participant->status === 'rejected')
+                                @if($participant->passed && $participant->attendance === 'present')
                                     <a href="{{ route('participant.resubmit.payment.form', $participant->id) }}"
                                         class="btn btn-premium btn-warning">
                                         <i class="fas fa-cloud-upload-alt me-2"></i>Upload Ulang Pembayaran
@@ -987,72 +981,6 @@
 @endsection
 
 
-<!-- Card Preview Modal -->
-<div class="modal fade" id="cardPreviewModal" tabindex="-1" aria-labelledby="cardPreviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="cardPreviewModalLabel">Pratinjau Kartu Ujian - {{ $participant->name }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="d-flex justify-content-center align-items-center" style="min-height: 500px;">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Memuat...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                <a href="{{ route('participant.card.preview', $participant->id) }}" target="_blank"
-                    class="btn btn-primary">Buka di Tab Baru</a>
-                <a href="{{ route('participant.card.download', $participant->id) }}" class="btn btn-success">Unduh
-                    PDF</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- JavaScript to load card preview -->
-<script nonce="{{ $csp_nonce ?? '' }}">
-    // Function to load card preview when modal is shown
-    document.getElementById('cardPreviewModal').addEventListener('shown.bs.modal', function () {
-        const modalBody = this.querySelector('.modal-body');
-        modalBody.innerHTML = `
-            <div class="d-flex justify-content-center align-items-center" style="min-height: 500px;">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Memuat...</span>
-                </div>
-            </div>
-        `;
-
-        // Create iframe for the card preview
-        const iframe = document.createElement('iframe');
-        iframe.src = '{{ route('participant.card.preview', $participant->id) }}';
-        iframe.style.width = '100%';
-        iframe.style.height = '70vh';
-        iframe.style.border = 'none';
-        iframe.onload = function () {
-            // Remove loading spinner and show iframe
-            modalBody.innerHTML = '';
-            modalBody.appendChild(iframe);
-        };
-
-        // Load iframe after a small delay to ensure modal is fully rendered
-        setTimeout(() => {
-            modalBody.innerHTML = '';
-            modalBody.appendChild(iframe);
-        }, 300);
-    });
-
-    // Reset iframe src when modal is closed to free resources
-    document.getElementById('cardPreviewModal').addEventListener('hidden.bs.modal', function () {
-        const iframe = this.querySelector('iframe');
-        if (iframe) {
-            iframe.src = 'about:blank'; // Free resources
-        }
-    });
-</script>
 
 <!-- Photo Modal -->
 <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
