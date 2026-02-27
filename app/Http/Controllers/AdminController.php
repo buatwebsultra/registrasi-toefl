@@ -393,11 +393,14 @@ class AdminController extends Controller
             $perPage = 10;
         }
 
-        $query = $schedule->participants()->with('studyProgram')
+        // Start from Participant model for cleaner selection and avoiding relationship/table name ambiguity
+        $query = Participant::query()
+            ->where('schedule_id', $scheduleId)
+            ->with(['studyProgram', 'faculty']) // Include faculty just in case it's needed
             ->addSelect([
                 'participants.*',
-                'test_count' => Participant::selectRaw('count(*)')
-                    ->from('participants as history')
+                'test_count' => DB::table('participants as history')
+                    ->selectRaw('count(*)')
                     ->whereColumn('history.nim', 'participants.nim')
                     ->whereNotNull('history.test_score')
                     ->whereNull('history.deleted_at')
@@ -422,16 +425,16 @@ class AdminController extends Controller
         } elseif ($sort === 'score_desc') {
             $query->orderBy('test_score', 'desc');
         } else {
-            // Default sorting - using raw SQL to handle the logical "effective seat number"
-            $query->orderByRaw('COALESCE(seat_number, temp_seat_number, id) ASC');
+            // Default sorting - using fully qualified column names to prevent ambiguity on some SQL servers
+            $query->orderByRaw('COALESCE(participants.seat_number, participants.temp_seat_number, participants.id) ASC');
         }
 
         $participants = $query->paginate($perPage)->appends(request()->query());
 
         // Hitung total peserta untuk kebutuhan view
-        $totalParticipants = $schedule->participants()->count();
+        $totalParticipants = Participant::where('schedule_id', $scheduleId)->count();
 
-        // Fetch all available schedules for rescheduling (filtered by category and MUST be later than current schedule)
+        // Fetch all available schedules for rescheduling
         $allAvailableSchedules = Schedule::available()
             ->where('id', '!=', $schedule->id)
             ->where('category', $schedule->category)
