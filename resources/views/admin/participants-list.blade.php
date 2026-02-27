@@ -234,13 +234,8 @@
                                 <td>{{ $participant->nim }}</td>
                                 <td>
                                     {{ $participant->name }}
-                                    @if($participant->test_count > 0)
-                                        <span class="badge bg-light text-dark shadow-sm border ms-1" title="Jumlah Riwayat Tes">
-                                            {{ $participant->test_count }}x
-                                        </span>
-                                    @endif
                                 </td>
-                                <td>{{ $participant->studyProgram->name ?? '-' }} {{ $participant->studyProgram->level ?? '' }}</td>
+                                <td>{{ optional($participant->studyProgram)->name ?? '-' }} {{ optional($participant->studyProgram)->level ?? '' }}</td>
                                 <td>
                                     <div class="score-display">
                                         @if($participant->test_score)
@@ -282,7 +277,7 @@
                                                 <span id="pass_fail_{{ $participant->id }}" class="fw-bold">{{ $participant->test_score ? ($participant->passed ? '(PASS)' : '(FAIL)') : '' }}</span>
                                             </div>
                                             <input type="hidden" class="academic-level" data-id="{{ $participant->id }}" value="{{ $participant->academic_level }}">
-                                            <input type="hidden" class="passing-grade" data-id="{{ $participant->id }}" value="{{ $participant->studyProgram->passing_grade ?? '' }}">
+                                            <input type="hidden" class="passing-grade" data-id="{{ $participant->id }}" value="{{ optional($participant->studyProgram)->passing_grade ?? '' }}">
                                         @else
                                             <span class="text-muted small">Tidak Hadir</span>
                                         @endif
