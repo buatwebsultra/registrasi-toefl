@@ -197,7 +197,7 @@
             </div>
         </div>
 
-        <form id="bulkScoreForm" action="{{ route('admin.participants.bulk-score.update', $schedule->id) }}" method="POST">
+        <form id="bulkScoreForm" action="{{ route('admin.schedule.bulk-score.update', $schedule->id) }}" method="POST">
             @csrf
             <div class="table-responsive">
                 <table class="table table-striped table-hover">

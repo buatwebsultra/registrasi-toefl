@@ -99,7 +99,7 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
     Route::put('/participant/{id}/score', [AdminController::class, 'updateTestScore'])->name('admin.participant.score.update')->middleware('admin');
     Route::post('/participant/{id}/score/validate', [AdminController::class, 'validateScore'])->name('admin.participant.score.validate')->middleware('admin');
     Route::post('/participants/score/bulk-validate', [AdminController::class, 'bulkValidateScores'])->name('admin.participants.score.bulk-validate')->middleware('admin');
-    Route::post('/schedule/{id}/bulk-score', [AdminController::class, 'bulkUpdateScores'])->name('admin.participants.bulk-score.update')->middleware('admin');
+    Route::post('/schedule/{id}/bulk-score', [AdminController::class, 'bulkUpdateScores'])->name('admin.schedule.bulk-score.update')->middleware('admin');
 
     // Export participants route
     Route::get('/participants/export', [AdminController::class, 'exportParticipants'])->name('admin.participants.export');
