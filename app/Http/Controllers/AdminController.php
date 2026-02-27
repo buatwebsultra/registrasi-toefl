@@ -397,13 +397,14 @@ class AdminController extends Controller
         $query = Participant::query()
             ->where('schedule_id', $scheduleId)
             ->with(['studyProgram', 'faculty']) // Include faculty just in case it's needed
-            ->addSelect([
-                'participants.*',
-                'test_count' => DB::table('participants as history')
-                    ->selectRaw('count(*)')
-                    ->whereColumn('history.nim', 'participants.nim')
-                    ->whereNotNull('history.test_score')
-                    ->whereNull('history.deleted_at')
+            ->withCount([
+                'schedule as test_count' => function ($q) {
+                    $q->select(DB::raw('count(*)'))
+                        ->from('participants as history')
+                        ->whereColumn('history.nim', 'participants.nim')
+                        ->whereNotNull('history.test_score')
+                        ->whereNull('history.deleted_at');
+                }
             ]);
 
         // Jika ada parameter pencarian NIM / Nama
