@@ -396,7 +396,8 @@ class AdminController extends Controller
         // Start from Participant model for cleaner selection and avoiding relationship/table name ambiguity
         $query = Participant::query()
             ->where('schedule_id', $scheduleId)
-            ->with(['studyProgram', 'faculty']); // Include faculty just in case it's needed
+            ->with(['studyProgram', 'faculty']) // Include faculty just in case it's needed
+            ->withCount('previousParticipations'); // Efficiently count test history
 
         // Jika ada parameter pencarian NIM / Nama
         if ($searchNim) {

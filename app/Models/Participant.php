@@ -99,6 +99,16 @@ class Participant extends Model
         return $this->belongsTo(Faculty::class);
     }
 
+    /**
+     * Relationship to find other participations by the same NIM
+     * Used for the "Riwayat Tes" feature
+     */
+    public function previousParticipations()
+    {
+        return $this->hasMany(self::class, 'nim', 'nim')
+            ->where('id', '!=', $this->id);
+    }
+
     // Accessor to get academic level from study program
     public function getAcademicLevelAttribute()
     {

@@ -234,6 +234,11 @@
                                 <td>{{ $participant->nim }}</td>
                                 <td>
                                     {{ $participant->name }}
+                                    @if($participant->previous_participations_count > 0)
+                                        <span class="badge bg-info text-dark ms-1" style="font-size: 0.7rem;" title="Riwayat Tes">
+                                            <i class="fas fa-history me-1"></i>{{ $participant->previous_participations_count }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>{{ optional($participant->studyProgram)->name ?? '-' }} {{ optional($participant->studyProgram)->level ?? '' }}</td>
                                 <td>
