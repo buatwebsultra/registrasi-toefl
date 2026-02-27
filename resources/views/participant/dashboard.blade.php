@@ -642,7 +642,7 @@
                                     @endif
                                 @endif
 
-                                @if($participant->passed && $participant->attendance === 'present')
+                                 @if($participant->status === 'rejected')
                                     <a href="{{ route('participant.resubmit.payment.form', $participant->id) }}"
                                         class="btn btn-premium btn-warning">
                                         <i class="fas fa-cloud-upload-alt me-2"></i>Upload Ulang Pembayaran
