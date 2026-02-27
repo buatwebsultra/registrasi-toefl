@@ -240,7 +240,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td>{{ $participant->studyProgram->name }} {{ $participant->studyProgram->level }}</td>
+                                <td>{{ $participant->studyProgram->name ?? '-' }} {{ $participant->studyProgram->level ?? '' }}</td>
                                 <td>
                                     <div class="score-display">
                                         @if($participant->test_score)

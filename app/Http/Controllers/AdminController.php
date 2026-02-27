@@ -203,7 +203,7 @@ class AdminController extends Controller
         $normalizedRoom = strtolower(trim($request->room));
 
         // Look for existing schedules with the same date and room (case-insensitive)
-        $existingSchedules = Schedule::whereDate('date', $request->date)
+        $existingSchedules = Schedule::whereDate('date', (string) $request->date)
             ->whereRaw('LOWER(room) = ?', [$normalizedRoom])
             ->get();
 
@@ -252,7 +252,7 @@ class AdminController extends Controller
         $normalizedRoom = strtolower(trim($request->room));
 
         // Look for existing schedules with the same date and room (excluding current)
-        $existingSchedules = Schedule::whereDate('date', $request->date)
+        $existingSchedules = Schedule::whereDate('date', (string) $request->date)
             ->whereRaw('LOWER(room) = ?', [$normalizedRoom])
             ->where('id', '!=', $id) // Exclude current schedule
             ->get();
@@ -435,7 +435,7 @@ class AdminController extends Controller
         $allAvailableSchedules = Schedule::available()
             ->where('id', '!=', $schedule->id)
             ->where('category', $schedule->category)
-            ->whereDate('date', '>', $schedule->date)
+            ->whereDate('date', '>', $schedule->date->toDateString())
             ->get();
 
         return view('admin.participants-list', compact('schedule', 'participants', 'searchNim', 'totalParticipants', 'sort', 'allAvailableSchedules', 'perPage'));
@@ -1122,7 +1122,7 @@ class AdminController extends Controller
             // If date is specified, get participants for that date
             $participants = Participant::with(['schedule', 'studyProgram', 'faculty'])
                 ->whereHas('schedule', function ($q) use ($request) {
-                    $q->whereDate('date', $request->date);
+                    $q->whereDate('date', (string) $request->date);
                 })
                 ->get();
         } else {

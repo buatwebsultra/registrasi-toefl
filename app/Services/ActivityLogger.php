@@ -28,7 +28,7 @@ class ActivityLogger
         }
 
         $userName = 'Guest';
-        
+
         if (!$userType) {
             if (Auth::check()) {
                 $userType = 'admin';
@@ -80,30 +80,36 @@ class ActivityLogger
      */
     protected static function exportToFile(array $logData)
     {
-        $fileName = 'activity_log_' . date('Y-m') . '.txt';
-        $filePath = 'activity_logs/' . $fileName; // Stored in storage/app/activity_logs/
+        try {
+            $fileName = 'activity_log_' . date('Y-m') . '.txt';
+            $filePath = 'activity_logs/' . $fileName; // Stored in storage/app/activity_logs/
 
-        // Format log entry for human readability
-        $timestamp = $logData['created_at'] ?? now()->toDateTimeString();
-        $userType = strtoupper($logData['user_type'] ?? 'UNKNOWN');
-        $userName = $logData['user_name'] ?? 'Unknown';
-        $action = $logData['action'] ?? 'No Action';
-        $description = $logData['description'] ?? 'No Description';
-        $ipAddress = $logData['ip_address'] ?? 'Unknown IP';
-        $userAgent = $logData['user_agent'] ?? 'Unknown User Agent';
+            // Format log entry for human readability
+            $timestamp = $logData['created_at'] ?? now()->toDateTimeString();
+            $userType = strtoupper($logData['user_type'] ?? 'UNKNOWN');
+            $userName = $logData['user_name'] ?? 'Unknown';
+            $action = $logData['action'] ?? 'No Action';
+            $description = $logData['description'] ?? 'No Description';
+            $ipAddress = $logData['ip_address'] ?? 'Unknown IP';
+            $userAgent = $logData['user_agent'] ?? 'Unknown User Agent';
 
-        // Create formatted log entry
-        $logEntry = "========================================\n";
-        $logEntry .= "Timestamp: {$timestamp}\n";
-        $logEntry .= "User Type: {$userType}\n";
-        $logEntry .= "User Name: {$userName}\n";
-        $logEntry .= "Action: {$action}\n";
-        $logEntry .= "Description: {$description}\n";
-        $logEntry .= "IP Address: {$ipAddress}\n";
-        $logEntry .= "User Agent: {$userAgent}\n";
-        $logEntry .= "========================================\n\n";
+            // Create formatted log entry
+            $logEntry = "========================================\n";
+            $logEntry .= "Timestamp: {$timestamp}\n";
+            $logEntry .= "User Type: {$userType}\n";
+            $logEntry .= "User Name: {$userName}\n";
+            $logEntry .= "Action: {$action}\n";
+            $logEntry .= "Description: {$description}\n";
+            $logEntry .= "IP Address: {$ipAddress}\n";
+            $logEntry .= "User Agent: {$userAgent}\n";
+            $logEntry .= "========================================\n\n";
 
-        // Append to the file. Storage will create directory if it doesn't exist.
-        Storage::disk('local')->append($filePath, $logEntry);
+            // Append to the file. Storage will create directory if it doesn't exist.
+            Storage::disk('local')->append($filePath, $logEntry);
+        } catch (\Exception $e) {
+            // Silently fail if file logging is not possible
+            // We don't want to crash the main request just because logging failed
+            \Log::error('ActivityLogger Export Error: ' . $e->getMessage());
+        }
     }
 }
