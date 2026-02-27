@@ -371,8 +371,7 @@
                                 </span>
                                 <input type="text" name="search" class="form-control-premium border-start-0"
                                     style="border-radius: 0 0.75rem 0.75rem 0; background: white;"
-                                    placeholder="Cari Peserta Berdasarkan NIM atau Nama..."
-                                    value="{{ $searchQuery ?? '' }}">
+                                    placeholder="Cari NIM atau Nama" value="{{ $searchQuery ?? '' }}">
                             </div>
                         </div>
                         <div class="col-md-2">
