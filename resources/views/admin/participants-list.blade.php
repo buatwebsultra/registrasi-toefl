@@ -336,12 +336,8 @@
                                             data-username="{{ $participant->username }}">
                                             <i class="fas fa-key"></i> Reset
                                         </button>
-                                        <form action="{{ route('admin.participant.delete', $participant->id) }}" method="POST"
-                                            class="d-inline form-delete-participant">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                        </form>
+                                        <button type="button" class="btn btn-danger btn-sm btn-delete-participant" 
+                                            data-id="{{ $participant->id }}" data-name="{{ $participant->name }}">Hapus</button>
                                     @endif
                                 </td>
                             </tr>
@@ -503,6 +499,13 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- Global forms to avoid nesting -->
+    <form id="globalDeleteForm" method="POST" class="d-none">
+        @csrf
+        @method('DELETE')
+    </form>
 
 @endsection
 
@@ -577,10 +580,14 @@
             });
 
             // 6. Delete Participant Confirm
-            document.querySelectorAll('.form-delete-participant').forEach(form => {
-                form.addEventListener('submit', function (e) {
-                    if (!confirm('Apakah Anda yakin ingin menghapus peserta ini?')) {
-                        e.preventDefault();
+            document.querySelectorAll('.btn-delete-participant').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    const name = this.getAttribute('data-name');
+                    if (confirm(`Apakah Anda yakin ingin menghapus peserta ${name}?`)) {
+                        const form = document.getElementById('globalDeleteForm');
+                        form.action = `/admin/participant/${id}/delete`;
+                        form.submit();
                     }
                 });
             });
