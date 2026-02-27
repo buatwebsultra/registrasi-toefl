@@ -103,7 +103,7 @@ class Participant extends Model
     public function getAcademicLevelAttribute()
     {
         // Try to get from study program first
-        if ($this->studyProgram) {
+        if ($this->studyProgram && $this->studyProgram->level) {
             $levelMap = [
                 'bachelor' => 'undergraduate',
                 'sarjana' => 'undergraduate',
@@ -120,7 +120,7 @@ class Participant extends Model
                 'doctorate' => 'doctorate',
             ];
 
-            $rawLevel = strtolower(trim($this->studyProgram->level));
+            $rawLevel = strtolower(trim((string) $this->studyProgram->level));
 
             // Check exact match first
             if (isset($levelMap[$rawLevel])) {
@@ -141,7 +141,8 @@ class Participant extends Model
             return $rawLevel;
         }
 
-        return $this->attributes['academic_level'] ?? 'undergraduate';
+        $attrLevel = $this->attributes['academic_level'] ?? 'undergraduate';
+        return is_string($attrLevel) ? strtolower(trim($attrLevel)) : 'undergraduate';
     }
 
     public function getAcademicLevelDisplayAttribute()
@@ -228,7 +229,7 @@ class Participant extends Model
     private function getNormalizedAcademicLevel()
     {
         // Try to get from study program first
-        if ($this->studyProgram) {
+        if ($this->studyProgram && $this->studyProgram->level) {
             $levelMap = [
                 'bachelor' => 'undergraduate',
                 'sarjana' => 'undergraduate',
@@ -245,7 +246,7 @@ class Participant extends Model
                 'doctorate' => 'doctorate',
             ];
 
-            $rawLevel = strtolower(trim($this->studyProgram->level));
+            $rawLevel = strtolower(trim((string) $this->studyProgram->level));
 
             // Check exact match first
             if (isset($levelMap[$rawLevel])) {
@@ -265,8 +266,9 @@ class Participant extends Model
         }
 
         // Fallback to attributes
-        if (isset($this->attributes['academic_level'])) {
-            $attrLevel = strtolower(trim($this->attributes['academic_level']));
+        $attrLevel = $this->attributes['academic_level'] ?? null;
+        if ($attrLevel) {
+            $attrLevel = strtolower(trim((string) $attrLevel));
 
             // Check keywords in attribute
             if (
