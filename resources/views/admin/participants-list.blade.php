@@ -135,6 +135,9 @@
                         <button type="button" class="btn btn-primary d-none" id="bulkValidateBtn">
                             <i class="fas fa-check-double"></i> Validasi Nilai Terpilih
                         </button>
+                        <button type="button" class="btn btn-outline-primary" id="toggleBulkInput">
+                            <i class="fas fa-edit me-1"></i> Mode Input Nilai
+                        </button>
                         <a href="{{ route('admin.schedule.participants.export', $schedule->id) }}" class="btn btn-success">
                             <i class="fas fa-download"></i> Download Seluruh Peserta
                         </a>
@@ -194,137 +197,179 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="w-40px"><input type="checkbox" id="selectAll"></th>
-                        <th class="w-40px">No</th>
-                        <th>Nomor Kursi</th>
-                        <th>NIM</th>
-                        <th>Nama</th>
-                        <th>Prodi</th>
-                        <th>Status Nilai</th>
-                        <th>Status Verifikasi</th>
-                        <th>Kehadiran</th>
-                        <th>WhatsApp</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($participants as $participant)
+        <form id="bulkScoreForm" action="{{ route('admin.participants.bulk-score.update', $schedule->id) }}" method="POST">
+            @csrf
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
                         <tr>
-                            <td>
-                                @if($participant->test_score && !$participant->is_score_validated)
-                                    <input type="checkbox" class="participant-checkbox" name="participant_ids[]"
-                                        value="{{ $participant->id }}">
-                                @else
-                                    <span class="text-muted opacity-25"><i class="fas fa-minus"></i></span>
-                                @endif
-                            </td>
-                            <td>
-                                {{ ($participants->currentPage() - 1) * $participants->perPage() + $loop->iteration }}
-                            </td>
-                            <td>{{ $participant->effective_seat_number }}</td>
-                            <td>{{ $participant->nim }}</td>
-                            <td>
-                                {{ $participant->name }}
-                                @if($participant->test_count > 0)
-                                    <span class="badge bg-light text-dark shadow-sm border ms-1" title="Jumlah Riwayat Tes">
-                                        {{ $participant->test_count }}x
-                                    </span>
-                                @endif
-                            </td>
-                            <td>{{ $participant->studyProgram->name }} {{ $participant->studyProgram->level }}</td>
-                            <td>
-                                @if($participant->test_score)
-                                    @if($participant->is_score_validated)
-                                        <span class="badge bg-primary"><i class="fas fa-check-circle me-1"></i>Tervalidasi</span>
+                            <th class="w-40px"><input type="checkbox" id="selectAll"></th>
+                            <th class="w-40px">No</th>
+                            <th>Nomor Kursi</th>
+                            <th>NIM</th>
+                            <th>Nama</th>
+                            <th>Prodi</th>
+                            <th id="scoreColumnTitle">Status Nilai</th>
+                            <th>Status Verifikasi</th>
+                            <th>Kehadiran</th>
+                            <th>WhatsApp</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($participants as $participant)
+                            <tr>
+                                <td>
+                                    @if($participant->test_score && !$participant->is_score_validated)
+                                        <input type="checkbox" class="participant-checkbox" name="participant_ids[]"
+                                            value="{{ $participant->id }}">
                                     @else
-                                        <span class="badge bg-secondary"><i class="fas fa-hourglass-half me-1"></i>Menunggu
-                                            Validasi</span>
+                                        <span class="text-muted opacity-25"><i class="fas fa-minus"></i></span>
                                     @endif
-                                    <div class="small fw-bold text-dark mt-1">
-                                        {{ number_format($participant->test_score, 0, '', '') }}
-                                        ({{ $participant->passed ? 'PASS' : 'FAIL' }})</div>
-                                @else
-                                    <span class="text-muted small">Belum dinput</span>
-                                @endif
-                            </td>
-                            <td>
-                                <span
-                                    class="badge bg-{{ $participant->status === 'confirmed' ? 'success' : ($participant->status === 'pending' ? 'warning' : ($participant->status === 'rejected' ? 'danger' : 'secondary')) }}">
-                                    {{ $participant->status === 'confirmed' ? 'Terkonfirmasi' : ($participant->status === 'pending' ? 'Tertunda' : ($participant->status === 'rejected' ? 'Ditolak' : 'Dibatalkan')) }}
-                                </span>
-                            </td>
-                            <td>
-                                @if($participant->attendance === 'present')
-                                    <span class="badge bg-success">Hadir</span>
-                                @elseif($participant->attendance === 'absent')
-                                    <span class="badge bg-danger">Tidak Hadir</span>
-                                @elseif($participant->attendance === 'permission')
-                                    <span class="badge bg-warning text-dark">Izin</span>
-                                @else
-                                    <span class="badge bg-secondary">-</span>
-                                @endif
-                                <button type="button" class="btn btn-sm btn-link p-0 ms-1 btn-open-attendance"
-                                    data-id="{{ $participant->id }}" data-name="{{ $participant->name }}"
-                                    data-attendance="{{ $participant->attendance }}" {{ $participant->passed ? 'disabled title="Tidak dapat mengubah kehadiran peserta yang sudah Lulus"' : ($participant->status !== 'confirmed' ? 'disabled title="Peserta belum terkonfirmasi"' : '') }}>
-                                    <i
-                                        class="fas fa-edit {{ ($participant->passed || $participant->status !== 'confirmed') ? 'text-muted' : '' }}"></i>
-                                </button>
-                            </td>
-                            <td>
-                                @if($participant->phone)
-                                    <a href="#" class="btn btn-sm btn-success btn-whatsapp-contact"
-                                        data-phone="{{ $participant->phone }}">
-                                        <i class="fab fa-whatsapp"></i> Chat
-                                    </a>
-                                @else
-                                    <span class="text-muted small">-</span>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('admin.participant.details', $participant->id) }}"
-                                    class="btn btn-info btn-sm me-1">Lihat Detail</a>
-                                @if(Auth::user()->isSuperAdmin())
-                                    <button type="button" class="btn btn-primary btn-sm me-1 btn-reschedule" 
-                                        data-id="{{ $participant->id }}">
-                                        <i class="fas fa-calendar-alt"></i> Pindah
-                                    </button>
-                                @endif
-                                @if(Auth::user()->isOperator())
-                                    <button type="button" class="btn btn-warning btn-sm me-1 btn-reset-password"
+                                </td>
+                                <td>
+                                    {{ ($participants->currentPage() - 1) * $participants->perPage() + $loop->iteration }}
+                                </td>
+                                <td>{{ $participant->effective_seat_number }}</td>
+                                <td>{{ $participant->nim }}</td>
+                                <td>
+                                    {{ $participant->name }}
+                                    @if($participant->test_count > 0)
+                                        <span class="badge bg-light text-dark shadow-sm border ms-1" title="Jumlah Riwayat Tes">
+                                            {{ $participant->test_count }}x
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>{{ $participant->studyProgram->name }} {{ $participant->studyProgram->level }}</td>
+                                <td>
+                                    <div class="score-display">
+                                        @if($participant->test_score)
+                                            @if($participant->is_score_validated)
+                                                <span class="badge bg-primary"><i class="fas fa-check-circle me-1"></i>Tervalidasi</span>
+                                            @else
+                                                <span class="badge bg-secondary"><i class="fas fa-hourglass-half me-1"></i>Menunggu
+                                                    Validasi</span>
+                                            @endif
+                                            <div class="small fw-bold text-dark mt-1">
+                                                {{ number_format($participant->test_score, 0, '', '') }}
+                                                ({{ $participant->passed ? 'PASS' : 'FAIL' }})</div>
+                                        @else
+                                            <span class="text-muted small">Belum dinput</span>
+                                        @endif
+                                    </div>
+                                    <div class="score-input d-none">
+                                        @if($participant->attendance === 'present')
+                                            <div class="input-group input-group-sm mb-1">
+                                                <span class="input-group-text p-1" style="width: 20px; font-size: 10px;">L</span>
+                                                <input type="number" name="scores[{{ $participant->id }}][listening]" 
+                                                    class="form-control raw-score px-1" data-session="1" data-id="{{ $participant->id }}"
+                                                    value="{{ $participant->raw_listening_pbt }}" min="0" max="50">
+                                            </div>
+                                            <div class="input-group input-group-sm mb-1">
+                                                <span class="input-group-text p-1" style="width: 20px; font-size: 10px;">S</span>
+                                                <input type="number" name="scores[{{ $participant->id }}][structure]" 
+                                                    class="form-control raw-score px-1" data-session="2" data-id="{{ $participant->id }}"
+                                                    value="{{ $participant->raw_structure_pbt }}" min="0" max="40">
+                                            </div>
+                                            <div class="input-group input-group-sm mb-1">
+                                                <span class="input-group-text p-1" style="width: 20px; font-size: 10px;">R</span>
+                                                <input type="number" name="scores[{{ $participant->id }}][reading]" 
+                                                    class="form-control raw-score px-1" data-session="3" data-id="{{ $participant->id }}"
+                                                    value="{{ $participant->raw_reading_pbt }}" min="0" max="50">
+                                            </div>
+                                            <div class="mt-1 small" style="font-size: 11px;">
+                                                <strong>Total: <span class="total-preview" id="total_{{ $participant->id }}">{{ $participant->test_score ?: '-' }}</span></strong>
+                                                <span id="pass_fail_{{ $participant->id }}" class="fw-bold">{{ $participant->test_score ? ($participant->passed ? '(PASS)' : '(FAIL)') : '' }}</span>
+                                            </div>
+                                            <input type="hidden" class="academic-level" data-id="{{ $participant->id }}" value="{{ $participant->academic_level }}">
+                                            <input type="hidden" class="passing-grade" data-id="{{ $participant->id }}" value="{{ $participant->studyProgram->passing_grade ?? '' }}">
+                                        @else
+                                            <span class="text-muted small">Tidak Hadir</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-{{ $participant->status === 'confirmed' ? 'success' : ($participant->status === 'pending' ? 'warning' : ($participant->status === 'rejected' ? 'danger' : 'secondary')) }}">
+                                        {{ $participant->status === 'confirmed' ? 'Terkonfirmasi' : ($participant->status === 'pending' ? 'Tertunda' : ($participant->status === 'rejected' ? 'Ditolak' : 'Dibatalkan')) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($participant->attendance === 'present')
+                                        <span class="badge bg-success">Hadir</span>
+                                    @elseif($participant->attendance === 'absent')
+                                        <span class="badge bg-danger">Tidak Hadir</span>
+                                    @elseif($participant->attendance === 'permission')
+                                        <span class="badge bg-warning text-dark">Izin</span>
+                                    @else
+                                        <span class="badge bg-secondary">-</span>
+                                    @endif
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1 btn-open-attendance"
                                         data-id="{{ $participant->id }}" data-name="{{ $participant->name }}"
-                                        data-username="{{ $participant->username }}">
-                                        <i class="fas fa-key"></i> Reset
+                                        data-attendance="{{ $participant->attendance }}" {{ $participant->passed ? 'disabled title="Tidak dapat mengubah kehadiran peserta yang sudah Lulus"' : ($participant->status !== 'confirmed' ? 'disabled title="Peserta belum terkonfirmasi"' : '') }}>
+                                        <i
+                                            class="fas fa-edit {{ ($participant->passed || $participant->status !== 'confirmed') ? 'text-muted' : '' }}"></i>
                                     </button>
-                                    <form action="{{ route('admin.participant.delete', $participant->id) }}" method="POST"
-                                        class="d-inline form-delete-participant">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                    </form>
+                                </td>
+                                <td>
+                                    @if($participant->phone)
+                                        <a href="#" class="btn btn-sm btn-success btn-whatsapp-contact"
+                                            data-phone="{{ $participant->phone }}">
+                                            <i class="fab fa-whatsapp"></i> Chat
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.participant.details', $participant->id) }}"
+                                        class="btn btn-info btn-sm me-1">Lihat Detail</a>
+                                    @if(Auth::user()->isSuperAdmin())
+                                        <button type="button" class="btn btn-primary btn-sm me-1 btn-reschedule" 
+                                            data-id="{{ $participant->id }}">
+                                            <i class="fas fa-calendar-alt"></i> Pindah
+                                        </button>
+                                    @endif
+                                    @if(Auth::user()->isOperator())
+                                        <button type="button" class="btn btn-warning btn-sm me-1 btn-reset-password"
+                                            data-id="{{ $participant->id }}" data-name="{{ $participant->name }}"
+                                            data-username="{{ $participant->username }}">
+                                            <i class="fas fa-key"></i> Reset
+                                        </button>
+                                        <form action="{{ route('admin.participant.delete', $participant->id) }}" method="POST"
+                                            class="d-inline form-delete-participant">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                @if($searchNim)
+                                    <td colspan="11" class="text-center">Tidak ditemukan peserta dengan NIM: {{ $searchNim }}</td>
+                                @else
+                                    <td colspan="11" class="text-center">Tidak ada peserta terdaftar untuk jadwal ini</td>
                                 @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            @if($searchNim)
-                                <td colspan="11" class="text-center">Tidak ditemukan peserta dengan NIM: {{ $searchNim }}</td>
-                            @else
-                                <td colspan="11" class="text-center">Tidak ada peserta terdaftar untuk jadwal ini</td>
-                            @endif
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-            @if($participants->hasPages())
-                <div class="d-flex justify-content-center">
-                    {{ $participants->appends(['search_nim' => $searchNim, 'sort' => $sort])->links() }}
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                @if($participants->hasPages())
+                    <div class="d-flex justify-content-center">
+                        {{ $participants->appends(['search_nim' => $searchNim, 'sort' => $sort])->links() }}
+                    </div>
+                @endif
+            </div>
+            <div class="card-footer d-none mt-3" id="bulkScoreFooter">
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 shadow">
+                        <i class="fas fa-save me-2"></i> Simpan Semua Nilai
+                    </button>
                 </div>
-            @endif
-        </div>
+            </div>
+        </form>
     </div>
     </div>
 
@@ -703,6 +748,91 @@
                     if (form) form.submit();
                 });
             }
+
+            // 9. Bulk Score Entry Toggle
+            const toggleBulkBtn = document.getElementById('toggleBulkInput');
+            if (toggleBulkBtn) {
+                toggleBulkBtn.addEventListener('click', function() {
+                    const displayElements = document.querySelectorAll('.score-display');
+                    const inputElements = document.querySelectorAll('.score-input');
+                    const footer = document.getElementById('bulkScoreFooter');
+                    const title = document.getElementById('scoreColumnTitle');
+                    
+                    const isInputMode = inputElements[0].classList.contains('d-none');
+                    
+                    if (isInputMode) {
+                        displayElements.forEach(el => el.classList.add('d-none'));
+                        inputElements.forEach(el => el.classList.remove('d-none'));
+                        footer.classList.remove('d-none');
+                        title.innerText = "Input Nilai Raw (L/S/R)";
+                        this.innerHTML = '<i class="fas fa-times me-1"></i> Batal Input';
+                        this.classList.replace('btn-outline-primary', 'btn-outline-danger');
+                    } else {
+                        displayElements.forEach(el => el.classList.remove('d-none'));
+                        inputElements.forEach(el => el.classList.add('d-none'));
+                        footer.classList.add('d-none');
+                        title.innerText = "Status Nilai";
+                        this.innerHTML = '<i class="fas fa-edit me-1"></i> Mode Input Nilai';
+                        this.classList.replace('btn-outline-danger', 'btn-outline-primary');
+                    }
+                });
+            }
+
+            // 10. Live Score Calculation
+            const pbtConversionTable = {
+                50: [68, 68, 67], 49: [67, 67, 66], 48: [66, 65, 65], 47: [65, 63, 63], 46: [63, 61, 61],
+                45: [62, 60, 60], 44: [61, 58, 59], 43: [60, 57, 58], 42: [59, 56, 57], 41: [58, 55, 56],
+                40: [57, 68, 55], 39: [57, 67, 54], 38: [56, 65, 54], 37: [55, 63, 53], 36: [54, 61, 52],
+                35: [54, 60, 52], 34: [53, 58, 51], 33: [52, 57, 50], 32: [52, 56, 49], 31: [51, 55, 48],
+                30: [51, 54, 48], 29: [50, 53, 47], 28: [49, 52, 46], 27: [49, 51, 46], 26: [48, 50, 45],
+                25: [48, 49, 44], 24: [47, 48, 43], 23: [47, 47, 43], 22: [46, 46, 42], 21: [45, 45, 41],
+                20: [45, 44, 40], 19: [44, 43, 39], 18: [43, 43, 38], 17: [42, 41, 37], 16: [41, 40, 36],
+                15: [41, 40, 35], 14: [39, 38, 34], 13: [38, 37, 32], 12: [37, 36, 31], 11: [35, 35, 30],
+                10: [33, 33, 29], 9: [32, 31, 28], 8: [32, 29, 28], 7: [31, 27, 27], 6: [30, 26, 26],
+                5: [29, 25, 25], 4: [28, 23, 24], 3: [27, 22, 23], 2: [26, 21, 23], 1: [25, 20, 22],
+                0: [24, 20, 21]
+            };
+
+            document.querySelectorAll('.raw-score').forEach(input => {
+                input.addEventListener('input', function() {
+                    const id = this.getAttribute('data-id');
+                    const listening = parseInt(document.querySelector(`input[name="scores[${id}][listening]"]`).value) || 0;
+                    const structure = parseInt(document.querySelector(`input[name="scores[${id}][structure]"]`).value) || 0;
+                    const reading = parseInt(document.querySelector(`input[name="scores[${id}][reading]"]`).value) || 0;
+
+                    // Convert to scaled
+                    const lScaled = pbtConversionTable[Math.min(50, Math.max(0, listening))][0];
+                    const sScaled = pbtConversionTable[Math.min(40, Math.max(0, structure))][1];
+                    const rScaled = pbtConversionTable[Math.min(50, Math.max(0, reading))][2];
+
+                    // Total
+                    const total = Math.round((lScaled + sScaled + rScaled) * 10 / 3);
+                    
+                    const totalPreview = document.getElementById(`total_${id}`);
+                    const statusPreview = document.getElementById(`pass_fail_${id}`);
+                    
+                    if (totalPreview) totalPreview.innerText = total;
+
+                    // Calculate PASS/FAIL
+                    if (statusPreview) {
+                        const level = document.querySelector(`.academic-level[data-id="${id}"]`).value;
+                        const customPassingGrade = document.querySelector(`.passing-grade[data-id="${id}"]`).value;
+                        
+                        let pass = false;
+                        if (customPassingGrade) {
+                            pass = total >= parseInt(customPassingGrade);
+                        } else {
+                            if (level === 'undergraduate') pass = total >= 410;
+                            else if (level === 'master') pass = total >= 450;
+                            else if (level === 'doctorate') pass = total >= 500;
+                            else pass = total >= 410;
+                        }
+
+                        statusPreview.innerText = pass ? '(PASS)' : '(FAIL)';
+                        statusPreview.className = pass ? 'fw-bold text-success' : 'fw-bold text-danger';
+                    }
+                });
+            });
         });
     </script>
 @endsection

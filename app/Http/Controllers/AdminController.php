@@ -724,6 +724,72 @@ class AdminController extends Controller
         return redirect()->route('admin.participant.details', $participant->id)->with('success', 'Nilai test berhasil disimpan dan akan muncul di dashboard peserta.');
     }
 
+    public function bulkUpdateScores(Request $request, $id)
+    {
+        // SECURITY: Explicit authorization check
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            abort(403, 'Unauthorized access');
+        }
+
+        $schedule = Schedule::findOrFail($id);
+        $scores = $request->input('scores', []);
+
+        if (empty($scores)) {
+            return back()->with('error', 'Tidak ada data nilai yang dikirim.');
+        }
+
+        $count = 0;
+        foreach ($scores as $participantId => $data) {
+            $participant = Participant::find($participantId);
+
+            // Basic safety checks
+            if (!$participant || $participant->schedule_id != $id || $participant->attendance !== 'present') {
+                continue;
+            }
+
+            // Validate that we have all required raw scores for this row
+            if (
+                !isset($data['listening']) || !isset($data['structure']) || !isset($data['reading']) ||
+                $data['listening'] === '' || $data['structure'] === '' || $data['reading'] === ''
+            ) {
+                continue;
+            }
+
+            // Convert Raw Scores to Scaled Scores
+            $listeningScaled = ScoreConverter::convert(1, $data['listening']);
+            $structureScaled = ScoreConverter::convert(2, $data['structure']);
+            $readingScaled = ScoreConverter::convert(3, $data['reading']);
+            $calculatedTotal = ScoreConverter::calculateTotal($listeningScaled, $structureScaled, $readingScaled);
+
+            $updateData = [
+                'test_date' => $schedule->date,
+                'test_format' => 'PBT',
+                'raw_listening_pbt' => $data['listening'],
+                'raw_structure_pbt' => $data['structure'],
+                'raw_reading_pbt' => $data['reading'],
+                'listening_score_pbt' => $listeningScaled,
+                'structure_score_pbt' => $structureScaled,
+                'reading_score_pbt' => $readingScaled,
+                'test_score' => $calculatedTotal,
+                'is_score_validated' => false,
+            ];
+
+            // Re-calculate passed status
+            $participant->fill($updateData);
+            $updateData['passed'] = $participant->passed;
+
+            $participant->update($updateData);
+            $count++;
+        }
+
+        if ($count > 0) {
+            ActivityLogger::log('Update Nilai Massal', "Admin memperbarui nilai TOEFL untuk $count peserta di jadwal {$schedule->room} (" . $schedule->date->format('d M Y') . ")");
+            return back()->with('success', "Berhasil memperbarui nilai untuk $count peserta.");
+        }
+
+        return back()->with('error', 'Tidak ada data nilai valid yang diperbarui.');
+    }
+
     // Update participant attendance status
     public function updateAttendance(Request $request, $id)
     {
