@@ -377,63 +377,73 @@ class AdminController extends Controller
 
     public function participantsList($scheduleId)
     {
-        if (Auth::user()->isProdi()) {
-            return redirect()->route('prodi.dashboard');
+        try {
+            if (Auth::user()->isProdi()) {
+                return redirect()->route('prodi.dashboard');
+            }
+            $schedule = Schedule::findOrFail($scheduleId);
+
+            // Ambil parameter pencarian dan pengurutan
+            $searchNim = request('search_nim');
+            $status = request('status');
+            $sort = request('sort');
+            $perPage = request('per_page', 10);
+
+            // Validate per_page
+            if (!in_array($perPage, [10, 20, 50, 100])) {
+                $perPage = 10;
+            }
+
+            // Start from Participant model for cleaner selection and avoiding relationship/table name ambiguity
+            $query = Participant::query()
+                ->where('schedule_id', $scheduleId)
+                ->with(['studyProgram', 'faculty']); // Include faculty just in case it's needed
+
+            // Jika ada parameter pencarian NIM / Nama
+            if ($searchNim) {
+                $query->where(function ($q) use ($searchNim) {
+                    $q->where('nim', 'LIKE', "%{$searchNim}%")
+                        ->orWhere('name', 'LIKE', "%{$searchNim}%");
+                });
+            }
+
+            // Filter by status if provided
+            if ($status) {
+                $query->where('status', $status);
+            }
+
+            // Handle sorting
+            if ($sort === 'name_asc') {
+                $query->orderBy('name', 'asc');
+            } elseif ($sort === 'score_desc') {
+                $query->orderBy('test_score', 'desc');
+            } else {
+                // Default sorting - using fully qualified column names to prevent ambiguity on some SQL servers
+                $query->orderByRaw('COALESCE(participants.seat_number, participants.temp_seat_number, participants.id) ASC');
+            }
+
+            $participants = $query->paginate($perPage)->appends(request()->query());
+
+            // Hitung total peserta untuk kebutuhan view
+            $totalParticipants = Participant::where('schedule_id', $scheduleId)->count();
+
+            // Fetch all available schedules for rescheduling
+            $allAvailableSchedules = Schedule::available()
+                ->where('id', '!=', $schedule->id)
+                ->where('category', $schedule->category)
+                ->whereDate('date', '>', $schedule->date->toDateString())
+                ->get();
+
+            return view('admin.participants-list', compact('schedule', 'participants', 'searchNim', 'totalParticipants', 'sort', 'allAvailableSchedules', 'perPage'))->render();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => collect($e->getTrace())->take(5)->toArray()
+            ]);
         }
-        $schedule = Schedule::findOrFail($scheduleId);
-
-        // Ambil parameter pencarian dan pengurutan
-        $searchNim = request('search_nim');
-        $status = request('status');
-        $sort = request('sort');
-        $perPage = request('per_page', 10);
-
-        // Validate per_page
-        if (!in_array($perPage, [10, 20, 50, 100])) {
-            $perPage = 10;
-        }
-
-        // Start from Participant model for cleaner selection and avoiding relationship/table name ambiguity
-        $query = Participant::query()
-            ->where('schedule_id', $scheduleId)
-            ->with(['studyProgram', 'faculty']); // Include faculty just in case it's needed
-
-        // Jika ada parameter pencarian NIM / Nama
-        if ($searchNim) {
-            $query->where(function ($q) use ($searchNim) {
-                $q->where('nim', 'LIKE', "%{$searchNim}%")
-                    ->orWhere('name', 'LIKE', "%{$searchNim}%");
-            });
-        }
-
-        // Filter by status if provided
-        if ($status) {
-            $query->where('status', $status);
-        }
-
-        // Handle sorting
-        if ($sort === 'name_asc') {
-            $query->orderBy('name', 'asc');
-        } elseif ($sort === 'score_desc') {
-            $query->orderBy('test_score', 'desc');
-        } else {
-            // Default sorting - using fully qualified column names to prevent ambiguity on some SQL servers
-            $query->orderByRaw('COALESCE(participants.seat_number, participants.temp_seat_number, participants.id) ASC');
-        }
-
-        $participants = $query->paginate($perPage)->appends(request()->query());
-
-        // Hitung total peserta untuk kebutuhan view
-        $totalParticipants = Participant::where('schedule_id', $scheduleId)->count();
-
-        // Fetch all available schedules for rescheduling
-        $allAvailableSchedules = Schedule::available()
-            ->where('id', '!=', $schedule->id)
-            ->where('category', $schedule->category)
-            ->whereDate('date', '>', $schedule->date->toDateString())
-            ->get();
-
-        return view('admin.participants-list', compact('schedule', 'participants', 'searchNim', 'totalParticipants', 'sort', 'allAvailableSchedules', 'perPage'));
     }
 
     public function participantDetails($id)
