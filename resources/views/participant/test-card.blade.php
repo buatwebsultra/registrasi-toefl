@@ -549,8 +549,8 @@
 
             <div class="card-container">
                 <div class="row logo-row">
-                    @if(file_exists(public_path('logo-uho-dan-diktisaintek-768x143.png')))
-                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('logo-uho-dan-diktisaintek-768x143.png'))) }}"
+                    @if(file_exists(public_path('logo-uho-diktisaintek-text-biru.png')))
+                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('logo-uho-diktisaintek-text-biru.png'))) }}"
                             alt="Logo UHO dan Diktisaintek" class="logo-img" style="height: 55px;" />
                     @else
                         <div

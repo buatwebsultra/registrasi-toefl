@@ -290,88 +290,15 @@
             border-radius: 4px;
         }
 
-        /* Make footer align with registration steps section width */
-        body.welcome-page .footer .container {
-            max-width: 100%;
-        }
-
-        /* Align footer width with registration container */
-        body.welcome-page .align-footer-with-content {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        /* Ensure footer width matches the registration content width */
-        body.welcome-page .footer {
-            width: 100%;
-        }
-
-        body.welcome-page .footer>.align-footer-with-content {
-            width: 100%;
-        }
-
-        /* Match the exact width of the registration container */
-        @media (min-width: 576px) {
-            body.welcome-page .align-footer-with-content {
-                max-width: 540px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            body.welcome-page .align-footer-with-content {
-                max-width: 720px;
-            }
-        }
-
-        @media (min-width: 992px) {
-            body.welcome-page .align-footer-with-content {
-                max-width: 960px;
-            }
-        }
-
-        @media (min-width: 1200px) {
-            body.welcome-page .align-footer-with-content {
-                max-width: 1140px;
-            }
-        }
-
-        @media (min-width: 1400px) {
-            body.welcome-page .align-footer-with-content {
-                max-width: 1320px;
-            }
-        }
-
-        /* Add padding to match registration container */
-        body.welcome-page .align-footer-with-content {
-            padding-left: 15px;
-            padding-right: 15px;
-        }
-
-        /* Make footer content area match the registration card exactly */
-        body.welcome-page .footer-content-match {
-            max-width: 100%;
-        }
-
-        /* Adjust footer text colors to match dark theme when inside light card */
-        body.welcome-page .footer .card .text-light {
-            color: #212529 !important;
-        }
-
-        body.welcome-page .footer .card a.text-light,
-        body.welcome-page .footer .card .text-light h5,
-        body.welcome-page .footer .card .text-light p,
-        body.welcome-page .footer .card .text-light span {
-            color: #212529 !important;
-        }
-
-        body.welcome-page .footer .card hr {
-            background-color: #6c757d;
-        }
-
-        /* Round the corners of the footer */
+        /* Round the corners of the footer to match design */
         .footer.rounded {
-            border-radius: 0.5rem !important;
+            border-radius: 1.5rem 1.5rem 0 0 !important;
             overflow: hidden;
+        }
+
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
         }
 
         /* Round the corners of the header to match footer */
@@ -452,7 +379,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top navbar-aligned rounded-custom">
         <div class="container-fluid px-3">
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
-                <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO dan Diktisaintek"
+                <img src="{{ asset('logo-uho-diktisaintek-text-biru.png') }}" alt="Logo UHO dan Diktisaintek"
                     class="me-3 navbar-logo">
                 <span>SIPENA UPA BAHASA UHO</span>
             </a>
@@ -518,12 +445,12 @@
         </main>
 
         <!-- Footer -->
-        <footer class="footer bg-dark text-white mt-5 pt-5 pb-3 rounded">
+        <footer class="footer bg-dark text-white mt-5 pt-5 pb-4 rounded">
             <div class="row g-3 px-3">
                 <!-- Information Section -->
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO dan Diktisaintek"
+                        <img src="{{ asset('logo-uho-diktisaintek-text-putih.png') }}" alt="Logo UHO dan Diktisaintek"
                             class="mb-2 footer-logo">
                     </div>
                     <p class="text-light mb-3">
@@ -554,19 +481,23 @@
                         </div>
                         <div class="col-md-6">
                             <ul class="list-unstyled mb-0">
-                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">Jadwal Ujian</a>
+                                <li class="mb-1"><a href="{{ url('/#jadwal-ujian') }}"
+                                        class="text-light text-decoration-none">Jadwal Ujian</a>
                                 </li>
-                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">Cara
+                                <li class="mb-1"><a href="{{ url('/#panduan-pendaftaran') }}"
+                                        class="text-light text-decoration-none">Cara
                                         Pendaftaran</a></li>
-                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">FAQ</a></li>
-                                <li class="mb-1"><a href="#" class="text-light text-decoration-none">Kontak</a></li>
+                                <li class="mb-1"><a href="{{ url('/#galeri-kegiatan') }}"
+                                        class="text-light text-decoration-none">Galeri</a></li>
+                                <li class="mb-1"><a href="{{ url('/#kontak') }}"
+                                        class="text-light text-decoration-none">Kontak</a></li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
                 <!-- Contact Information Section -->
-                <div class="col-md-4">
+                <div class="col-md-4" id="kontak">
                     <h5 class="fw-bold mb-3 text-light">Kontak</h5>
                     <ul class="list-unstyled mb-0">
                         <li class="mb-2">

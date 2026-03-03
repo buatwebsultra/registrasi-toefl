@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +10,14 @@
             size: A4;
             margin: 20mm;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
             background: #ffffff;
         }
+
         .card {
             width: 100%;
             height: 100%;
@@ -24,9 +27,10 @@
             overflow: hidden;
             box-sizing: border-box;
             border-radius: 12px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
             border: 1px solid #e2e8f0;
         }
+
         .card::before {
             content: '';
             position: absolute;
@@ -36,6 +40,7 @@
             height: 8px;
             background: linear-gradient(90deg, #1a365d, #3498db, #1a365d);
         }
+
         .header {
             text-align: center;
             margin-bottom: 20px;
@@ -46,34 +51,40 @@
             color: white;
             padding: 20px 20px 15px;
             border-radius: 8px 8px 0 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .header h1 {
             color: white;
             margin: 0;
             font-size: 26px;
             font-weight: 700;
             letter-spacing: 0.8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
+
         .header p {
             margin: 5px 0 0 0;
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             font-size: 14px;
             font-weight: 500;
         }
+
         .university-logo {
             text-align: center;
             margin: -40px 0 15px;
         }
+
         .university-logo img {
             height: 60px;
             width: auto;
             object-fit: contain;
         }
+
         .main-content {
             margin-bottom: 15px;
         }
+
         .photo-container {
             width: 100px;
             height: 130px;
@@ -85,10 +96,12 @@
             align-items: center;
             justify-content: center;
             background: #f8f9fa;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            align-self: flex-start; /* Align photo to top */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            align-self: flex-start;
+            /* Align photo to top */
             position: relative;
         }
+
         .photo-container::before {
             content: '';
             position: absolute;
@@ -101,14 +114,17 @@
             z-index: -1;
             background-size: 400% 400%;
         }
+
         .photo-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
         .participant-info {
             margin-bottom: 15px;
         }
+
         .info-row {
             display: flex;
             margin-bottom: 6px;
@@ -116,11 +132,13 @@
             border-bottom: 1px solid #e2e8f0;
             padding: 4px 0;
         }
+
         .info-row:last-child {
             border-bottom: none;
             margin-bottom: 0;
             padding-bottom: 0;
         }
+
         .info-label {
             flex: 0 0 140px;
             font-weight: 600;
@@ -128,17 +146,20 @@
             font-size: 12px;
             position: relative;
         }
+
         .info-label::after {
             content: ':';
             position: absolute;
             right: -6px;
         }
+
         .info-value {
             flex: 1;
             color: #2d3748;
             font-weight: 500;
             font-size: 12px;
         }
+
         .section-header {
             font-size: 16px;
             font-weight: 600;
@@ -151,6 +172,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .section-header::after {
             content: '';
             position: absolute;
@@ -161,6 +183,7 @@
             height: 3px;
             background: linear-gradient(to right, transparent, #4299e1, transparent);
         }
+
         .qr-code {
             text-align: center;
             margin: 20px 0;
@@ -170,12 +193,14 @@
             border: 1px solid #e9ecef;
             width: 140px;
         }
+
         .qr-code p {
             margin: 0 0 8px 0;
             font-weight: 600;
             color: #495057;
             font-size: 12px;
         }
+
         .qr-placeholder {
             width: 120px;
             height: 120px;
@@ -189,6 +214,7 @@
             font-size: 10px;
             color: #adb5bd;
         }
+
         .footer {
             text-align: center;
             margin-top: 20px;
@@ -199,9 +225,11 @@
             line-height: 1.4;
             background: linear-gradient(to bottom, #ffffff, #f8fafc);
         }
+
         .footer p {
             margin: 4px 0;
         }
+
         .watermark-logo {
             position: absolute;
             top: 50%;
@@ -211,11 +239,13 @@
             z-index: 0;
             pointer-events: none;
         }
+
         .watermark-logo img {
             width: 150px;
             height: auto;
             filter: grayscale(100%);
         }
+
         .watermark-text {
             position: absolute;
             top: 50%;
@@ -228,6 +258,7 @@
             z-index: 0;
             pointer-events: none;
         }
+
         .seat-info {
             background: linear-gradient(135deg, #42a5f5, #1e88e5, #0d47a1);
             color: white;
@@ -236,26 +267,29 @@
             text-align: center;
             margin: 20px 0;
             box-shadow: 0 8px 20px rgba(30, 136, 229, 0.3);
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             position: relative;
             overflow: hidden;
         }
+
         .seat-number {
             font-size: 36px;
             font-weight: bold;
             margin: 8px 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             background: linear-gradient(to right, #ffffff, #e3f2fd);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-family: 'Arial Black', sans-serif;
         }
+
         .seat-label {
             font-size: 16px;
             font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
+
         .qr-section {
             display: flex;
             justify-content: flex-end;
@@ -263,11 +297,12 @@
         }
     </style>
 </head>
+
 <body>
     <div class="card">
         <div class="watermark-logo">
-            @if(file_exists(public_path('logo-uho-dan-diktisaintek-768x143.png')))
-                <img src="file://{{ public_path('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO" />
+            @if(file_exists(public_path('logo-uho-diktisaintek-text-biru.png')))
+                <img src="file://{{ public_path('logo-uho-diktisaintek-text-biru.png') }}" alt="Logo UHO" />
             @else
                 <div style="width: 150px; height: auto;">Logo</div>
             @endif
@@ -276,15 +311,16 @@
         <div class="watermark-text">UPA Bahasa Universitas Halu Oleo</div>
 
         <div class="university-logo">
-            @if(file_exists(public_path('logo-uho-dan-diktisaintek-768x143.png')))
+            @if(file_exists(public_path('logo-uho-diktisaintek-text-biru.png')))
                 <!-- Use asset() for web preview, but file:// for PDF generation -->
                 @php
                     $isPdfRoute = str_contains(request()->route()->getName() ?? '', 'card.download');
                 @endphp
                 @if($isPdfRoute)
-                    <img src="file://{{ public_path('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO dan Diktisaintek" />
+                    <img src="file://{{ public_path('logo-uho-diktisaintek-text-biru.png') }}"
+                        alt="Logo UHO dan Diktisaintek" />
                 @else
-                    <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}" alt="Logo UHO dan Diktisaintek" />
+                    <img src="{{ asset('logo-uho-diktisaintek-text-biru.png') }}" alt="Logo UHO dan Diktisaintek" />
                 @endif
             @else
                 <div style="height: 60px; width: auto;">Logo</div>
@@ -307,12 +343,16 @@
                                 $isPdfRoute = str_contains(request()->route()->getName() ?? '', 'card.download');
                             @endphp
                             @if($isPdfRoute)
-                                <img src="file://{{ storage_path('app/public/' . $participant->photo_path) }}" alt="Participant Photo" style="object-fit:cover;">
+                                <img src="file://{{ storage_path('app/public/' . $participant->photo_path) }}"
+                                    alt="Participant Photo" style="object-fit:cover;">
                             @else
-                                <img src="{{ asset('storage/' . $participant->photo_path) }}" alt="Participant Photo" style="object-fit:cover;">
+                                <img src="{{ asset('storage/' . $participant->photo_path) }}" alt="Participant Photo"
+                                    style="object-fit:cover;">
                             @endif
                         @else
-                            <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #ccc; font-size: 10px;">No Photo</div>
+                            <div
+                                style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #ccc; font-size: 10px;">
+                                No Photo</div>
                         @endif
                     </div>
                 </div>
@@ -352,7 +392,8 @@
                         </div>
                         <div class="info-row">
                             <div class="info-label">Place & Date of Birth:</div>
-                            <div class="info-value">{{ $participant->birth_place }}, {{ $participant->birth_date->format('d F Y') }}</div>
+                            <div class="info-value">{{ $participant->birth_place }},
+                                {{ $participant->birth_date->format('d F Y') }}</div>
                         </div>
                         <div class="info-row">
                             <div class="info-label">Phone Number:</div>
@@ -381,7 +422,8 @@
             </div>
             <div class="info-row">
                 <div class="info-label">Capacity:</div>
-                <div class="info-value">{{ $participant->schedule->used_capacity }} of {{ $participant->schedule->capacity }}</div>
+                <div class="info-value">{{ $participant->schedule->used_capacity }} of
+                    {{ $participant->schedule->capacity }}</div>
             </div>
         </div>
 
@@ -405,4 +447,5 @@
         </div>
     </div>
 </body>
+
 </html>

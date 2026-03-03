@@ -10,7 +10,7 @@
         <div class="col-lg-8 mx-auto text-center">
             <!-- University Logo -->
             <div class="mb-4" data-aos="fade-down" data-aos-duration="1000">
-                <img src="{{ asset('logo-uho-dan-diktisaintek-768x143.png') }}"
+                <img src="{{ asset('logo-uho-diktisaintek-text-biru.png') }}"
                      alt="Logo UHO dan Diktisaintek"
                      class="img-fluid welcome-logo">
             </div>
@@ -42,7 +42,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6" data-aos="fade-left" data-aos-delay="800">
+        <div class="col-md-6" data-aos="fade-left" data-aos-delay="800" id="jadwal-ujian">
             <div class="card border-0 shadow-lg h-100 card-hover bg-white overflow-hidden">
                 <div class="card-body d-flex flex-column p-5">
                     <div class="d-flex align-items-center mb-4">
@@ -109,7 +109,7 @@
 
     <div class="row mt-5">
         <div class="col-md-12">
-            <div class="card border-0 shadow-lg bg-light">
+            <div class="card border-0 shadow-lg bg-light" id="panduan-pendaftaran">
                 <div class="card-body p-5">
                     <div class="text-center mb-5">
                         <h2 class="fw-bold text-primary mb-2" data-aos="fade-up">Panduan Pendaftaran</h2>
@@ -151,7 +151,7 @@
 
     <!-- Gallery Section -->
     @if(isset($galleryItems) && count($galleryItems) > 0)
-    <div class="row mt-5 mb-5">
+    <div class="row mt-5 mb-5" id="galeri-kegiatan">
         <div class="col-md-12">
             <h5 class="text-center fw-bold mb-4 fs-3 text-primary" data-aos="fade-up">Galeri Kegiatan</h5>
             <div id="galleryCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden bg-dark" data-bs-ride="carousel" data-aos="zoom-in" data-aos-delay="200">
