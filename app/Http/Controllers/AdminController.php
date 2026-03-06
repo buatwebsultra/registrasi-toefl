@@ -1560,15 +1560,27 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'User deleted successfully.');
     }
 
-    public function activityLogs()
+    public function activityLogs(Request $request)
     {
         if (!Auth::user()->isSuperAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
-        $logs = \App\Models\ActivityLog::orderBy('created_at', 'desc')->paginate(50);
+        $search = $request->input('search');
 
-        return view('admin.logs.index', compact('logs'));
+        $logs = \App\Models\ActivityLog::query()
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('user_name', 'LIKE', "%{$search}%")
+                        ->orWhere('action', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('admin.logs.index', compact('logs', 'search'));
     }
 
     public function downloadLogs(Request $request)

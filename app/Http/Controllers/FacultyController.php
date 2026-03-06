@@ -20,10 +20,18 @@ class FacultyController extends Controller
     }
 
     // Display list of faculties
-    public function index()
+    public function index(Request $request)
     {
-        $faculties = Faculty::with('studyPrograms')->paginate(10);
-        return view('admin.faculties.index', compact('faculties'));
+        $search = $request->input('search');
+
+        $faculties = Faculty::with('studyPrograms')
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'LIKE', "%{$search}%");
+            })
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.faculties.index', compact('faculties', 'search'));
     }
 
     // Show form to create new faculty
@@ -92,11 +100,19 @@ class FacultyController extends Controller
     }
 
     // Display list of study programs
-    public function studyProgramsIndex()
+    public function studyProgramsIndex(Request $request)
     {
-        $studyPrograms = StudyProgram::with('faculty')->paginate(10);
+        $search = $request->input('search');
+
+        $studyPrograms = StudyProgram::with('faculty')
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'LIKE', "%{$search}%");
+            })
+            ->paginate(10)
+            ->withQueryString();
+
         $faculties = Faculty::all();
-        return view('admin.study-programs.index', compact('studyPrograms', 'faculties'));
+        return view('admin.study-programs.index', compact('studyPrograms', 'faculties', 'search'));
     }
 
     // Show form to create new study program
