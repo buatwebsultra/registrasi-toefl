@@ -8,7 +8,9 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use RyanChandler\LaravelCloudflareTurnstile\Rules\Turnstile;
 
 class AuthController extends Controller
 {
@@ -21,10 +23,13 @@ class AuthController extends Controller
     // Admin login
     public function adminLogin(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'cf-turnstile-response' => ['required', 'turnstile'],
         ]);
+
+        $credentials = $request->only('email', 'password');
 
         // Check if user has operator role or higher (operator, admin, superadmin)
         $user = User::where('email', $request->email)->first();
@@ -82,6 +87,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'username' => 'required|string|alpha_dash|max:255',
             'password' => 'required',
+            'cf-turnstile-response' => ['required', 'turnstile'],
         ]);
 
         // Sanitize input

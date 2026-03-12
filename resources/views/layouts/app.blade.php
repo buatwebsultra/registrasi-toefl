@@ -18,6 +18,8 @@
         rel="stylesheet">
     <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Cloudflare Turnstile Scripts -->
+    <x-turnstile.scripts nonce="{{ $csp_nonce ?? '' }}" />
     <!-- Custom CSS -->
     <style nonce="{{ $csp_nonce ?? '' }}">
         body {

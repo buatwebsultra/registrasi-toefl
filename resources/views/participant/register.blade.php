@@ -646,6 +646,10 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-4">
+                                    <x-turnstile />
+                                </div>
+
                                 <div class="d-flex justify-content-between mt-4">
                                     <button type="button" class="btn btn-secondary btn-prev" data-step="5">Kembali</button>
                                     <button type="submit" class="btn btn-success btn-lg px-4" id="finalSubmitBtn" disabled>

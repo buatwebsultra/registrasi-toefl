@@ -32,6 +32,10 @@
                         @enderror
                     </div>
 
+                    <div class="mb-3">
+                        <x-turnstile />
+                    </div>
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Login</button>
                     </div>

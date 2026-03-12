@@ -10,6 +10,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.9",
         "phpoffice/phpspreadsheet": "^5.3",
+        "ryangjchandler/laravel-cloudflare-turnstile": "^3.0",
         "simplesoftwareio/simple-qrcode": "^4.0"
     },
     "require-dev": {

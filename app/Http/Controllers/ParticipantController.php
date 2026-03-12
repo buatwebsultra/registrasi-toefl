@@ -10,6 +10,7 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use RyanChandler\LaravelCloudflareTurnstile\Rules\Turnstile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -39,6 +40,7 @@ class ParticipantController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'schedule_id' => 'required|exists:schedules,id',
+            'cf-turnstile-response' => ['required', 'turnstile'],
             'nim' => 'required|string|max:255',
             'name' => 'required|string|max:255|regex:/^[A-Za-z\s\.\,\'\-]+$/',
             'gender' => 'required|in:male,female',

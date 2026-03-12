@@ -38,6 +38,10 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <x-turnstile />
+                    </div>
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
