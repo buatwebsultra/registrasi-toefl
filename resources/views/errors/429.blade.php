@@ -12,7 +12,7 @@
                 <h1 class="display-4 fw-bold mb-3">429</h1>
                 <h2 class="h3 mb-4">Terlalu Banyak Permintaan</h2>
                 <p class="lead text-muted mb-5">
-                    Anda telah melakukan terlalu banyak permintaan dalam waktu singkat.
+                    Melakukan terlalu banyak permintaan dalam waktu singkat.
                     Silakan tunggu beberapa saat sebelum mencoba kembali untuk menjaga keamanan sistem.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
@@ -27,7 +27,7 @@
                 <div class="mt-5 p-4 bg-light rounded-4 text-start">
                     <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Mengapa ini terjadi?</h6>
                     <p class="text-muted small mb-0">
-                        Sistem kami membatasi jumlah percobaan akses atau login dalam satu waktu untuk melindungi akun Anda dari upaya pembobolan (brute-force). Pembatasan ini bersifat sementara.
+                        Membatasi jumlah percobaan akses atau login dalam 1 waktu. Pembatasan ini bersifat sementara.
                     </p>
                 </div>
             </div>

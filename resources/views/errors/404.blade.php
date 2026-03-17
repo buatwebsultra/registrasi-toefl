@@ -12,7 +12,7 @@
                 <h1 class="display-4 fw-bold mb-3">404</h1>
                 <h2 class="h3 mb-4">Halaman Tidak Ditemukan</h2>
                 <p class="lead text-muted mb-5">
-                    Halaman yang Anda cari tidak tersedia atau telah dipindahkan.
+                    Halaman tidak tersedia.
                     Silakan periksa kembali tautan Anda atau kembali ke halaman utama.
                 </p>
                 <div class="d-flex justify-content-center gap-3">

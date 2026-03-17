@@ -10,11 +10,10 @@
                     <i class="fas fa-user-lock fa-5x text-danger opacity-50"></i>
                 </div>
                 <h1 class="display-4 fw-bold mb-3">403</h1>
-                <h2 class="h3 mb-4">Mohon Maaf, Akses Terbatas</h2>
+                <h2 class="h3 mb-4">Mohon Maaf, Akses </h2>
                 <p class="lead text-muted mb-5">
-                    Anda tidak memiliki izin untuk mengakses halaman ini. Hal ini mungkin terjadi karena hak akses akun
-                    Anda tidak mencukupi atau sesi login Anda telah berakhir. Silakan hubungi Administrator jika Anda
-                    merasa seharusnya memiliki akses.
+                    Anda tidak memiliki izin untuk mengakses halaman ini.
+                    Anda tidak mencukupi atau sesi login Anda telah berakhir.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
                     <a href="{{ url()->previous() }}" class="btn btn-primary btn-lg rounded-pill px-5">
@@ -29,7 +28,7 @@
                     <h6 class="fw-bold mb-3"><i class="fas fa-shield-alt me-2"></i>Informasi Keamanan:</h6>
                     <p class="small text-muted mb-0">
                         Sistem mencatat seluruh aktivitas untuk menjaga keamanan data. Pastikan Anda masuk menggunakan
-                        akun dengan wewenang yang sesuai.
+                        akun yang sesuai.
                     </p>
                 </div>
             </div>

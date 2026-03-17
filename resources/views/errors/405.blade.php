@@ -13,7 +13,7 @@
                 <h2 class="h3 mb-4">Metode Tidak Diizinkan</h2>
                 <p class="lead text-muted mb-5">
                     Maaf, permintaan Anda tidak dapat diproses karena kesalahan metode akses.
-                    Silakan kembali ke halaman sebelumnya dan coba muat ulang halaman.
+                    Silakan kembali ke halaman sebelumnya dan coba muat ulang/Refresh halaman.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
                     <a href="{{ url()->previous() }}" class="btn btn-primary btn-lg rounded-pill px-5">

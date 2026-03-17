@@ -12,7 +12,7 @@
                 <h1 class="display-4 fw-bold mb-3">413</h1>
                 <h2 class="h3 mb-4">File Terlalu Besar</h2>
                 <p class="lead text-muted mb-5">
-                    Maaf, file yang Anda unggah melebihi batas kapasitas server kami.
+                    Maaf, file yang Anda unggah melebihi batas kapasitas.
                     Batas maksimal unggah per file adalah <strong>1MB</strong>.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
@@ -28,7 +28,7 @@
                     <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Saran Perbaikan:</h6>
                     <ul class="mb-0 small text-muted">
                         <li>Gunakan format <strong>JPG</strong> atau <strong>PNG</strong>.</li>
-                        <li>Kompres gambar Anda sebelum diunggah agar ukurannya lebih kecil.</li>
+                        <li>Kompres gambar Anda sebelum diunggah/Upload agar ukurannya lebih kecil.</li>
                         <li>Pastikan ukuran file tidak lebih dari <strong>1MB</strong>.</li>
                     </ul>
                 </div>

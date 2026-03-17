@@ -12,7 +12,7 @@
                 <h1 class="display-4 fw-bold mb-3">500</h1>
                 <h2 class="h3 mb-4">Terjadi Kesalahan Internal Server</h2>
                 <p class="lead text-muted mb-5">
-                    Sepertinya ada masalah teknis pada server kami.
+                    Masalah teknis pada server kami.
                     Kami sedang berupaya memperbaikinya. Silakan muat ulang halaman atau coba lagi nanti.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
