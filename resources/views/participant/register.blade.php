@@ -451,6 +451,7 @@
                                                 placeholder="Contoh: budi_santoso">
                                             <div class="form-text">Hanya boleh berisi huruf kecil, angka, dan underscore.
                                                 (Dilarang menggunakan spasi atau titik). Contoh: jay_idzes</div>
+                                            <div id="username-availability-feedback" class="mt-1 small"></div>
                                             @error('username')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -504,7 +505,7 @@
 
                                 <div class="d-flex justify-content-between mt-4">
                                     <button type="button" class="btn btn-secondary btn-prev" data-step="4">Kembali</button>
-                                    <button type="button" class="btn btn-primary btn-next" data-step="4">Lanjut ke
+                                    <button type="button" class="btn btn-primary btn-next" id="btn-next-step-4" data-step="4">Lanjut ke
                                         Review</button>
                                 </div>
                             </div>
@@ -1104,65 +1105,79 @@
             filterStudyPrograms();
         }
 
-        // Username real-time validation (existing functionality)
+        // Username real-time validation with AJAX check
         const usernameInput = document.getElementById('username');
+        const usernameFeedback = document.getElementById('username-availability-feedback');
+        const nextBtnStep4 = document.getElementById('btn-next-step-4');
+        let usernameCheckTimeout;
 
         function validateUsername(value) {
             // Regex pattern: lowercase letters, numbers, and underscores only
             const regex = /^[a-z0-9_]+$/;
 
+            // Clear feedback and reset button state if empty
+            if (!value) {
+                usernameInput.classList.remove('is-invalid', 'is-valid');
+                usernameFeedback.innerHTML = '';
+                nextBtnStep4.disabled = false;
+                return false;
+            }
+
             if (!regex.test(value)) {
                 // Mark as invalid and show error message
+                usernameInput.classList.remove('is-valid');
                 usernameInput.classList.add('is-invalid');
-
-                // Remove any existing error message
-                let existingError = document.getElementById('username-error');
-                if (existingError) {
-                    existingError.remove();
-                }
-
-                // Create error message
-                const errorDiv = document.createElement('div');
-                errorDiv.id = 'username-error';
-                errorDiv.className = 'invalid-feedback';
-                errorDiv.textContent = 'Username hanya boleh berisi huruf kecil, angka, dan underscore. (Dilarang menggunakan spasi atau titik).';
-                errorDiv.style.display = 'block';
-
-                // Insert after the input element
-                usernameInput.parentNode.insertBefore(errorDiv, usernameInput.nextSibling);
-
+                usernameFeedback.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Format tidak valid (hanya huruf kecil, angka, dan underscore).</span>';
+                nextBtnStep4.disabled = true;
                 return false;
-            } else {
-                usernameInput.classList.remove('is-invalid');
+            }
 
-                // Remove error message if it exists
-                let existingError = document.getElementById('username-error');
-                if (existingError) {
-                    existingError.remove();
+            // If regex passes, start AJAX check with debouncing
+            usernameInput.classList.remove('is-invalid', 'is-valid');
+            usernameFeedback.innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin me-1"></i>Memeriksa ketersediaan...</span>';
+            nextBtnStep4.disabled = true;
+
+            clearTimeout(usernameCheckTimeout);
+            usernameCheckTimeout = setTimeout(() => {
+                checkUsernameAvailability(value);
+            }, 500); // 500ms debounce
+
+            return true;
+        }
+
+        async function checkUsernameAvailability(username) {
+            try {
+                const response = await fetch(`{{ route('participant.check-username') }}?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+
+                if (data.available) {
+                    usernameInput.classList.remove('is-invalid');
+                    usernameInput.classList.add('is-valid');
+                    usernameFeedback.innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-1"></i>${data.message}</span>`;
+                    nextBtnStep4.disabled = false;
+                } else {
+                    usernameInput.classList.remove('is-valid');
+                    usernameInput.classList.add('is-invalid');
+                    usernameFeedback.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-1"></i>${data.message}</span>`;
+                    nextBtnStep4.disabled = true;
                 }
-
-                return true;
+            } catch (error) {
+                console.error('Error checking username:', error);
+                usernameFeedback.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Gagal memeriksa ketersediaan. Silakan coba lagi.</span>';
+                nextBtnStep4.disabled = false; // Allow proceeding if check fails? Maybe safer to keep disabled or allow but server will catch it.
             }
         }
 
-        // Convert username input to lowercase in real-time
+        // Convert username input to lowercase and validate in real-time
         if (usernameInput) {
-            // Convert to lowercase on input
             usernameInput.addEventListener('input', function () {
-                const currentValue = this.value;
-                const newValue = currentValue.toLowerCase();
-
-                if (currentValue !== newValue) {
-                    this.value = newValue;
-
-                    // Show validation message if invalid characters are detected
-                    validateUsername(newValue);
-                }
+                this.value = this.value.toLowerCase();
+                validateUsername(this.value);
             });
 
-            // Convert to lowercase on blur to ensure it's lowercase
             usernameInput.addEventListener('blur', function () {
                 this.value = this.value.toLowerCase();
+                if (this.value) validateUsername(this.value);
             });
         }
 

@@ -136,7 +136,7 @@ class ParticipantController extends Controller
                     }
                 },
             ],
-            'username' => 'required|string|max:255|regex:/^[a-z0-9_]+$/',
+            'username' => 'required|string|max:255|regex:/^[a-z0-9_]+$/|unique:participants,username',
             'password' => [
                 'required',
                 'string',
@@ -149,6 +149,7 @@ class ParticipantController extends Controller
             'phone.regex' => 'Format nomor WhatsApp tidak valid. Gunakan format: 081234567890',
             'username.regex' => 'Username hanya boleh berisi huruf kecil, angka, dan underscore (tanpa spasi atau titik).',
             'username.required' => 'Username tidak boleh kosong.',
+            'username.unique' => 'Username sudah digunakan oleh pendaftar lain. Silakan pilih username yang lain.',
             'password.required' => 'Password tidak boleh kosong.',
             'password.min' => 'Password minimal harus 12 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
@@ -427,6 +428,35 @@ class ParticipantController extends Controller
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
+    }
+
+    public function checkUsername(\Illuminate\Http\Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'username' => 'required|string|max:255|regex:/^[a-z0-9_]+$/',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Format username tidak valid. Gunakan huruf kecil, angka, dan underscore.'
+            ]);
+        }
+
+        $username = strtolower(trim($request->username));
+        $exists = \App\Models\Participant::where('username', $username)->exists();
+
+        if ($exists) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Username sudah digunakan.'
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'message' => 'Username tersedia.'
+        ]);
     }
 
     private function generateSeatNumber($room, $position)

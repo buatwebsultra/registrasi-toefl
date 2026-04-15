@@ -52,6 +52,7 @@ Route::middleware(['participant'])->prefix('participant')->group(function () {
 Route::prefix('participant')->group(function () {
     Route::get('/register', [ParticipantController::class, 'showRegistrationForm'])->name('participant.register.form');
     Route::post('/register', [ParticipantController::class, 'register'])->name('participant.register')->middleware('throttle:10,1');
+    Route::get('/check-username', [ParticipantController::class, 'checkUsername'])->name('participant.check-username');
 });
 
 // SECURITY: Secure file download with authorization - accessible by both participant and admin
