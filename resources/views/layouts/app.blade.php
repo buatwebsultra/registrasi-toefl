@@ -398,6 +398,11 @@
                                 <a class="nav-link" href="{{ route('admin.dashboard') }}">Dashboard Admin</a>
                             @endif
                         </li>
+                        @if(Auth::user()->isAdmin())
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.settings.certificate') }}">Pengaturan Sertifikat</a>
+                            </li>
+                        @endif
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.profile') }}">Profil</a>
                         </li>

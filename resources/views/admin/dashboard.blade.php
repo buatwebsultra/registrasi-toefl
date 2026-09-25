@@ -539,6 +539,13 @@
                                     (Slider)</span>
                                 <i class="fas fa-chevron-right small opacity-50"></i>
                             </a>
+                            @if(Auth::user()->isAdmin())
+                            <a href="{{ route('admin.settings.certificate') }}"
+                                class="btn btn-outline-light text-dark border p-3 d-flex align-items-center justify-content-between rounded-3 transition-all hover:bg-light">
+                                <span class="fw-bold"><i class="fas fa-file-signature me-3 text-success"></i>TTD & Stempel Sertifikat</span>
+                                <i class="fas fa-chevron-right small opacity-50"></i>
+                            </a>
+                            @endif
                         </div>
                     </div>
                 </div>

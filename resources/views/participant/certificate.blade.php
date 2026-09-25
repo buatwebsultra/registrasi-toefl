@@ -440,18 +440,36 @@
                         </tr>
                     </table>
 
+                    @php
+                        $signerTitle = \App\Models\Setting::get('certificate_signer_title', 'Head of UPA Bahasa UHO,');
+                        $signerName = !empty($participant->schedule->signature_name) 
+                            ? $participant->schedule->signature_name 
+                            : \App\Models\Setting::get('certificate_signer_name', 'Ir. Uniadi Mangidi, S.T., M.T., M.Eng.Sc');
+                        $signerNip = !empty($participant->schedule->signature_nip) 
+                            ? $participant->schedule->signature_nip 
+                            : \App\Models\Setting::get('certificate_signer_nip', '19750614 200212 1 002');
+                        $signatureFilePath = \App\Models\Setting::getSignaturePath();
+                        $signatureMime = 'image/png';
+                        if ($signatureFilePath && file_exists($signatureFilePath)) {
+                            $ext = strtolower(pathinfo($signatureFilePath, PATHINFO_EXTENSION));
+                            if (in_array($ext, ['jpg', 'jpeg'])) {
+                                $signatureMime = 'image/jpeg';
+                            }
+                        }
+                    @endphp
+
                     <div class="signature-block" style="position: relative;">
-                        <div class="signature-title">Head of UPA Bahasa UHO,</div>
-                        @if(file_exists(public_path('signature.png')))
-                            <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('signature.png'))) }}"
+                        <div class="signature-title">{{ $signerTitle }}</div>
+                        @if($signatureFilePath && file_exists($signatureFilePath))
+                            <img src="data:{{ $signatureMime }};base64,{{ base64_encode(file_get_contents($signatureFilePath)) }}"
                                 alt="Signature"
                                 style="position: absolute; width: 120px; height: auto; left: 50%; transform: translateX(-50%); top: 30px; z-index: 10;">
                         @endif
                         <div class="signature-name" style="margin-top: 75px;">
-                            {{ $participant->schedule->signature_name ?? 'Ir. Uniadi Mangidi, S.T., M.T., M.Eng.Sc' }}
+                            {{ $signerName }}
                         </div>
                         <div class="signature-nip">
-                            {{ $participant->schedule->signature_nip ?? '19750614 200212 1 002' }}</div>
+                            {{ $signerNip }}</div>
                     </div>
                 </td>
             </tr>

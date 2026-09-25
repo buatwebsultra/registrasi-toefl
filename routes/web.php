@@ -6,6 +6,7 @@ use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\PDFController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Models\Schedule;
 
 /*
@@ -146,6 +147,11 @@ Route::middleware(['operator'])->prefix('admin')->group(function () {
         Route::get('/logs', [AdminController::class, 'activityLogs'])->name('admin.logs.index');
         Route::post('/logs/download', [AdminController::class, 'downloadLogs'])->name('admin.logs.download');
         Route::get('/schedules/sync-capacity', [AdminController::class, 'syncScheduleCapacities'])->name('admin.schedules.sync-capacity');
+
+        // Certificate & Signer Settings
+        Route::get('/settings/certificate', [SettingController::class, 'certificateSettings'])->name('admin.settings.certificate');
+        Route::post('/settings/certificate', [SettingController::class, 'updateCertificateSettings'])->name('admin.settings.certificate.update');
+        Route::delete('/settings/certificate/signature', [SettingController::class, 'deleteCertificateSignature'])->name('admin.settings.certificate.delete-signature');
     });
 
     // Admin Profile Routes
